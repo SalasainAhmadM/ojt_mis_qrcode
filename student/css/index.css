@@ -1,0 +1,343 @@
+.content-wrapper {
+    height: 600px;
+    margin-left: 40px; 
+    margin-right: 40px;
+    border-radius: 10px;
+  }
+
+  .intern-company {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding-bottom: 15px;
+    padding-left: 15px;
+    padding-right: 15px;
+    width: 100%;
+  }
+
+  .company-logo img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .details label {
+    color: #737373;
+  }
+
+  .main-box {
+    display: flex;
+    justify-content: space-between;
+    width: calc(100% - 60px);
+    margin-left: 20px;
+  }
+
+  .left-box,
+  .right-box {
+    padding: 20px;
+    height: 500px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+  }
+  .whole-box {
+  width: 100%;
+  padding: 20px;
+  padding-left: 30px;
+  padding-right: 30px;
+    height: 600px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+}
+.header-box {
+  width: 100%;
+  padding: 10px;
+  padding-left: 20px;
+  display: flex;
+    justify-content: space-between;
+    width: calc(100% - 60px);
+    margin-left: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+}
+  .left-box {
+    width: 70%;
+    margin-right: 5px;
+  }
+
+  .right-box {
+    width: 30%;
+    overflow-y: auto;
+  }
+
+  .left-box h2,
+  .right-box h2 , .whole-box h2{
+    margin-bottom: 15px;
+  }
+
+  .left-box table , .whole-box table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .left-box table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+  .whole-box table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+  .left-box table th , .whole-box table th {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin-right: -17px; 
+  }
+
+  .left-box tbody{
+    display: block;
+    max-height: 320px;
+    overflow-y: scroll;
+    width: calc(100% + 17px); 
+    margin-right: -17px; 
+  }
+  .whole-box tbody {
+    display: block;
+    max-height: 420px;
+    overflow-y: scroll;
+    width: calc(100% + 17px); 
+    margin-right: -17px; 
+  }
+
+  .left-box table thead,
+  .left-box table tbody tr , .whole-box table thead, .whole-box table tbody tr{
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .dropdown,
+  .search-bar,
+  .filter-btn {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    font-size: 14px;
+  }
+
+  .filter-btn {
+    background-color: #095d40;
+    color: white;
+    cursor: pointer;
+    border: none;
+    padding: 5px 10px;
+  }
+
+  .action-icon:hover,
+    .export-btn:hover, .add-btn:hover,
+    .filter-btn:hover {
+    background-color: #074f34;
+  }
+
+  .dropdown {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    font-size: 14px;
+  }
+
+  .search-bar {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    font-size: 14px;
+    width: 150px;
+  }
+
+  .announcement {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .announcement h3 {
+    margin: 0;
+    font-size: 18px;
+  }
+
+  .announcement p {
+    margin: 5px 0;
+    color: #737373;
+  }
+
+  .header-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .header-group h2 {
+    margin: 0;
+  }
+
+  .button-container {
+    display: flex;
+    gap: 10px;
+  }
+
+  .export-btn , .add-btn {
+    background-color: #095d40;
+    color: white;
+    cursor: pointer;
+    border: none;
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+    border-radius: 5px;
+    font-size: 14px;
+  }
+
+  .export-btn i , .add-btn i{
+    margin-right: 5px;
+  }
+  
+  .action-icon {
+    background-color: #095d40;
+    height: 100%;
+    width: 30%;
+    color: #fff;
+    border: 1px solid #888;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  th.action,
+  td.action {
+    width: 10%;
+  }
+
+  .whole-box table th.action,
+  .whole-box table td.action , .main-box table th.action,
+  .main-box table td.action{
+    text-align: center;
+  }
+   /* Modal Big Styles */
+   .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding-top: 50px;
+  }
+
+  .modal-content-big {
+    background-color: #fff;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    text-align: center;
+    width: 50%;
+    border-radius: 10px;
+  }
+
+  .close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+  }
+
+  .close:hover,
+  .close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .modal h2 {
+    margin-top: 0;
+    color: #095d40;
+  }
+
+  .modal label {
+    display: block;
+    margin: 15px 0 5px;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .modal input[type="text"],
+  .modal input[type="date"],
+  .modal textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+  }
+
+  .horizontal-group {
+    display: flex;
+    gap: 20px;
+  }
+
+  .horizontal-group input.date {
+    width: 40%;
+  }
+
+  .input-group {
+    flex: 1;
+  }
+
+  .modal textarea {
+    height: 250px;
+    resize: vertical;
+  }
+
+  .modal-btn {
+    background-color: #095d40;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .modal-btn:hover {
+    background-color: #06492e;
+  }
+
+ 

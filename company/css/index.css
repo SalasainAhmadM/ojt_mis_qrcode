@@ -1,0 +1,588 @@
+.content-wrapper {
+    height: 600px;
+    margin-left: 40px; 
+    margin-right: 40px;
+    border-radius: 10px;
+  }
+  .intern-company {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    width: 100%;
+  }
+
+  .company-logo img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .details label {
+    color: #737373;
+  }
+
+  .main-box {
+    display: flex;
+    justify-content: space-between;
+    width: calc(100% - 60px);
+    margin-left: 20px;
+  }
+
+  .left-box,
+  .right-box {
+    padding: 20px;
+    height: 500px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+  }
+  .whole-box {
+  width: 100%;
+  padding: 20px;
+  padding-left: 30px;
+  padding-right: 30px;
+    height: 600px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+}
+.header-box {
+  width: 100%;
+  padding: 10px;
+  padding-left: 20px;
+  display: flex;
+    justify-content: space-between;
+    width: calc(100% - 60px);
+    margin-left: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+}
+  .left-box {
+    width: 70%;
+    margin-right: 5px;
+  }
+
+  .right-box {
+    width: 30%;
+    overflow-y: auto;
+  }
+
+  .left-box h2,
+  .right-box h2 , .whole-box h2{
+    margin-bottom: 15px;
+  }
+
+  .left-box table , .whole-box table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .left-box table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+  .whole-box table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+  .left-box table th , .whole-box table th {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin-right: -17px; 
+  }
+
+  .left-box tbody{
+    display: block;
+    max-height: 320px;
+    overflow-y: scroll;
+    width: calc(100% + 17px); 
+    margin-right: -17px; 
+  }
+  .whole-box tbody {
+    display: block;
+    max-height: 420px;
+    overflow-y: scroll;
+    width: calc(100% + 17px); 
+    margin-right: -17px; 
+  }
+
+  .left-box table thead,
+  .left-box table tbody tr , .whole-box table thead, .whole-box table tbody tr{
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .dropdown,
+  .search-bar,
+  .filter-btn {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    font-size: 14px;
+  }
+
+  .filter-btn {
+    background-color: #095d40;
+    color: white;
+    cursor: pointer;
+    border: none;
+    padding: 5px 10px;
+  }
+
+  .action-icon:hover,
+    .export-btn:hover, .add-btn:hover,
+    .filter-btn:hover {
+    background-color: #074f34;
+  }
+
+  .dropdown {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    font-size: 14px;
+  }
+
+  .search-bar {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    font-size: 14px;
+    width: 150px;
+  }
+
+  .announcement {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .announcement h3 {
+    margin: 0;
+    font-size: 18px;
+  }
+
+  .announcement p {
+    margin: 5px 0;
+    color: #737373;
+  }
+
+  .header-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .header-group h2 {
+    margin: 0;
+  }
+
+  .button-container {
+    display: flex;
+    gap: 10px;
+  }
+
+  .export-btn , .add-btn{
+    background-color: #095d40;
+    color: white;
+    cursor: pointer;
+    border: none;
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+    border-radius: 5px;
+    font-size: 14px;
+  }
+
+  .export-btn i , .add-btn i {
+    margin-right: 5px;
+  }
+  .action-icon {
+    background-color: #095d40;
+    height: 100%;
+    width: 30%;
+    color: #fff;
+    border: 1px solid #888;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .action-qr , .action-id{
+    background-color: #095d40;
+    height: 100%;
+    width: 40%;
+    color: #fff;
+    border: 1px solid #888;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  } 
+  th.action,
+  td.action {
+    width: 10%;
+  }
+  th.section,
+  td.section {
+    width: 8%;
+  }
+  th.wmsu_id,
+  td.wmsu_id {
+    width: 10%;
+  }
+  th.contact,
+  td.contact {
+    width: 15%;
+  }
+  .whole-box table th.action,
+  .whole-box table td.action , .main-box table th.action,
+  .main-box table td.action{
+    text-align: center;
+  }
+   /* Modal Styles */
+  .close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+  }
+
+  .close:hover,
+  .close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .modal h2 {
+    margin-top: 0;
+    color: #095d40;
+  }
+
+  .modal label {
+    display: block;
+    margin: 15px 0 5px;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .modal input[type="text"],
+  .modal input[type="date"],
+  .modal input[type="email"],
+  .modal textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+  }
+
+  .horizontal-group {
+    display: flex;
+    gap: 20px;
+  }
+
+  .horizontal-group input.date {
+    width: 40%;
+  }
+
+  .input-group {
+    flex: 1;
+  }
+
+  .modal textarea {
+    height: 250px;
+    resize: vertical;
+  }
+
+  .modal-btn {
+    background-color: #095d40;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .modal-btn:hover {
+    background-color: #06492e;
+  }
+
+  /* Rigth Box QR */
+  
+  td.maxlength , td.section , td.wmsu_id , td.contact {
+    max-width: 20%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.right-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+}
+
+.qr-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#qr-code-img {
+    width: 200px;
+    height: 200px;
+    margin-bottom: 10px;
+}
+
+.qr-name {
+    color: #095d40;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 10px;
+}
+/* QR Scanner page */
+/* left box */
+.left-box-qr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.intern-timein-details,
+.time-in-details {
+  width: 50%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* background-color: #f9f9f9;
+  border: 1px solid #ccc; */
+}
+
+.intern-image img {
+  width: 100px;
+  height: 100px;
+  border: 3px solid #095d40;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+
+.intern-details h3,
+.time-in-info h3 {
+  margin-bottom: 10px;
+  font-size: 20px;
+  color: #095d40;
+  text-align: center;
+}
+
+.intern-details span.total-ojt-hrs{
+  font-size: 22px;
+  color:#095d40;
+}
+.intern-details p {
+  font-size: 16px;
+  color: #333;
+  text-align: left;
+}
+
+.time-in-info p {
+  font-size: 16px;
+  color: #333;
+  text-align: center;
+}
+
+.clock-image img {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 350px;
+  height: auto;
+}
+/* right box */
+.left-box-qr,.right-box-qr {
+  padding: 20px;
+  height: 550px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+}
+
+.left-box-qr {
+  width: 70%;
+  margin-right: 5px;
+}
+
+.right-box-qr {
+  width: 30%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+}
+
+.lottie-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 300px;
+  height: 300px;
+  margin-bottom: 20px;
+}
+
+.start-scan {
+  background-color: #095d40;
+  color: white;
+  cursor: pointer;
+  border: none;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  font-size: 16px;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.start-scan i {
+  margin-left: 5px;
+}
+
+#video {
+  width: 300px;
+  height: 300px;
+  border-radius: 10px; 
+  border: 2px solid #095d40;
+  display: none;
+  object-fit: cover;
+}
+
+/* FRONT ID */
+.id-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  /* Ensure content starts from the top */
+  background: url('../../img/id-front.png') no-repeat center center;
+  background-size: contain;
+  width: 320px;
+  height: 500px;
+  position: relative;
+  text-align: center;
+  color: black;
+  border-radius: 4px;
+  font-family: 'Roboto', sans-serif;
+  overflow: hidden;
+}
+
+.top-left-container {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  gap: 5px;
+  padding-top: 10px;
+  padding-left: 30px;
+}
+
+.wmsu-logo {
+  width: 35px;
+  height: auto;
+}
+
+.university-text {
+  font-size: 12px;
+  line-height: 1.1;
+  margin: 0;
+  color: #fff;
+}
+
+.student-photo {
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  margin-top: 80px;
+  margin-bottom: 8px;
+  border: 3px solid #095d40;
+}
+
+.mid-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 0;
+}
+
+.id-container h3 {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.id-container p {
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.bottom-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 30px;
+  width: 100%;
+  text-align: center;
+}
+
+.bottom-container p {
+  font-size: 8px;
+  font-weight: 500;
+
+}
+
+.bottom-container .value {
+  font-size: 12px;
+  font-weight: bold;
+}

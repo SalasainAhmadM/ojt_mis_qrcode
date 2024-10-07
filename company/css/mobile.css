@@ -1,0 +1,141 @@
+/* For Mobile Screens */
+@media (max-width: 768px) {
+  .bx-menu {
+      display: block; /* Show the hamburger icon in mobile view */
+  }
+}
+
+/* For Web/Desktop Screens */
+@media (min-width: 769px) {
+  .bx-menu {
+      display: none; /* Hide the hamburger icon in web/desktop view */
+  }
+}
+
+/* Sidebar */
+@media (max-width: 420px) {
+  .sidebar.close .nav-links li .sub-menu {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+  }
+
+  .header .school-name {
+    margin-left: 95px;
+    font-size: 10px;
+  }
+
+  .header .school-name img {
+    height: 36px;
+    margin-left: 5px;
+  }
+}
+
+/* home form container */
+@media (max-width: 768px) {
+    .form-container {
+      flex-direction: column;
+      padding: 10px;
+    }
+
+    .form-section {
+      width: 100%;
+      margin-right: 0;
+      margin-bottom: 20px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+    }
+
+    .image-preview img {
+      max-width: 100%;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .form-container {
+      padding: 5px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .btn-confirm {
+      width: 100%;
+      padding: 12px;
+    }
+
+    .image-preview img {
+      max-width: 100%;
+      margin-top: 15px;
+    }
+  }
+
+  /* Modal */
+  @media (max-width: 768px) {
+    .modal {
+      z-index: 100;
+    }
+
+    .modal-content {
+      width: 50%;
+      margin: 15% auto;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .modal-content {
+      width: 60%;
+      margin: 20% auto;
+    }
+
+    .close-btn {
+      font-size: 24px;
+    }
+
+    .proceed-btn {
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+  }
+  /* index form-container */
+  @media (max-width: 900px) {
+    .main-box {
+      flex-direction: column;
+      width: 100%;
+      padding: 10px;
+    }
+
+    .left-box,
+    .right-box {
+      max-width: 100%;
+      width: 100%;
+    }
+
+    .filter-group {
+      flex-direction: row;
+      gap: 10px;
+    }
+
+    .dropdown,
+    .search-bar {
+      width: 100%;
+    }
+
+    .filter-btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+    }
+  }
+

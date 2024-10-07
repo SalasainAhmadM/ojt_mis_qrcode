@@ -1,0 +1,236 @@
+<?php
+session_start();
+require '../conn/connection.php';
+
+// Check if the user is logged in
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: ../index.php"); // Redirect to login page if not logged in
+    exit();
+}
+
+// Fetch admin details from the database
+$admin_id = $_SESSION['user_id'];
+$query = "SELECT * FROM admin WHERE admin_id = ?";
+if ($stmt = $database->prepare($query)) {
+    $stmt->bind_param("i", $admin_id); // Bind parameters
+    $stmt->execute(); // Execute the query
+    $result = $stmt->get_result(); // Get the result
+
+    if ($result->num_rows > 0) {
+        $admin = $result->fetch_assoc(); // Fetch admin details
+    } else {
+        // Handle case where admin is not found
+        $admin = [
+            'admin_firstname' => 'Unknown',
+            'admin_middle' => 'U',
+            'admin_lastname' => 'User',
+            'admin_email' => 'unknown@wmsu.edu.ph'
+        ];
+    }
+    $stmt->close(); // Close the statement
+}
+
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Manage Profile</title>
+    <link rel="icon" href="../img/ccs.png" type="image/icon type">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="./css/style.css">
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="./css/mobile.css">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.5/index.global.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.5/index.global.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+</head>
+
+<body>
+    <div class="header">
+        <i class="fas fa-school"></i>
+        <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                style="color: #095d40;">|</span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
+            <img src="../img/ccs.png">
+        </div>
+    </div>
+    <div class="sidebar close">
+        <div class="profile-details">
+            <img src="../uploads/admin/<?php echo !empty($admin['admin_image']) ? $admin['admin_image'] : 'user.png'; ?>"
+                alt="logout Image" class="logout-img">
+            <div style="margin-top: 10px;" class="profile-info">
+                <span
+                    class="profile_name"><?php echo $admin['admin_firstname'] . ' ' . $admin['admin_middle'] . '. ' . $admin['admin_lastname']; ?></span>
+                <br />
+                <span class="profile_email"><?php echo $admin['admin_email']; ?></span>
+            </div>
+        </div>
+        <hr>
+        <ul class="nav-links">
+            <li>
+                <a href="index.php">
+                    <i class="fas fa-th-large"></i>
+                    <span class="link_name">Dashboard</span>
+                </a>
+                <ul class="sub-menu blank">
+                    <li><a class="link_name" href="index.php">Dashboard</a></li>
+                </ul>
+            </li>
+            <li>
+                <div class="iocn-link">
+                    <a href="user-manage.php">
+                        <i class="fa-solid fa-user"></i>
+                        <span class="link_name">Manage Users</span>
+                    </a>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </div>
+                <ul class="sub-menu">
+                    <li><a class="link_name" href="user-manage.php">User Management</a></li>
+                    <li><a href="./users/adviser.php">Adviser Management</a></li>
+                    <li><a href="./users/company.php">Company Management</a></li>
+                    <li><a href="./users/student.php">Student Management</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="others.php">
+                    <i class="fa-solid fa-ellipsis-h"></i>
+                    <span class="link_name">Others</span>
+                </a>
+                <ul class="sub-menu blank">
+                    <li><a class="link_name" href="others.php">Others</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="calendar.php" class="active">
+                    <i class="fa-regular fa-calendar-days"></i>
+                    <span class="link_name">Calendar</span>
+                </a>
+                <ul class="sub-menu blank">
+                    <li><a class="link_name" href="calendar.php">Calendar</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="setting.php">
+                    <i class="fas fa-cog"></i>
+                    <span class="link_name">Manage Profile</span>
+                </a>
+                <ul class="sub-menu blank">
+                    <li><a class="link_name" href="setting.php">Manage Profile</a></li>
+                </ul>
+            </li>
+            <li>
+                <a onclick="openLogoutModal()">
+                    <div class="logout-details">
+                        <div class="logout-content"></div>
+                        <div class="name-">
+                            <div class="logout_name">
+                                <i class="fas fa-sign-out-alt left-icon"></i>Logout
+                            </div>
+                        </div>
+                        <i class="fas fa-sign-out-alt right-icon"></i>
+                    </div>
+                </a>
+            </li>
+        </ul>
+    </div>
+    <section class="home-section">
+        <div class="home-content">
+            <i class="fas fa-bars bx-menu"></i>
+        </div>
+        <div id="calendar"></div>
+
+    </section>
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="modal">
+        <div class="modal-content">
+            <!-- Lottie Animation -->
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/logout-095d40.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2 style="color: #000">Are you sure you want to logout?</h2>
+            <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+                <button class="confirm-btn" onclick="logout()">Confirm</button>
+                <button class="cancel-btn" onclick="closeModal('logoutModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <style>
+        #calendar {
+            max-width: 600px;
+            margin: 40px auto;
+        }
+    </style>
+
+    <!-- Holiday Modal -->
+    <div id="holidayModal" class="modal">
+        <div class="modal-content">
+            <h2 id="selectedDate">Set Holiday</h2>
+            <p>Is this date a holiday?</p>
+            <div class="modal-buttons">
+                <button class="confirm-btn" onclick="setHoliday()">Yes</button>
+                <button class="cancel-btn" onclick="closeModal()">No</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Open modal function
+        function openModal(dateStr) {
+            document.getElementById('selectedDate').innerText = "Set Holiday for " + dateStr;
+            document.getElementById('holidayModal').style.display = 'flex';
+        }
+
+        // Close modal function
+        function closeModal() {
+            document.getElementById('holidayModal').style.display = 'none';
+        }
+
+        // Set holiday function
+        function setHoliday() {
+            alert("Holiday has been set.");
+            closeModal();
+        }
+
+        // Initialize FullCalendar
+        document.addEventListener('DOMContentLoaded', function () {
+            var calendarEl = document.getElementById('calendar');
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                initialDate: new Date(),
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth' // Only month view
+                },
+                weekends: false, // Disable weekends
+                navLinks: true,
+                editable: false,
+                selectable: true,
+                dayMaxEvents: true,
+                dateClick: function (info) {
+                    var clickedDate = new Date(info.date);
+                    var day = clickedDate.getDay();
+
+                    // If it's a weekday, open the modal
+                    if (day !== 0 && day !== 6) {
+                        openModal(info.dateStr);
+                    }
+                }
+            });
+
+            calendar.render();
+        });
+    </script>
+
+    <script src="./js/script.js"></script>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+</body>
+
+</html>

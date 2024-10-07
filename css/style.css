@@ -1,0 +1,458 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css");
+
+/* Basic modal styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.modal-content {
+  background-color: white;
+  margin: 15% auto;
+  padding: 20px;
+  border: 3px solid #8B0000;
+  width: 30%;
+  text-align: center;
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.close-btn {
+  color: gray;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+  color: darkgray;
+}
+
+.proceed-btn {
+  background-color: #095d40;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+  margin-top: 20px;
+  transition: background-color 0.3s ease;
+}
+
+.proceed-btn:hover {
+  background-color: #074f34;
+}
+* {
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #ddd;
+  font-size: 14px;
+}
+
+.container {
+  background-color: #fff;
+  width: 760px;
+  max-width: 100vw;
+  height: 580px;
+  position: relative;
+  overflow-x: hidden;
+  border-radius: 10px; 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.container .forms-container {
+  position: relative;
+  width: 50%;
+  text-align: center;
+}
+
+.container .forms-container .form-control {
+  position: absolute;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  height: 580px;
+  transition: all 0.5s ease-in;
+}
+
+.container .forms-container .form-control h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.container .forms-container .form-control form {
+  display: flex;
+  flex-direction: column;
+  margin: 0px 30px;
+}
+
+.container .forms-container .form-control form input {
+  margin: 5px 0px;
+  border: none;
+  padding: 15px;
+  background-color: #efefef;
+  border-radius: 5px;
+}
+
+.container .forms-container .form-control form button {
+  border: none;
+  padding: 20px;
+  margin-top: 5px;
+  background-color: #095d40;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.container .forms-container .form-control form button:focus {
+  outline: none;
+}
+
+.container .forms-container .form-control span {
+  margin: 10px 0px;
+}
+
+.container .forms-container .form-control.signup-form {
+  opacity: 0;
+  z-index: 1;
+  left: 200%;
+}
+
+.intro-control__inner img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto 20px auto; 
+  object-fit: contain; 
+}
+
+.container .forms-container .form-control.signin-form {
+  opacity: 1;
+  z-index: 2;
+  left: 0%;
+}
+
+.container .intros-container {
+  position: relative;
+  left: 50%;
+  width: 50%;
+  text-align: center;
+}
+
+.container .intros-container .intro-control {
+  position: absolute;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  height: 580px;
+  color: #fff;
+  background: linear-gradient(170deg, #095d40, #095d40);
+  transition: all 0.5s ease-in;
+}
+
+.container .intros-container .intro-control .intro-control__inner {
+  margin: 0px 30px;
+}
+
+.container .intros-container .intro-control button {
+  border: none;
+  padding: 15px 30px;
+  background-color: #fff;
+  border-radius: 50px;
+  color: #000;
+  margin: 10px 0px;
+  cursor: pointer;
+}
+
+.container .intros-container .intro-control button:focus,
+.container .intros-container .intro-control button:hover {
+  outline: none;
+  color: #000;
+  background-color: #e6e6e6;
+}
+
+.container .intros-container .intro-control h3,
+.container .intros-container .intro-control p {
+  margin: 10px 0px;
+}
+
+.container .intros-container .intro-control.signin-intro {
+  opacity: 1;
+  z-index: 2;
+}
+
+.container .intros-container .intro-control.signup-intro {
+  opacity: 0;
+  z-index: 1;
+}
+
+.change .forms-container .form-control.signup-form {
+  opacity: 1;
+  z-index: 2;
+  transform: translateX(-100%);
+}
+
+.change .forms-container .form-control.signup-form button {
+  background-color: #095d40 !important;
+}
+
+.change .forms-container .form-control.signin-form {
+  opacity: 0;
+  z-index: 1;
+  transform: translateX(-100%);
+}
+
+.change .intros-container .intro-control {
+  transform: translateX(-100%);
+  background: linear-gradient(170deg, #095d40, #095d40);
+}
+
+.change .intros-container .intro-control #signin-btn {
+  background-color: #fff;
+}
+
+.change .intros-container .intro-control #signin-btn:hover {
+  background-color: #e6e6e6;
+}
+
+.change .intros-container .intro-control.signin-intro {
+  opacity: 0;
+  z-index: 1;
+}
+
+.change .intros-container .intro-control.signup-intro {
+  opacity: 1;
+  z-index: 2;
+}
+
+.role-fields {
+  display: none;
+  flex-direction: column;
+}
+
+.checkbox-group {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.checkbox-group label {
+  margin: 0 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin-right: 5px;
+}
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding-right: 40px; 
+  box-sizing: border-box;
+}
+.input-wrapper .toggle-password {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 40px; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  user-select: none; 
+}
+
+.input-wrapper .toggle-password i {
+  font-size: 18px;
+  color: #999;
+}
+
+.flex-wrapper {
+  display: flex;
+  gap: 10px;
+}
+
+.flex-wrapper input:first-child {
+  flex: 6;
+}
+
+.flex-wrapper input:last-child {
+  flex: 1;
+}
+.forgot-password-link {
+  margin-top: 8px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.forgot-password-link a {
+  color: #000;
+  text-decoration: none;
+}
+
+.forgot-password-link a:hover {
+  text-decoration: underline;
+}
+/* CSS for Signup Button and Password Strength Indicators */
+#signup-button {
+  width: 100%;
+  padding: 10px;
+  background-color: #095d40;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s, opacity 0.3s;
+  opacity: 0.6;
+}
+
+#signup-button:enabled {
+  opacity: 1;
+}
+
+#signup-button:hover:enabled {
+  background-color: #074d34;
+}
+
+/* CSS for Password Strength and Instruction Text */
+.password-strength {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #666;
+}
+
+
+#signup_instruction_text {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #8B0000;
+  display: block;
+  height: 15px;
+}
+
+
+
+
+@media screen and (max-width: 580px) {
+  .container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .container .forms-container {
+    order: 2;
+    width: 100%;
+    height: 50vh;
+    position: relative;
+  }
+
+  .container .forms-container .form-control {
+    position: absolute;
+    height: 50vh;
+    width: 100%;
+    transition: transform 0.5s ease-in-out;
+  }
+
+  .container .forms-container .form-control.signup-form {
+    left: 100%; /* Offscreen by default */
+    margin-top: 70px;
+  }
+
+  .container .forms-container .form-control.signin-form {
+    left: 0; /* Visible by default */
+  }
+
+  .container .intros-container {
+    order: 1;
+    width: 100%;
+    left: 0%;
+    height: 40vh;
+  }
+
+  .container .intros-container .intro-control {
+    position: absolute;
+    height: 40vh;
+    width: 100%;
+    transition: transform 0.5s ease-in-out;
+  }
+  .intro-control__inner img {
+    max-width: 50%;
+    height: auto;
+    display: block;
+    margin: 0 auto 20px auto; 
+    object-fit: contain; 
+  }
+  /* When in "signup" state */
+  .change .forms-container .form-control.signup-form {
+    transform: translateX(-100%); /* Bring signup form into view */
+  }
+
+  .change .forms-container .form-control.signin-form {
+    transform: translateX(-100%); /* Push signin form out of view */
+  }
+
+  /* When in "signup" state, swap intros */
+  .change .intros-container .signin-intro {
+    transform: translateX(100%); /* Push signin intro out of view */
+  }
+
+  .change .intros-container .signup-intro {
+    transform: translateX(0%); /* Bring signup intro into view */
+  }
+}
+
+@media (max-width: 768px) {
+  .modal {
+    z-index: 100;
+  }
+
+  .modal-content {
+    width: 50%;
+    margin: 15% auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-content {
+    width: 60%;
+    margin: 20% auto;
+  }
+
+  .close-btn {
+    font-size: 24px;
+  }
+
+  .proceed-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
