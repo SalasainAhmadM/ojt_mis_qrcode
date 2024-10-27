@@ -10,6 +10,60 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <style>
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+        background-color: white;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 30%;
+        text-align: center;
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .close-btn {
+        color: gray;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        border: none;
+        background: none;
+        cursor: pointer;
+    }
+
+    .close-btn:hover,
+    .close-btn:focus {
+        color: darkgray;
+    }
+
+    .proceed-btn {
+        background-color: #074f34;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 16px;
+        margin-top: 20px;
+        transition: background-color 0.3s ease;
+    }
+
+    .proceed-btn:hover {
+        background-color: #05613e;
+    }
+
     /* CSS for Reset Password Page */
     body {
         margin: 0;
@@ -149,7 +203,8 @@
             <p>Enter your new password below to reset it.</p>
             <form action="./update-password.php" method="POST">
                 <div class="input-group">
-                    <input type="hidden" name="token" value="<?php echo htmlspecialchars($_GET['token']); ?>">
+                    <input type="hidden" name="token"
+                        value="<?php echo isset($_POST['token']) ? htmlspecialchars($_POST['token']) : htmlspecialchars($_GET['token']); ?>">
                     <input type="password" id="new_password" name="new_password" placeholder="New Password" required>
                     <span class="toggle-password">
                         <i style="margin-bottom: 15px;" class="fas fa-eye"></i>
@@ -170,6 +225,79 @@
         </div>
     </div>
 
+    <!-- Password Reset Success Modal -->
+    <div id="passwordResetSuccessModal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2>Password Reset Successful!</h2>
+            <p>Your password has been successfully reset. You can now log in with your new password.</p>
+            <button class="proceed-btn" onclick="proceedToLogin()">Proceed</button>
+        </div>
+    </div>
+
+    <script>
+        function proceedToLogin() {
+            window.location.href = '../index.php';
+        }
+    </script>
+
+
+    <!-- Password Reset Failure Modal -->
+    <div id="passwordResetFailureModal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2 style="color: #8B0000">Password Reset Failed</h2>
+            <p style="color: #8B0000">There was an error resetting your password. Please try again later.</p>
+            <button class="proceed-btn" onclick="closeModal('passwordResetFailureModal')">Confirm</button>
+        </div>
+    </div>
+
+    <!-- Invalid Token Modal -->
+    <div id="invalidTokenModal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2 style="color: #8B0000">Invalid or Expired Token</h2>
+            <p style="color: #8B0000">The password reset token is either invalid or has expired. Please request a new
+                one.</p>
+            <button class="proceed-btn" onclick="closeModal('invalidTokenModal')">Confirm</button>
+        </div>
+    </div>
+
+    <script>
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = "block";
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+        }
+
+        // Show modals based on URL parameter
+        document.addEventListener("DOMContentLoaded", function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const resetParam = urlParams.get('reset');
+
+            if (resetParam === 'success') {
+                showModal('passwordResetSuccessModal');
+            } else if (resetParam === 'failure') {
+                showModal('passwordResetFailureModal');
+            } else if (resetParam === 'invalid_token') {
+                showModal('invalidTokenModal');
+            }
+        });
+    </script>
     <script>
         // Password toggle functionality
         const togglePassword = document.querySelectorAll('.toggle-password');
@@ -224,6 +352,7 @@
             }
         }
     </script>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 
 </html>

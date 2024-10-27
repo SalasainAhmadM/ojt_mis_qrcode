@@ -377,9 +377,15 @@ hr {
     margin-left: 20px;
   }
 
-  .left-box,
   .right-box {
     padding: 20px;
+    height: 500px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+  }
+  .left-box{
+    padding: 30px;
     height: 500px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -723,7 +729,7 @@ hr {
   }
 
   .modal input[type="text"],
-  .modal input[type="date"], .modal select[type="text"], .modal input[type="email"],.modal input[type="password"],
+  .modal input[type="date"], .modal select[type="text"], .modal select#dayType, .modal input[type="email"],.modal input[type="time"],.modal input[type="password"],
   .modal textarea {
     width: 100%;
     padding: 10px;
@@ -767,7 +773,7 @@ hr {
 
   /* Logout Modal */
   .confirm-btn,
-  .cancel-btn {
+  .cancel-btn, .confirm-dlt {
     padding: 10px 20px;
     font-size: 16px;
     border-radius: 6px;
@@ -775,21 +781,21 @@ hr {
     cursor: pointer;
   }
 
-  .confirm-btn {
+  .confirm-btn, .confirm-dlt{
     background-color: #095d40;
     color: white;
   }
 
-  .cancel-btn {
+  .cancel-btn  {
     background-color: #A31C1C;
     color: white;
   }
 
-  .confirm-btn:hover {
+  .confirm-btn:hover, .confirm-dlt:hover{
     background-color: #073e2b;
   }
 
-  .cancel-btn:hover {
+  .cancel-btn:hover  {
     background-color: #8B0000;
   }
 
@@ -972,7 +978,16 @@ td.image img {
 }
 
 /* ADVISER MANAGEMENT */
-
+.modal-content-date {
+  background-color: #fff;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  text-align: center;
+  width: 30%;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
 .modal-content-big {
   background-color: #fff;
   margin: auto;
@@ -1133,3 +1148,70 @@ td.image img {
 }
 
 /* manage admin end */
+
+/* calendar */
+#calendar {
+  padding: 20px;
+  height: 500px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  width: 70%;
+}
+
+.right-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#qr-code-img {
+  width: 200px;
+  height: 200px;
+  margin-bottom: 10px;
+}
+
+.qr-name,
+.qr-date {
+  color: #095d40;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.company-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  background-color: #fff;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  width: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.company-img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 15px;
+}
+
+.company-name {
+  font-size: 18px;
+  color: #333;
+  font-weight: bold;
+}
+/* calendar end */

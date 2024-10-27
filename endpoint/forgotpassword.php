@@ -10,6 +10,60 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <style>
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 30%;
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .close-btn {
+    color: gray;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    border: none;
+    background: none;
+    cursor: pointer;
+  }
+
+  .close-btn:hover,
+  .close-btn:focus {
+    color: darkgray;
+  }
+
+  .proceed-btn {
+    background-color: #074f34;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+  }
+
+  .proceed-btn:hover {
+    background-color: #05613e;
+  }
+
   /* CSS for Forgot Password Page */
   body {
     margin: 0;
@@ -99,6 +153,10 @@
   }
 
   @media screen and (max-width: 400px) {
+    .modal-content {
+      width: 80%;
+    }
+
     .forgot-password-container {
       width: 90%;
       padding: 20px;
@@ -134,6 +192,94 @@
       <a href="../index.php" class="back-to-login">Back to Signin</a>
     </div>
   </div>
+
+  <!-- Password Reset Success Modal -->
+  <div id="passwordResetSuccessModal" class="modal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeModal('passwordResetSuccessModal')">&times;</button>
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+          style="width: 150px; height: 150px;" loop autoplay>
+        </lottie-player>
+      </div>
+      <h2>Password Reset Link Sent!</h2>
+      <p>A password reset link has been sent to your email.</p>
+      <button class="proceed-btn" onclick="goToGmail()">Proceed</button>
+    </div>
+  </div>
+
+  <!-- Password Reset Failure Modal -->
+  <div id="passwordResetFailureModal" class="modal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
+          style="width: 150px; height: 150px;" loop autoplay>
+        </lottie-player>
+      </div>
+      <h2 style="color: #8B0000">Failed to Send Password Reset Link</h2>
+      <p style="color: #8B0000">There was an error sending the password reset email. Please try again later.</p>
+      <button class="proceed-btn" onclick="closeModal('passwordResetFailureModal')">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Token Storage Failure Modal -->
+  <div id="tokenStorageFailureModal" class="modal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
+          style="width: 150px; height: 150px;" loop autoplay>
+        </lottie-player>
+      </div>
+      <h2 style="color: #8B0000">Failed to Store Token</h2>
+      <p style="color: #8B0000">There was an error saving the reset token. Please try again later.</p>
+      <button class="proceed-btn" onclick="closeModal('tokenStorageFailureModal')">Cancel</button>
+    </div>
+  </div>
+
+  <!-- No User Found Modal -->
+  <div id="noUserFoundModal" class="modal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
+          style="width: 150px; height: 150px;" loop autoplay>
+        </lottie-player>
+      </div>
+      <h2 style="color: #8B0000">No User Found</h2>
+      <p style="color: #8B0000">The email address you entered does not match any account. Please try again.</p>
+      <button class="proceed-btn" onclick="closeModal('noUserFoundModal')">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Script to handle modals and URL-based logic -->
+  <script>
+    function showModal(modalId) {
+      document.getElementById(modalId).style.display = "block";
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = "none";
+    }
+    function goToGmail() {
+      window.location.href = "https://mail.google.com";
+    }
+
+    // Show modals based on URL parameter
+    document.addEventListener("DOMContentLoaded", function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const resetParam = urlParams.get('reset');
+
+      if (resetParam === 'success') {
+        showModal('passwordResetSuccessModal');
+      } else if (resetParam === 'email_failure') {
+        showModal('passwordResetFailureModal');
+      } else if (resetParam === 'token_failure') {
+        showModal('tokenStorageFailureModal');
+      } else if (resetParam === 'no_user') {
+        showModal('noUserFoundModal');
+      }
+    });
+  </script>
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 
 </html>

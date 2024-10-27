@@ -141,9 +141,310 @@ if ($stmt = $database->prepare($query)) {
         <div class="home-content">
             <i class="fas fa-bars bx-menu"></i>
         </div>
-        <div id="calendar"></div>
+        <div class="content-wrapper">
 
+            <div class="header-box"> 
+                <label style="color: #a6a6a6; margin-left: 5px;">Schedule Management</label>
+            </div>
+            <div class="main-box">
+                <div class="right-box">
+                    <?php
+                    $companyQuery = "SELECT company_id, company_image, company_name FROM company";
+                    if ($companyStmt = $database->prepare($companyQuery)) {
+                        $companyStmt->execute();
+                        $companyResult = $companyStmt->get_result();
+
+                        while ($company = $companyResult->fetch_assoc()) {
+                            $companyImage = !empty($company['company_image']) ? htmlspecialchars($company['company_image']) : 'user.png';
+                            $companyName = htmlspecialchars($company['company_name']);
+
+                            echo '
+                         <div class="company-item">
+                         <img src="../uploads/company/' . $companyImage . '" alt="Company Image" class="company-img">
+                         <div class="company-name">' . $companyName . '</div>
+                         </div>';
+                        }
+
+                        $companyStmt->close();
+                    }
+                    ?>
+                </div>
+
+                <div id="calendar"></div>
+
+            </div>
+        </div>
     </section>
+
+    <!-- Schedule Holiday Modal -->
+    <div id="scheduleHolidayModal" class="modal">
+        <div class="modal-content-date">
+            <h2 style="color: #000" id="selectedDate"></h2>
+            <form id="scheduleForm" action="submit_holiday.php" method="POST">
+                <input type="hidden" id="scheduleDate" name="date">
+                <div>
+                    <label for="holidayName">Holiday Name</label>
+                    <input type="text" id="holidayName" name="holidayName" placeholder="Enter Holiday Name" required>
+                </div>
+                <div class="modal-buttons" style="margin-top: 20px;">
+                    <button type="submit" class="confirm-btn">Confirm</button>
+                    <button type="button" class="cancel-btn" onclick="closeModal('scheduleHolidayModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Edit Holiday Modal -->
+<div id="editHolidayModal" class="modal">
+    <div class="modal-content-date">
+        <h2 style="color: #000" id="editSelectedDate"></h2> 
+        <form id="editForm" action="edit_holiday.php" method="POST">
+            <input type="hidden" id="holidayId" name="holidayId">
+            <input type="hidden" id="editDate" name="date"> 
+            
+            <div>
+                <label for="editHolidayName">Holiday Name</label>
+                <input type="text" id="editHolidayName" name="holidayName" placeholder="Enter Holiday Name" required>
+            </div>
+            
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button type="button" class="confirm-dlt" onclick="triggerDelete()">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+                <button type="submit" class="confirm-btn">Confirm</button>
+                <button type="button" class="cancel-btn" onclick="closeModal('editHolidayModal')">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+  
+
+    <script>
+        function triggerDelete() {
+        const form = document.getElementById('editForm');
+        form.action = 'delete_holiday.php'; 
+        form.submit(); 
+    }
+    let selectedDate = null;
+
+    // Function to format the date
+    function formatDate(dateStr) {
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Intl.DateTimeFormat('en-US', options).format(new Date(dateStr));
+    }
+
+    // Close modal function for future dates
+    function closeModal() {
+        document.getElementById('scheduleHolidayModal').style.display = 'none';
+    }
+
+    // Open modal for past dates
+    function openPastDateModal() {
+        document.getElementById('pastDateModal').style.display = 'flex';
+    }
+
+    // Close modal for past dates
+    function closePastDateModal() {
+        document.getElementById('pastDateModal').style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+    var calendarEl = document.getElementById('calendar');
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        initialDate: new Date(),
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth'
+        },
+        weekends: false,
+        navLinks: true,
+        editable: false,
+        selectable: true,
+        dayMaxEvents: true,
+
+        eventSources: [
+            {
+                url: 'fetch_holidays.php', 
+                method: 'GET',
+                failure: function() {
+                    alert('There was an error while fetching holiday events!');
+                },
+                extraParams: function() { 
+                    return {};
+                },
+            }
+        ],
+
+        dateClick: function (info) {
+            var clickedDate = new Date(info.date);
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (clickedDate < today) {
+                openPastDateModal();
+            } else {
+                var day = clickedDate.getDay();
+                if (day !== 0 && day !== 6) {
+                    // Check if the clicked date has an event (holiday)
+                    var existingHoliday = calendar.getEvents().find(event => event.startStr === info.dateStr);
+                    
+                    if (existingHoliday) {
+                        // If holiday exists, open Edit Holiday Modal
+                        openEditModal(existingHoliday);
+                    } else {
+                        // If no holiday, open Schedule Holiday Modal
+                        openModal(info.dateStr);
+                    }
+                }
+            }
+        }
+    });
+
+    calendar.render();
+});
+
+function openEditModal(holiday) {
+    const formattedDate = formatDate(holiday.startStr);
+    document.getElementById('editSelectedDate').innerHTML = 'Edit <span style="color: #8B0000;">Holiday</span> for ' + formattedDate;
+    
+    document.getElementById('holidayId').value = holiday.extendedProps.holidayId;
+    
+    document.getElementById('editHolidayName').value = holiday.title;
+    document.getElementById('editDate').value = holiday.startStr;
+
+    document.getElementById('editHolidayModal').style.display = 'flex';
+}
+
+function openModal(dateStr) {
+    selectedDate = dateStr;
+    const formattedDate = formatDate(dateStr);
+    document.getElementById('selectedDate').innerHTML = 'Set <span style="color: #8B0000;">Holiday</span> for ' + formattedDate;
+    document.getElementById('scheduleDate').value = dateStr;
+    document.getElementById('scheduleHolidayModal').style.display = 'flex';
+}
+
+    // Show modal
+    function showModal(modalId) {
+        var modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'block';
+        }
+    }
+
+    function closeModal(modalId) {
+        var modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    <?php if (isset($_SESSION['schedule_success']) && $_SESSION['schedule_success']): ?>
+    window.onload = function () {
+        showModal('scheduleSuccessModal');
+        <?php unset($_SESSION['schedule_success']); ?>
+    };
+    <?php elseif (isset($_SESSION['edit_success']) && $_SESSION['edit_success']): ?>
+    window.onload = function () {
+        showModal('editSuccessModal');
+        <?php unset($_SESSION['edit_success']); ?>
+    };
+    <?php elseif (isset($_SESSION['delete_success']) && $_SESSION['delete_success']): ?>
+    window.onload = function () {
+        showModal('deleteSuccessModal');
+        <?php unset($_SESSION['delete_success']); ?>
+    };
+<?php endif; ?>
+
+<?php if (isset($_SESSION['error_message'])): ?>
+    window.onload = function () {
+        showModal('scheduleErrorModal');
+        <?php unset($_SESSION['error_message']); ?>
+    };
+<?php endif; ?>
+</script>
+
+
+<!-- Modal for past dates -->
+<div id="pastDateModal" class="modal">
+    <div class="modal-content">
+        <!-- Lottie Animation for Error -->
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
+                style="width: 150px; height: 150px;" loop autoplay>
+            </lottie-player>
+        </div>
+        <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+            <button class="cancel-btn" onclick="closePastDateModal()">Close</button>
+        </div>
+    </div>
+</div>
+<!-- Schedule Success Modal -->
+<div id="scheduleSuccessModal" class="modal">
+    <div class="modal-content">
+        <!-- Lottie Animation for Success -->
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+                style="width: 150px; height: 150px;" loop autoplay>
+            </lottie-player>
+        </div>
+        <h2 style="color: #000">Holiday successfully scheduled!</h2>
+        <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+            <button class="confirm-btn" onclick="closeModal('scheduleSuccessModal')">Close</button>
+        </div>
+    </div>
+</div>
+<!-- Edit Success Modal -->
+<div id="editSuccessModal" class="modal">
+    <div class="modal-content">
+        <!-- Lottie Animation for Success -->
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+                style="width: 150px; height: 150px;" loop autoplay>
+            </lottie-player>
+        </div>
+        <h2 style="color: #000">Holiday successfully updated!</h2>
+        <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+            <button class="confirm-btn" onclick="closeModal('editSuccessModal')">Close</button>
+        </div>
+    </div>
+</div>
+<!-- Delete Success Modal -->
+<div id="deleteSuccessModal" class="modal">
+    <div class="modal-content">
+        <!-- Lottie Animation for Success -->
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+                style="width: 150px; height: 150px;" loop autoplay>
+            </lottie-player>
+        </div>
+        <h2 style="color: #000">Holiday successfully deleted!</h2>
+        <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+            <button class="confirm-btn" onclick="closeModal('deleteSuccessModal')">Close</button>
+        </div>
+    </div>
+</div>
+<!-- Schedule Error Modal -->
+<div id="scheduleErrorModal" class="modal">
+    <div class="modal-content">
+        <!-- Lottie Animation for Error -->
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
+                style="width: 150px; height: 150px;" loop autoplay>
+            </lottie-player>
+        </div>
+        <h2 style="color: #000">
+            <?php echo isset($_SESSION['error_message']) ? $_SESSION['error_message'] : 'An error occurred'; ?>
+        </h2>
+        <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+            <button class="confirm-btn" onclick="closeModal('scheduleErrorModal')">Close</button>
+        </div>
+    </div>
+</div>
+
     <!-- Logout Confirmation Modal -->
     <div id="logoutModal" class="modal">
         <div class="modal-content">
@@ -160,77 +461,38 @@ if ($stmt = $database->prepare($query)) {
             </div>
         </div>
     </div>
-    <style>
-        #calendar {
-            max-width: 600px;
-            margin: 40px auto;
-        }
-    </style>
-
-    <!-- Holiday Modal -->
-    <div id="holidayModal" class="modal">
-        <div class="modal-content">
-            <h2 id="selectedDate">Set Holiday</h2>
-            <p>Is this date a holiday?</p>
-            <div class="modal-buttons">
-                <button class="confirm-btn" onclick="setHoliday()">Yes</button>
-                <button class="cancel-btn" onclick="closeModal()">No</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Open modal function
-        function openModal(dateStr) {
-            document.getElementById('selectedDate').innerText = "Set Holiday for " + dateStr;
-            document.getElementById('holidayModal').style.display = 'flex';
-        }
-
-        // Close modal function
-        function closeModal() {
-            document.getElementById('holidayModal').style.display = 'none';
-        }
-
-        // Set holiday function
-        function setHoliday() {
-            alert("Holiday has been set.");
-            closeModal();
-        }
-
-        // Initialize FullCalendar
-        document.addEventListener('DOMContentLoaded', function () {
-            var calendarEl = document.getElementById('calendar');
-
-            var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                initialDate: new Date(),
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth' // Only month view
-                },
-                weekends: false, // Disable weekends
-                navLinks: true,
-                editable: false,
-                selectable: true,
-                dayMaxEvents: true,
-                dateClick: function (info) {
-                    var clickedDate = new Date(info.date);
-                    var day = clickedDate.getDay();
-
-                    // If it's a weekday, open the modal
-                    if (day !== 0 && day !== 6) {
-                        openModal(info.dateStr);
-                    }
-                }
-            });
-
-            calendar.render();
-        });
-    </script>
-
     <script src="./js/script.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 
 </html>
+
+
+ <!-- Schedule Modal -->
+    <!-- <div id="scheduleModal" class="modal">
+        <div class="modal-content-date">
+            <h2 id="selectedDate">Set Schedule</h2>
+            <form id="scheduleForm" action="submit_schedule.php" method="POST">
+                <input type="hidden" id="scheduleDate" name="date">
+                <div>
+                    <label for="timeIn">Time In:</label>
+                    <input type="time" id="timeIn" name="time_in" value="08:00" required>
+                </div>
+                <div>
+                    <label for="timeOut">Time Out:</label>
+                    <input type="time" id="timeOut" name="time_out" value="16:00" required>
+                </div>
+                <div>
+                    <label for="dayType">Day Type:</label>
+                    <select id="dayType" name="day_type" required>
+                        <option value="Regular">Regular</option>
+                        <option value="Holiday">Holiday</option>
+                    </select>
+                </div>
+                <div class="modal-buttons" style="margin-top: 20px;">
+                    <button type="submit" class="confirm-btn">Save Schedule</button>
+                    <button type="button" class="cancel-btn" onclick="closeModal('scheduleModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div> -->

@@ -96,7 +96,7 @@ if ($departments_result->num_rows > 0) {
                 </div>
                 <ul class="sub-menu">
                     <li><a class="link_name" href="interns.php">Manage Interns</a></li>
-                    <li><a href="./intern/intern-profile.php">Student Profile</a></li>
+                    <!-- <li><a href="./intern/intern-profile.php">Student Profile</a></li> -->
                     <li><a href="./intern/intern-reports.php">Intern Reports</a></li>
                 </ul>
             </li>

@@ -40,6 +40,8 @@ if ($stmt = $database->prepare($query)) {
     <link rel="icon" href="../../img/ccs.png" type="image/icon type">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 </head>
@@ -129,15 +131,6 @@ if ($stmt = $database->prepare($query)) {
                 </a>
                 <ul class="sub-menu blank">
                     <li><a class="link_name" href="../message.php">Message</a></li>
-                </ul>
-            </li>
-            <li>
-                <a href="../others.php">
-                    <i class="fa-solid fa-ellipsis-h"></i>
-                    <span class="link_name">Others</span>
-                </a>
-                <ul class="sub-menu blank">
-                    <li><a class="link_name" href="../others.php">Others</a></li>
                 </ul>
             </li>
             <li>

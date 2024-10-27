@@ -106,9 +106,10 @@ if ($course_sections_result->num_rows > 0) {
     <title>Intern - Settings</title>
     <link rel="icon" href="../img/ccs.png" type="image/icon type">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="./css/style.css">
-    <link rel="stylesheet" href="./css/index.css">
-    <link rel="stylesheet" href="./css/mobile.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <!-- <link rel="stylesheet" href="./css/style.css"> -->
+    <!-- <link rel="stylesheet" href="./css/index.css"> -->
+    <link rel="stylesheet" href="../css/mobile.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
 
@@ -191,7 +192,7 @@ if ($course_sections_result->num_rows > 0) {
     </div>
     <section class="home-section">
         <div class="home-content">
-            <i class="fas fa-bars bx-menu"></i>
+            <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
         </div>
         <form style="" class="form-container">
             <div style="padding: 10px; margin-left: 20px;" class="form-section">

@@ -46,7 +46,6 @@ window.addEventListener("resize", checkWindowSize);
 function openLogoutModal() {
   document.getElementById("logoutModal").style.display = "block";
 }
-
 // Function to close the modal
 function closeModal(modalId) {
   document.getElementById(modalId).style.display = "none";

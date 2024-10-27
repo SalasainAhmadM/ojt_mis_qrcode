@@ -298,6 +298,11 @@
   .modal input[type="text"],
   .modal input[type="date"],
   .modal input[type="email"],
+  .modal select[type="text"], 
+  .modal select#dayType, 
+  .modal select#editDayType,
+  .modal input[type="time"],
+  .modal input[type="password"],
   .modal textarea {
     width: 100%;
     padding: 10px;
@@ -306,7 +311,7 @@
     border-radius: 5px;
     box-sizing: border-box;
   }
-
+  
   .horizontal-group {
     display: flex;
     gap: 20px;
@@ -347,33 +352,115 @@
     text-overflow: ellipsis;
 }
 
+/*  */
+
+#calendar {
+  padding: 30px;
+  height: 500px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  width: 70%;
+}
+
+.modal-content-date {
+  background-color: #fff;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  text-align: center;
+  width: 30%;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
 .right-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
 }
 
 .qr-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 #qr-code-img {
-    width: 200px;
-    height: 200px;
-    margin-bottom: 10px;
+  width: 200px;
+  height: 200px;
+  margin-bottom: 10px;
 }
 
-.qr-name {
-    color: #095d40;
-    font-size: 18px;
-    font-weight: bold;
-    text-align: center;
-    margin-top: 10px;
+.qr-name,
+.qr-date {
+  color: #095d40;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.time-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 10px;
+  padding: 0 20px;
+}
+
+.time-label {
+  font-size: 16px;
+  color: #333;
+  font-weight: bold;
+  margin-right: 5px;
+}
+.holiday {
+  color: #8B0000;
+}
+.holiday-label {
+  color: #8B0000; 
+  font-size: 18px; 
+  font-weight: bold;
+  text-align: center; 
+  margin-top: 4px; 
+}
+
+.time-label {
+  display: flex;
+  flex-direction: column; 
+  align-items: center;
+}
+
+.time-in-label,
+.time-out-label {
+  font-size: 16px; 
+  color: #333; 
+  font-weight: bold;
+}
+.action-buttons {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.action-buttons button {
+  background-color: #095d40;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  font-size: 16px;
+  cursor: pointer;
+  margin: 5px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+  /* display: none; */
+}
+
+.action-buttons button:hover {
+  background-color: #05613e;
 }
 /* QR Scanner page */
 /* left box */
@@ -445,7 +532,7 @@
 
 .left-box-qr {
   width: 70%;
-  margin-right: 5px;
+  /* margin-right: 5px; */
 }
 
 .right-box-qr {

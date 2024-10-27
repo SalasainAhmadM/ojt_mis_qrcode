@@ -30,6 +30,7 @@ if ($stmt = $database->prepare($query)) {
     $stmt->close(); // Close the statement
 }
 
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -41,6 +42,8 @@ if ($stmt = $database->prepare($query)) {
     <link rel="icon" href="../../img/ccs.png" type="image/icon type">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mobile.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 </head>
@@ -86,7 +89,7 @@ if ($stmt = $database->prepare($query)) {
                 </div>
                 <ul class="sub-menu">
                     <li><a class="link_name" href="../interns.php">Manage Interns</a></li>
-                    <li><a href="intern-profile.php">Student Profile</a></li>
+                    <!-- <li><a href="intern-profile.php">Student Profile</a></li> -->
                     <li><a href="intern-reports.php">Intern Reports</a></li>
                 </ul>
             </li>
@@ -133,15 +136,6 @@ if ($stmt = $database->prepare($query)) {
                 </ul>
             </li>
             <li>
-                <a href="../others.php">
-                    <i class="fa-solid fa-ellipsis-h"></i>
-                    <span class="link_name">Others</span>
-                </a>
-                <ul class="sub-menu blank">
-                    <li><a class="link_name" href="../others.php">Others</a></li>
-                </ul>
-            </li>
-            <li>
                 <a href="../setting.php">
                     <i class="fas fa-cog"></i>
                     <span class="link_name">Settings</span>
@@ -169,6 +163,8 @@ if ($stmt = $database->prepare($query)) {
         <div class="home-content">
             <i class="fas fa-bars bx-menu"></i>
         </div>
+
+
     </section>
     <!-- Logout Confirmation Modal -->
     <div id="logoutModal" class="modal">

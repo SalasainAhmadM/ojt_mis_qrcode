@@ -62,9 +62,10 @@ $current_page = $pagination_data['current_page'];
   <title>Intern - Journal</title>
   <link rel="icon" href="../img/ccs.png" type="image/icon type">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="./css/style.css">
-  <link rel="stylesheet" href="./css/index.css">
-  <link rel="stylesheet" href="./css/mobile.css">
+  <link rel="stylesheet" href="../css/main.css">
+  <!-- <link rel="stylesheet" href="./css/style.css"> -->
+  <!-- <link rel="stylesheet" href="./css/index.css"> -->
+  <link rel="stylesheet" href="../css/mobile.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <style>
 
@@ -145,90 +146,13 @@ $current_page = $pagination_data['current_page'];
 
     </ul>
   </div>
-  <style>
-    /* pagination adviser */
-    .pagination {
-      margin-top: 20px;
-      text-align: center;
-    }
-
-    .pagination a {
-      display: inline-block;
-      margin: 0 5px;
-      padding: 6px 14px;
-      background-color: #f4f4f4;
-      border: 1px solid #ccc;
-      color: #333;
-      text-decoration: none;
-      border-radius: 4px;
-    }
-
-    .pagination a.active {
-      background-color: #07432e;
-      color: white;
-    }
-
-    .pagination a:hover {
-      background-color: #ddd;
-    }
-
-    .pagination a.prev,
-    .pagination a.next {
-      font-weight: bold;
-    }
-
-    /* filter button */
-    .search-bar-container {
-      position: relative;
-      width: 150px;
-      display: inline-block;
-    }
-
-    .search-bar {
-      width: 100%;
-      padding: 5px 25px 5px 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      background-color: #fff;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
-
-    .search-bar:focus {
-      border-color: #07432e;
-      outline: none;
-    }
-
-    .search-bar-icon {
-      position: absolute;
-      top: 50%;
-      right: 10px;
-      transform: translateY(-50%);
-      font-size: 14px;
-      color: #888;
-      background: none;
-      border: none;
-      padding: 0;
-      cursor: pointer;
-    }
-
-    .reset-bar-icon {
-      padding: 5px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      background-color: #fff;
-      font-size: 14px;
-    }
-
-    .reset-bar-icon:hover {
-      color: #07432e;
-    }
-  </style>
   <section class="home-section">
     <div class="home-content">
-      <i class="fas fa-bars bx-menu"></i>
+      <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
     </div>
+    <style>
 
+    </style>
     <div class="content-wrapper">
 
       <div class="header-box">
@@ -269,32 +193,24 @@ $current_page = $pagination_data['current_page'];
           <table>
             <thead>
               <tr>
-                <th style='width: 20%;'>Title</th>
-                <th>Description</th>
-                <th style='width: 15%;'>Date Submitted</th>
-                <!-- <th style='width: 5%;'>Size</th> -->
+                <th class="title">Title</th>
+                <th class="description">Description</th>
+                <th class="date">Date Submitted</th>
+                <!-- <th class="size">Size</th> -->
                 <th class="action">Action</th>
               </tr>
             </thead>
-            <style>
-              td.description {
-                max-width: 300px;
-                overflow: hidden;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-              }
-            </style>
             <tbody>
               <?php if (!empty($journals)): ?>
                 <?php foreach ($journals as $journal): ?>
                   <tr>
-                    <td style="width: 20%;">
+                    <td class="title">
                       <?php echo htmlspecialchars($journal['journal_name']); ?>
                     </td>
                     <td class="description">
                       <?php echo htmlspecialchars($journal['journal_description']); ?>
                     </td>
-                    <td style="width: 15%;">
+                    <td class="date">
                       <?php echo date("M d, Y", strtotime($journal['journal_date'])); ?>
                     </td>
                     <td class="action">
@@ -302,7 +218,8 @@ $current_page = $pagination_data['current_page'];
                         data-student-id="<?php echo $journal['student_id']; ?>">
                         <i class="fa-solid fa-pen-to-square"></i>
                       </button>
-                      <button class="action-icon delete-btn" data-id="<?php echo $journal['journal_id']; ?>">
+                      <button class="action-icon delete-btn"
+                        onclick="openDeleteModal(<?php echo $journal['journal_id']; ?>)">
                         <i class="fa-solid fa-trash"></i>
                       </button>
                     </td>
@@ -314,7 +231,9 @@ $current_page = $pagination_data['current_page'];
                 </tr>
               <?php endif; ?>
             </tbody>
+
           </table>
+
 
           <div class="pagination">
             <?php renderPaginationLinks($total_pages, $current_page, $search_query); ?>
@@ -326,7 +245,7 @@ $current_page = $pagination_data['current_page'];
     </div>
 
     <!-- Add Modal -->
-    <div id="addModal" class="modal">
+    <div id="addModal" style="padding-top: 50px;" class="modal">
       <div class="modal-content-big">
         <span class="close" id="closeAddModal">&times;</span>
         <h2>Add Journal Entry</h2>
@@ -375,7 +294,7 @@ $current_page = $pagination_data['current_page'];
     </script>
 
     <!-- Edit Modal -->
-    <div id="editModal" class="modal">
+    <div id="editModal" style="padding-top: 50px;" class="modal">
       <div class="modal-content-big">
         <span class="close" id="closeEditModal">&times;</span>
         <h2>Edit Journal Entry</h2>
@@ -440,10 +359,10 @@ $current_page = $pagination_data['current_page'];
       </div>
     </div>
     <!-- Success Modal for Journal Deletion -->
-    <div id="journalDeleteSuccessModal" class="modal">
-      <div class="modal-content">
-        <!-- Lottie Animation -->
-        <div style="display: flex; justify-content: center; align-items: center;">
+    <!-- <div id="journalDeleteSuccessModal" class="modal">
+      <div class="modal-content"> -->
+    <!-- Lottie Animation -->
+    <!-- <div style="display: flex; justify-content: center; align-items: center;">
           <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
             style="width: 150px; height: 150px;" loop autoplay>
           </lottie-player>
@@ -453,7 +372,7 @@ $current_page = $pagination_data['current_page'];
             style="color: #095d40; font-size: 20px"><?php echo $_SESSION['full_name']; ?>!</span></p>
         <button class="proceed-btn" onclick="closeModal('journalDeleteSuccessModal')">Close</button>
       </div>
-    </div>
+    </div> -->
     <!-- Success Modal for Journal Duplicate Day -->
     <div id="journalErrorSuccessModal" class="modal">
       <div class="modal-content">
@@ -467,6 +386,37 @@ $current_page = $pagination_data['current_page'];
         <p>Just edit your journal for today, <span
             style="color: #095d40; font-size: 20px"><?php echo $_SESSION['full_name']; ?>!</span></p>
         <button class="proceed-btn" onclick="closeModal('journalErrorSuccessModal')">Close</button>
+      </div>
+    </div>
+
+    <div id="deleteModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <!-- Lottie Animation -->
+        <div style="display: flex; justify-content: center; align-items: center;">
+          <lottie-player src="../animation/alert-095d40.json" background="transparent" speed="1"
+            style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+        </div>
+        <h2 style="color: #000">Are you sure you want to delete?</h2>
+        <input type="hidden" id="delete-journal-id" value="">
+        <div style="display: flex; justify-content: space-around; margin-top: 10px; margin-bottom: 20px">
+          <button class="confirm-btn" onclick="confirmDelete()">Confirm</button>
+          <button class="cancel-btn" onclick="closeDeleteModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="deleteSuccessModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <!-- Lottie Animation -->
+        <div style="display: flex; justify-content: center; align-items: center;">
+          <lottie-player src="../animation/delete.json" background="transparent" speed="1"
+            style="width: 150px; height: 150px;" loop autoplay>
+          </lottie-player>
+        </div>
+        <h2>Journal Deleted Successfully!</h2>
+        <p>The journal entry has been deleted successfully <br> <span
+            style="color: #095d40; font-size: 20px;"><?php echo $_SESSION['full_name']; ?>!</span></p>
+        <button class="proceed-btn" onclick="closeDeleteSuccessModal()">Close</button>
       </div>
     </div>
     <!-- Logout Confirmation Modal -->
@@ -487,6 +437,9 @@ $current_page = $pagination_data['current_page'];
     </div>
 
   </section>
+
+
+
   <script>
     function showModal(modalId) {
       document.getElementById(modalId).style.display = "block";
@@ -507,38 +460,33 @@ $current_page = $pagination_data['current_page'];
       <?php elseif (isset($_SESSION['journal_delete_success'])): ?>
         showModal('journalDeleteSuccessModal');
         <?php unset($_SESSION['journal_delete_success']); ?>
+
       <?php elseif (isset($_SESSION['journal_error'])): ?>
         showModal('journalErrorSuccessModal');
         <?php unset($_SESSION['journal_error']); ?>
+
+      <?php elseif (isset($_SESSION['journal_delete_success'])): ?>
+        showModal('deleteSuccessModal');
+        <?php unset($_SESSION['journal_delete_success']); ?>
       <?php endif; ?>
     };
 
-    // Get the modal elements
+    // Open Add and Edit Modals
     var addModal = document.getElementById("addModal");
     var editModal = document.getElementById("editModal");
-
-    // Get the buttons that open the modals
     var addBtn = document.getElementById("openAddModalBtn");
 
-    // Get the <span> elements that close the modals
-    var closeAddModal = document.getElementById("closeAddModal");
-    var closeEditModal = document.getElementById("closeEditModal");
-
-    // Open the Add modal and set the date to today in DD/MM/YYYY format
     addBtn.onclick = function () {
       addModal.style.display = "block";
-
-      // Get today's date
       const today = new Date();
-
-      // Format the date to DD/MM/YYYY
       const day = String(today.getDate()).padStart(2, '0');
-      const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+      const month = String(today.getMonth() + 1).padStart(2, '0');
       const year = today.getFullYear();
-
-      // Set the formatted date in the journalDate input (as HTML date input needs YYYY-MM-DD format)
       document.getElementById('journalDate').value = `${year}-${month}-${day}`;
     }
+
+    var closeAddModal = document.getElementById("closeAddModal");
+    var closeEditModal = document.getElementById("closeEditModal");
 
     closeAddModal.onclick = function () {
       addModal.style.display = "none";
@@ -557,41 +505,65 @@ $current_page = $pagination_data['current_page'];
       }
     }
 
+    // Edit button functionality
     const editButtons = document.querySelectorAll('.edit-btn');
-
     editButtons.forEach(button => {
       button.addEventListener('click', () => {
         const journalId = button.getAttribute('data-id');
-
         fetch(`fetch_journal.php?id=${journalId}`)
           .then(response => response.json())
           .then(data => {
             document.getElementById('editJournalTitle').value = data.journal_name;
             document.getElementById('editJournalDate').value = data.journal_date;
             document.getElementById('editJournalDescription').value = data.journal_description;
-
             document.getElementById('journalIdDisplay').value = data.journal_id;
             document.getElementById('journalId').value = data.journal_id;
-
-            document.getElementById('editModal').style.display = 'block';
+            editModal.style.display = 'block';
           })
           .catch(error => console.error('Error:', error));
       });
     });
 
-    const deleteButtons = document.querySelectorAll('.delete-btn');
+    function openDeleteModal(journalId) {
+      document.getElementById("delete-journal-id").value = journalId; // Store journalId in hidden field
+      document.getElementById("deleteModal").style.display = "block"; // Show delete modal
+    }
 
-    deleteButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const journalId = button.getAttribute('data-id');
+    function closeDeleteModal() {
+      document.getElementById("deleteModal").style.display = "none"; // Hide delete modal
+    }
 
-        if (confirm('Are you sure you want to delete this journal entry?')) {
-          window.location.href = `delete_journal.php?id=${journalId}`;
+    function closeDeleteSuccessModal() {
+      document.getElementById('deleteSuccessModal').style.display = 'none';
+      window.location.reload(); // Reload page after closing success modal
+    }
+
+    function confirmDelete() {
+      const journalId = document.getElementById("delete-journal-id").value; // Get journal ID
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "delete_journal.php", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          const response = JSON.parse(xhr.responseText);
+
+          if (response.status === 'success') {
+            showModal('deleteSuccessModal'); // Show success modal
+          } else {
+            alert(response.message); // Show error message if deletion fails
+          }
         }
-      });
-    });
+      };
+
+      xhr.send("id=" + journalId); // Send the journal ID via POST
+
+      closeDeleteModal(); // Close the delete modal
+    }
 
   </script>
+
   <script src="./js/script.js"></script>
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>

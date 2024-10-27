@@ -29,6 +29,17 @@ if ($stmt = $database->prepare($query)) {
     }
     $stmt->close(); // Close the statement
 }
+// Fetch all companies for display
+$query = "SELECT company_id, company_image, company_name FROM company";
+$companies = [];
+if ($stmt = $database->prepare($query)) {
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $companies[] = $row;
+    }
+    $stmt->close();
+}
 
 ?>
 <!DOCTYPE html>
@@ -88,7 +99,7 @@ if ($stmt = $database->prepare($query)) {
                 </div>
                 <ul class="sub-menu">
                     <li><a class="link_name" href="interns.php">Manage Interns</a></li>
-                    <li><a href="./intern/intern-profile.php">Student Profile</a></li>
+                    <!-- <li><a href="./intern/intern-profile.php">Student Profile</a></li> -->
                     <li><a href="./intern/intern-reports.php">Intern Reports</a></li>
                 </ul>
             </li>
@@ -134,15 +145,6 @@ if ($stmt = $database->prepare($query)) {
                     <li><a class="link_name" href="message.php">Message</a></li>
                 </ul>
             </li>
-            <!-- <li>
-                <a href="others.php">
-                    <i class="fa-solid fa-ellipsis-h"></i>
-                    <span class="link_name">Others</span>
-                </a>
-                <ul class="sub-menu blank">
-                    <li><a class="link_name" href="others.php">Others</a></li>
-                </ul>
-            </li> -->
             <li>
                 <a href="setting.php">
                     <i class="fas fa-cog"></i>
@@ -167,10 +169,109 @@ if ($stmt = $database->prepare($query)) {
             </li>
         </ul>
     </div>
+    <style>
+        .whole-box {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 20px;
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        .main-box {
+            height: 550px;
+            /* Adjust height based on your layout */
+            overflow-y: auto;
+            /* Enables vertical scrolling when content overflows */
+        }
+
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            /* Add some spacing between the buttons */
+        }
+
+        .button-box {
+            position: relative;
+            background-color: #fff;
+            width: 300px;
+            height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            margin-top: 120px;
+            margin-right: 50px;
+            border-left: 3px solid #095d40;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: visible;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+
+
+        .button-container a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .button-box:hover {
+            background-color: #f0f0f0;
+            border-left: 3px solid #07432e;
+            color: #07432e;
+        }
+
+        .box-logo {
+            position: absolute;
+            top: -40px;
+            width: 100px;
+            height: 100px;
+            background-color: white;
+            border-radius: 50%;
+            object-fit: contain;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .box-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 40px;
+        }
+
+        .box-title:hover {
+            color: #07432e;
+        }
+    </style>
     <section class="home-section">
         <div class="home-content">
             <i class="fas fa-bars bx-menu"></i>
         </div>
+        <div class="content-wrapper">
+            <div class="header-box">
+                <label style="color: #a6a6a6;">Company Profile</label>
+            </div>
+            <div class="main-box">
+                <div class="whole-box">
+                    <div class="button-container">
+                        <?php foreach ($companies as $company): ?>
+                            <a href="./users/company.php?id=<?php echo $company['company_id']; ?>" class="button-box">
+                                <img src="../uploads/company/<?php echo htmlspecialchars($company['company_image'], ENT_QUOTES); ?>"
+                                    alt="Logo" class="box-logo">
+                                <div class="box-title">
+                                    <?php echo htmlspecialchars($company['company_name'], ENT_QUOTES); ?>
+                                </div>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </section>
     <!-- Logout Confirmation Modal -->
     <div id="logoutModal" class="modal">

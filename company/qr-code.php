@@ -27,7 +27,44 @@ if ($stmt = $database->prepare($query)) {
     }
     $stmt->close(); // Close the statement
 }
+$current_date = date('Y-m-d');
 
+// Fetch the holiday for the current date
+$query = "SELECT * FROM holiday WHERE holiday_date = ?";
+if ($stmt = $database->prepare($query)) {
+    $stmt->bind_param("s", $current_date);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $holiday = $result->fetch_assoc();
+    } else {
+        $holiday = null;
+    }
+    $stmt->close();
+}
+
+// Fetch the schedule for the current date if there is no holiday
+if (!$holiday) {
+    $query = "SELECT * FROM schedule WHERE company_id = ? AND date = ?";
+    if ($stmt = $database->prepare($query)) {
+        $stmt->bind_param("is", $company_id, $current_date);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $schedule = $result->fetch_assoc();
+        } else {
+            $schedule = [
+                'generated_qr_code' => '../img/qr-code-error.png',
+                'time_in' => '',
+                'time_out' => '',
+                'day_type' => ''
+            ];
+        }
+        $stmt->close();
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -102,6 +139,7 @@ if ($stmt = $database->prepare($query)) {
             <li>
                 <a href="message.php">
                     <i class="fa-regular fa-comments"></i>
+
                     <span class="link_name">Message</span>
                 </a>
                 <ul class="sub-menu blank">
@@ -125,6 +163,15 @@ if ($stmt = $database->prepare($query)) {
                 </a>
                 <ul class="sub-menu blank">
                     <li><a class="link_name" href="attendance.php">Attendance</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="calendar.php">
+                    <i class="fa-regular fa-calendar-days"></i>
+                    <span class="link_name">Schedule</span>
+                </a>
+                <ul class="sub-menu blank">
+                    <li><a class="link_name" href="calendar.php">Manage Schedule</a></li>
                 </ul>
             </li>
             <li>
@@ -158,6 +205,9 @@ if ($stmt = $database->prepare($query)) {
         </div>
 
         <div class="content-wrapper">
+            <div class="header-box">
+                <label style="color: #a6a6a6; margin-left: 10px;">QR Scanner</label>
+            </div>
             <div class="main-box">
                 <div class="left-box-qr">
                     <!-- Intern Time-In Details -->
@@ -168,15 +218,7 @@ if ($stmt = $database->prepare($query)) {
                         <div class="intern-details">
                             <h3><strong>Intern Name</strong></h3>
                             <p>WMSU ID: <strong></strong></p>
-                            <p>Course & Section: <strong></strong></p>
                             <p>Email: <strong></strong></p>
-                            <p>Contact: <strong></strong></p>
-                            <p>Batch Year: <strong></strong></p>
-                            <p>Department: <strong></strong></p>
-                            <p>Company: <strong></strong></p>
-                            <p>Adviser: <strong></strong></p>
-                            <p>Barangay: <strong></strong></p>
-                            <p>Street: <strong></strong></p>
                             <p>Total OJT Hours: <span class="total-ojt-hrs"><strong></strong></span></p>
                         </div>
                     </div>
@@ -193,31 +235,34 @@ if ($stmt = $database->prepare($query)) {
                         </div>
                     </div>
                 </div>
-
-
-                <!-- Right Box for Scanning QR Code-->
+                <!-- Right Box for Scanning QR Code -->
                 <div class="right-box-qr">
-                    <h2>Scan Your QR Code</h2>
-                    <div id="qr-scanner">
-                        <!-- Lottie Animation -->
-                        <div id="lottie-animation" class="lottie-wrapper">
-                            <lottie-player src="../animation/qr-095d40.json" background="transparent" speed="1"
-                                style="width: 300px; height: 300px;" loop autoplay>
-                            </lottie-player>
-                        </div>
-
-                        <video id="video" autoplay hidden></video>
-
-                        <canvas id="canvas" hidden></canvas>
-
-                        <button id="start-scan" class="start-scan">Start Scan <i
-                                class="fa-solid fa-camera"></i></button>
+                    <h2 style="text-align: center;">Today's QR Code</h2>
+                    <div class="qr-container">
+                        <img src="<?php echo !empty($schedule['generated_qr_code']) ? $schedule['generated_qr_code'] : '../img/qr-code-error.png'; ?>" alt="QR Code" id="qr-code-img" style="width: 200px; height: 200px;">
+                        <p class="qr-date"><?php echo date('F j, Y'); ?></p>
+                        <div style="flex-direction: column; align-items: center; " class="time-container">
+                            <?php if ($holiday): ?>
+                                <!-- Show holiday details if present -->
+                                 <p style="text-align: center;"class="holiday-label"><strong> <?php echo $holiday['holiday_name']; ?></strong></p>
+                                 <?php else: ?>
+                                 <?php
+                                 $timeIn = date('g:ia', strtotime($schedule['time_in']));
+                                 $timeOut = date('g:ia', strtotime($schedule['time_out']));
+                                 ?>
+                                 <div class="time-label">
+                                    <p class="time-in-label"><?php echo "Time-in: $timeIn"; ?></p>
+                                    <p class="time-out-label"><?php echo "Time-out: $timeOut"; ?></p>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        <p class="day-type">
+                            <strong id="day-type-text"><?php echo $holiday ? 'Holiday' : $schedule['day_type']; ?></strong>
+                        </p>
                     </div>
                 </div>
-
             </div>
         </div>
-
     </section>
     <!-- QR Scan Time-in Modal -->
     <div id="qrsuccessTimeinModal" class="modal" style="display: none;">
@@ -270,145 +315,54 @@ if ($stmt = $database->prepare($query)) {
         </div>
     </div>
     <script>
-        document.getElementById("start-scan").addEventListener("click", function () {
-            // Hide the Lottie animation
-            document.getElementById("lottie-animation").style.display = 'none';
+  window.addEventListener('DOMContentLoaded', () => {
+    const dayType = "<?php echo $holiday ? 'Holiday' : $schedule['day_type']; ?>";
+    const qrDate = document.querySelector('.qr-date');
+    const dayTypeText = document.getElementById('day-type-text');
+    const timePeriod = document.getElementById('time-period');
+    const holidayLabel = document.querySelector('.holiday-label');
+    const holidayModal = document.getElementById('holidayModal'); 
 
-            // Show the video for QR scanning
-            const video = document.getElementById("video");
-            video.hidden = false;
-            video.style.display = 'block';
+    if (dayType.trim() === 'Holiday') {
+        qrDate.classList.add('holiday');
+        dayTypeText.classList.add('holiday');
+        if (timePeriod) timePeriod.style.display = 'none'; // Hide time-in and time-out
 
-            // Start QR code scanner by accessing the camera
-            startQRCodeScanner();
-        });
-
-        function startQRCodeScanner() {
-            const video = document.getElementById("video");
-            const canvas = document.getElementById("canvas");
-
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' }
-                }).then(function (stream) {
-                    video.srcObject = stream;
-                    video.play();
-
-                    const context = canvas.getContext('2d');
-                    video.addEventListener('play', () => {
-                        const scanInterval = setInterval(() => {
-                            canvas.width = video.videoWidth;
-                            canvas.height = video.videoHeight;
-                            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                            const qrCode = jsQR(imageData.data, canvas.width, canvas.height);
-
-                            if (qrCode) {
-                                // QR code successfully scanned
-                                document.getElementById("video").srcObject.getTracks().forEach(track => track.stop()); // Stop video
-                                clearInterval(scanInterval); // Stop scanning
-
-                                // Send QRData to server to process time-in
-                                processQRCode(qrCode.data);
-                            }
-                        }, 500); // Scan every 500ms
-                    });
-                }).catch(function (err) {
-                    console.error("Error accessing camera: ", err);
-                    alert("Could not access camera. Please ensure you have allowed camera access in your browser settings.");
-                });
-            } else {
-                alert("Camera not supported in this browser.");
-            }
+        // Show the holiday modal
+        if (holidayModal) {
+            holidayModal.style.display = 'block';
         }
+    } else if (dayType.trim() === 'Regular') {
+        if (timePeriod) timePeriod.style.display = ''; // Show time-in and time-out
+        dayTypeText.parentElement.style.display = 'none';
+    } else if (dayType.trim() === '') {
+        if (timePeriod) timePeriod.style.display = 'none'; // Hide time-in and time-out
+        dayTypeText.parentElement.style.display = 'none';
+    }
+});
 
-        function processQRCode(qrData) {
-            fetch('timein.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ qrData: qrData })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        if (data.event_type === 'Time-in') {
-                            // Time-in logic
-                            document.querySelector(".intern-image img").src = data.student_image ?
-                                "../uploads/student/" + data.student_image :
-                                "../uploads/student/user.png";
-                            document.querySelector(".intern-details h3 strong").innerText = data.student_name;
-                            document.querySelector(".intern-details p:nth-of-type(1) strong").innerText = data.wmsu_id;
-                            document.querySelector(".intern-details p:nth-of-type(2) strong").innerText = data.course_section;
-                            document.querySelector(".intern-details p:nth-of-type(3) strong").innerText = data.email;
-                            document.querySelector(".intern-details p:nth-of-type(4) strong").innerText = data.contact;
-                            document.querySelector(".intern-details p:nth-of-type(5) strong").innerText = data.batch_year;
-                            document.querySelector(".intern-details p:nth-of-type(6) strong").innerText = data.department;
-                            document.querySelector(".intern-details p:nth-of-type(7) strong").innerText = data.company;
-                            document.querySelector(".intern-details p:nth-of-type(8) strong").innerText = data.adviser;
-                            document.querySelector(".intern-details p:nth-of-type(9) strong").innerText = data.barangay;
-                            document.querySelector(".intern-details p:nth-of-type(10) strong").innerText = data.street;
-                            document.querySelector(".intern-details p:nth-of-type(11) strong").innerText = data.total_ojt_hours;
+// Close modal function
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
 
-                            // Update time-in details
-                            document.querySelector(".time-in-details p:nth-of-type(1) strong").innerText = data.time_in;
-                            document.querySelector(".time-in-details p:nth-of-type(2) strong").innerText = data.date_in;
-                            document.querySelector(".time-in-details h3").innerText = data.event_type;
-
-                            document.querySelector("#qrsuccessTimeinModal span").innerText = data.student_name;
-                            document.querySelector("#qrsuccessTimeinModal h3").innerText = data.time_in;
-
-                            // Show Time-in modal
-                            openModal('qrsuccessTimeinModal');
-                        } else if (data.event_type === 'Time-out') {
-                            // Time-out logic
-                            document.querySelector(".intern-image img").src = data.student_image ?
-                                "../uploads/student/" + data.student_image :
-                                "../uploads/student/user.png";
-                            document.querySelector(".intern-details h3 strong").innerText = data.student_name;
-                            document.querySelector(".intern-details p:nth-of-type(1) strong").innerText = data.wmsu_id;
-                            document.querySelector(".intern-details p:nth-of-type(2) strong").innerText = data.course_section;
-                            document.querySelector(".intern-details p:nth-of-type(3) strong").innerText = data.email;
-                            document.querySelector(".intern-details p:nth-of-type(4) strong").innerText = data.contact;
-                            document.querySelector(".intern-details p:nth-of-type(5) strong").innerText = data.batch_year;
-                            document.querySelector(".intern-details p:nth-of-type(6) strong").innerText = data.department;
-                            document.querySelector(".intern-details p:nth-of-type(7) strong").innerText = data.company;
-                            document.querySelector(".intern-details p:nth-of-type(8) strong").innerText = data.adviser;
-                            document.querySelector(".intern-details p:nth-of-type(9) strong").innerText = data.barangay;
-                            document.querySelector(".intern-details p:nth-of-type(10) strong").innerText = data.street;
-                            document.querySelector(".intern-details p:nth-of-type(11) strong").innerText = data.total_ojt_hours;
-
-                            // Update time-out details
-                            document.querySelector(".time-in-details p:nth-of-type(1) strong").innerText = data.time_out;
-                            document.querySelector(".time-in-details p:nth-of-type(2) strong").innerText = data.date_in;
-                            document.querySelector(".time-in-details h3").innerText = data.event_type;
-
-                            document.querySelector("#qrsuccessTimeoutModal span").innerText = data.student_name;
-                            document.querySelector("#qrsuccessTimeoutModal h3").innerText = data.time_out;
-                            document.querySelector("#ojt-hours").innerText = data.ojt_hours;
-
-                            // Show Time-out modal
-                            openModal('qrsuccessTimeoutModal');
-                        }
-                    } else {
-                        alert(data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error("Error processing QR code:", error);
-                });
-        }
-
-        function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-    </script>
+</script>
+<!-- Holiday Modal -->
+<div id="holidayModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <lottie-player src="../animation/alert-8B0000.json" background="transparent" speed="1" 
+                           style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+        </div>
+        <h2 style="color: #8B0000">It's a Holiday!</h2>
+        <p><strong><?php echo date('F j, Y'); ?></strong></p>
+        <p style="color: #8B0000"><strong><?php echo $holiday['holiday_name']; ?></strong></p>
+        <button class="proceed-btn" onclick="closeModal('holidayModal')">Close</button>
+    </div>
+</div>
 
 
     <script src="./js/script.js"></script>

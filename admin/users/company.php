@@ -117,6 +117,15 @@ $current_page = $pagination_data['current_page'];
                 </ul>
             </li>
             <li>
+                <a href="../calendar.php">
+                    <i class="fa-regular fa-calendar-days"></i>
+                    <span class="link_name">Calendar</span>
+                </a>
+                <ul class="sub-menu blank">
+                    <li><a class="link_name" href="../calendar.php">Calendar</a></li>
+                </ul>
+            </li>
+            <li>
                 <a href="../setting.php">
                     <i class="fas fa-cog"></i>
                     <span class="link_name">Manage Profile</span>
@@ -218,8 +227,7 @@ $current_page = $pagination_data['current_page'];
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </button>
 
-                                            <button class="action-icon delete-btn"
-                                                onclick="confirmDelete(<?php echo $company['company_id']; ?>)">
+                                            <button class="action-icon delete-btn" onclick="openDeleteModal(<?php echo $company['company_id']; ?>)">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
 
@@ -588,32 +596,6 @@ $current_page = $pagination_data['current_page'];
             <?php endif; ?>
         }
 
-        function confirmDelete(companyId) {
-            const confirmation = confirm("Are you sure you want to delete this company?");
-
-            if (confirmation) {
-                const xhr = new XMLHttpRequest();
-                xhr.open("POST", "./others/delete_company.php", true);
-                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState === 4 && xhr.status === 200) {
-                        const response = JSON.parse(xhr.responseText);
-
-                        if (response.status === 'success') {
-                            alert(response.message);
-                            location.reload();
-                        } else {
-                            alert(response.message);
-                        }
-                    }
-                };
-
-                xhr.send("id=" + companyId);
-            } else {
-                console.log("Deletion canceled.");
-            }
-        }
 
         function validateAddPassword() {
             var password = document.getElementById("companyPassword").value;
@@ -655,7 +637,72 @@ $current_page = $pagination_data['current_page'];
                 }
             });
         });
+        function openDeleteModal(companyId) {
+        document.getElementById("delete-company-id").value = companyId; // Store companyId in hidden field
+        document.getElementById("deleteModal").style.display = "block"; // Show modal
+    }
+
+    function closeDeleteModal() {
+        document.getElementById("deleteModal").style.display = "none"; // Hide modal
+    }
+    function closeDeleteSuccessModal() {
+    document.getElementById('deleteSuccessModal').style.display = 'none';
+    window.location.reload();
+}
+    function confirmDelete() {
+        const companyId = document.getElementById("delete-company-id").value; // Get companyId from hidden input
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "./others/delete_company.php", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+
+                if (response.status === 'success') {
+                    showModal('deleteSuccessModal');
+                } else {
+                    alert(response.message);
+                }
+            }
+        };
+
+        xhr.send("id=" + companyId); 
+
+        closeDeleteModal(); 
+    }
     </script>
+    <div id="deleteModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <!-- Lottie Animation -->
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <lottie-player src="../../animation/alert-095d40.json" background="transparent" speed="1"
+                style="width: 150px; height: 150px;" loop autoplay>
+            </lottie-player>
+        </div>
+        <h2 style="color: #000">Are you sure you want to delete?</h2>
+        <input type="hidden" id="delete-company-id" value="">
+        <div style="display: flex; justify-content: space-around; margin-top: 10px; margin-bottom: 20px">
+            <button class="confirm-btn" onclick="confirmDelete()">Confirm</button>
+            <button class="cancel-btn" onclick="closeDeleteModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+    <div id="deleteSuccessModal" class="modal">
+        <div class="modal-content">
+            <!-- Lottie Animation -->
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../../animation/delete.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2>Company Delete Successfully!</h2>
+            <p>company has been deleted successfully by <span
+                    style="color: #095d40; font-size: 20px;"><?php echo $_SESSION['full_name']; ?>!</span></p>
+            <button class="proceed-btn" onclick="closeDeleteSuccessModal('deleteSuccessModal')">Close</button>
+        </div>
+    </div>
     <script src="../js/script.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>

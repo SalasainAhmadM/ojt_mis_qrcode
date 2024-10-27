@@ -1,16 +1,14 @@
 <?php
 include '../conn/connection.php';
-require_once '../src/PHPMailer.php'; // Adjust based on your PHPMailer path
+require_once '../src/PHPMailer.php'; 
 require_once '../src/SMTP.php';
 require_once '../src/Exception.php';
-require_once './config.php'; // Include the file where sendPasswordResetEmail is defined
+require_once './config.php'; 
 
 if (isset($_POST['email'])) {
-    $email = strtolower(trim($_POST['email'])); // Normalize email
-
-    // Check if email exists in admin, student, adviser, or company
+    $email = strtolower(trim($_POST['email'])); 
     $roles = ['admin', 'student', 'adviser', 'company'];
-    $userFound = false; // Flag to check if user is found
+    $userFound = false; 
 
     foreach ($roles as $role) {
         $stmt = $database->prepare("SELECT * FROM $role WHERE {$role}_email = ?");
@@ -29,35 +27,32 @@ if (isset($_POST['email'])) {
             $expires_at->modify('+1 hour');
             $expires_at_formatted = $expires_at->format('Y-m-d H:i:s');
 
-
-
             // Insert or update the token
             $stmt = $database->prepare("REPLACE INTO password_reset_tokens (email, token, expires_at) VALUES (?, ?, ?)");
             $stmt->bind_param("sss", $email, $token, $expires_at_formatted);
             if ($stmt->execute()) {
                 // Send password reset email using sendPasswordResetEmail function
                 if (sendPasswordResetEmail($email, $token)) {
-                    $message = 'Password reset link has been sent to your email.';
+                    // Redirect to forgotpassword.php with success modal trigger
+                    header("Location: ./forgotpassword.php?reset=success");
+                    exit;
                 } else {
-                    $message = 'Failed to send password reset email.';
+                    // Redirect to forgotpassword.php with email failure modal trigger
+                    header("Location: ./forgotpassword.php?reset=email_failure");
+                    exit;
                 }
             } else {
-                $message = 'Failed to store reset token.';
+                // Redirect to forgotpassword.php with token storage failure modal trigger
+                header("Location: ./forgotpassword.php?reset=token_failure");
+                exit;
             }
-            echo "<script type='text/javascript'>
-                alert('$message');
-                window.location.href = '../endpoint/forgotpassword.php';
-            </script>";
-            exit;
         }
     }
 
     if (!$userFound) {
-        $message = 'No user found with that email.';
-        echo "<script type='text/javascript'>
-            alert('$message');
-            window.location.href = '../endpoint/forgotpassword.php';
-        </script>";
+        // Redirect to forgotpassword.php with no user found modal trigger
+        header("Location: ./forgotpassword.php?reset=no_user");
+        exit;
     }
 }
 ?>

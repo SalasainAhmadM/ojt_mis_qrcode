@@ -287,11 +287,42 @@ INSERT INTO `student_journal` (`journal_id`, `student_id`, `journal_name`, `jour
 CREATE TABLE `attendance` (
   `attendance_id` int(11) NOT NULL AUTO_INCREMENT,
   `student_id` int(11) NOT NULL,
+  `schedule_id` int(11) NOT NULL,
   `time_in` timestamp NOT NULL DEFAULT current_timestamp(),
   `time_out` timestamp NULL DEFAULT NULL,
   `ojt_hours` DECIMAL(10,2) GENERATED ALWAYS AS (TIMESTAMPDIFF(SECOND, `time_in`, `time_out`) / 3600) STORED,
   PRIMARY KEY (`attendance_id`) 
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `schedule`
+--
+
+CREATE TABLE `schedule` (
+  `schedule_id` int(11) NOT NULL AUTO_INCREMENT,
+  `company_id` int(11) NOT NULL,
+  `date` date NOT NULL,
+  `time_in` time DEFAULT NULL, 
+  `time_out` time DEFAULT NULL, 
+  `generated_qr_code` varchar(255) NOT NULL,
+  `day_type` enum('Regular', 'Halfday', 'Suspended') NOT NULL DEFAULT 'Regular',
+  PRIMARY KEY (`schedule_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `holiday`
+--
+
+CREATE TABLE `holiday` (
+  `holiday_id` int(11) NOT NULL AUTO_INCREMENT,
+  `holiday_date` date NOT NULL,
+  `holiday_name` varchar(255) NOT NULL,
+  PRIMARY KEY (`holiday_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -462,6 +493,17 @@ ALTER TABLE `course_sections`
 --
 ALTER TABLE `student_journal`
   ADD CONSTRAINT `student_journal_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `student` (`student_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+--
+-- Constraints for table `attendance`
+--
+ALTER TABLE `attendance`
+  ADD CONSTRAINT `attendance_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `student` (`student_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `attendance_ibfk_2` FOREIGN KEY (`schedule_id`) REFERENCES `schedule` (`schedule_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+--
+-- Constraints for table `schedule`
+--
+ALTER TABLE `schedule`
+  ADD CONSTRAINT `schedule_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `company` (`company_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 COMMIT;
 

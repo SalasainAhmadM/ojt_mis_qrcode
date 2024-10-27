@@ -103,10 +103,29 @@ $formatted_email = substr_replace($extracted_email_part, '-', 4, 0);
   <link rel="icon" href="../img/ccs.png" type="image/icon type">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-  <link rel="stylesheet" href="./css/style.css">
-  <link rel="stylesheet" href="./css/mobile.css">
+  <link rel="stylesheet" href="../css/main.css">
+  <!-- <link rel="stylesheet" href="./css/style.css"> -->
+  <!-- <link rel="stylesheet" href="./css/index.css"> -->
+  <link rel="stylesheet" href="../css/mobile.css">
+  <link rel="stylesheet" href="../css/mobile.css">
 </head>
 <style>
+  @media (max-width: 768px) {
+    .modal-content {
+      z-index: 1000;
+      width: 80%;
+      padding: 15px;
+    }
+
+    .form-container {
+      width: 95%;
+      flex-direction: column;
+      padding: 10px;
+      margin-left: 10px;
+      margin-right: 10px;
+      font-size: 12px;
+    }
+  }
 </style>
 
 <body>
@@ -122,7 +141,9 @@ $formatted_email = substr_replace($extracted_email_part, '-', 4, 0);
     </div>
   </div>
 
+  <style>
 
+  </style>
   <form style="margin-top: 30px" class="form-container">
     <div style="padding: 10px; margin-left: 40px;" class="form-section">
       <label style="color: #a6a6a6">Student Profiling</label>
@@ -269,6 +290,7 @@ $formatted_email = substr_replace($extracted_email_part, '-', 4, 0);
       </div>
     </div>
   </div>
+
   <!-- JavaScript for modal behavior -->
   <script>
     function fetchAdviser() {

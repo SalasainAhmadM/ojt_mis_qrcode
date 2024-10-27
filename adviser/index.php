@@ -88,7 +88,7 @@ if ($stmt = $database->prepare($query)) {
         </div>
         <ul class="sub-menu">
           <li><a class="link_name" href="interns.php">Manage Interns</a></li>
-          <li><a href="./intern/intern-profile.php">Student Profile</a></li>
+          <!-- <li><a href="./intern/intern-profile.php">Student Profile</a></li> -->
           <li><a href="./intern/intern-reports.php">Intern Reports</a></li>
         </ul>
       </li>
@@ -343,9 +343,6 @@ if ($stmt = $database->prepare($query)) {
             <div class="date-section">
               <span></span><br>
               <input type="date" class="search-bar" placeholder="Search Date">
-              <button class="filter-btn">
-                <i style="margin-right: 3px" class="fa-solid fa-filter"></i>Filter
-              </button>
             </div>
             <div class="search-section">
               <span><strong>Search</strong></span><br>

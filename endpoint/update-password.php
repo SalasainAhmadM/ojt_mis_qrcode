@@ -2,94 +2,102 @@
 include '../conn/connection.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!isset($_POST['token'])) {
-        echo "<script>alert('Invalid or expired token.'); window.location.href = '../endpoint/forgotpassword.php';</script>";
+    // Ensure the token is present
+    if (!isset($_POST['token']) || empty($_POST['token'])) {
+        header("Location: ../endpoint/reset-password.php?reset=invalid_token");
         exit;
     }
 
-    date_default_timezone_set('Asia/Manila'); // Set to Philippine timezone
+    date_default_timezone_set('Asia/Manila'); 
 
-    $token = $_POST['token']; // Capture the token from the hidden input field
+    $token = $_POST['token'];
     $new_password = $_POST['new_password'];
     $confirm_password = $_POST['confirm_password'];
 
+    // Validate that both password fields are filled
     if (empty($new_password) || empty($confirm_password)) {
-        echo "<script>alert('Please fill in all fields.'); window.location.href = '../endpoint/forgotpassword.php';</script>";
+        header("Location: ../endpoint/reset-password.php?reset=failure&token=" . urlencode($token));
         exit;
     }
 
+    // Ensure passwords match
     if ($new_password !== $confirm_password) {
-        echo "<script>alert('Passwords do not match.'); window.location.href = '../endpoint/forgotpassword.php';</script>";
+        header("Location: ../endpoint/reset-password.php?reset=failure&token=" . urlencode($token));
         exit;
     }
 
-    // Check if the token exists and is still valid
+    // Fetch the reset token data and ensure it has not expired
     $stmt = $database->prepare("SELECT * FROM password_reset_tokens WHERE token = ? AND expires_at > NOW()");
     if (!$stmt) {
-        echo "<script>alert('Error preparing statement: " . $database->error . "'); window.location.href = '../endpoint/forgotpassword.php';</script>";
+        header("Location: ../endpoint/reset-password.php?reset=failure&token=" . urlencode($token));
         exit;
     }
 
     $stmt->bind_param("s", $token);
     if (!$stmt->execute()) {
-        echo "<script>alert('Error executing statement: " . $stmt->error . "'); window.location.href = '../endpoint/forgotpassword.php';</script>";
+        header("Location: ../endpoint/reset-password.php?reset=failure&token=" . urlencode($token));
         exit;
     }
 
     $result = $stmt->get_result();
     if (!$result) {
-        echo "<script>alert('Error getting result: " . $stmt->error . "'); window.location.href = '../endpoint/forgotpassword.php';</script>";
+        header("Location: ../endpoint/reset-password.php?reset=failure&token=" . urlencode($token));
         exit;
     }
 
     $token_data = $result->fetch_assoc();
     if (!$token_data) {
-        echo "<script>alert('Invalid or expired token.'); window.location.href = '../endpoint/forgotpassword.php';</script>";
+        header("Location: ../endpoint/reset-password.php?reset=invalid_token");
         exit;
     }
 
+    // Fetch email from the token data
     $email = $token_data['email'];
     $password_hash = password_hash($new_password, PASSWORD_BCRYPT);
 
     $password_updated = false;
     $roles = ['admin', 'student', 'adviser', 'company'];
 
+    // Try to update the password for each role
     foreach ($roles as $role) {
         $stmt = $database->prepare("UPDATE $role SET {$role}_password = ? WHERE {$role}_email = ?");
         if (!$stmt) {
-            echo "<script>alert('Error preparing update statement for role $role: " . $database->error . "'); window.location.href = '../endpoint/forgotpassword.php';</script>";
+            header("Location: ../endpoint/reset-password.php?reset=failure&token=" . urlencode($token));
             exit;
         }
 
         $stmt->bind_param("ss", $password_hash, $email);
         if (!$stmt->execute()) {
-            echo "<script>alert('Error executing update statement for role $role: " . $stmt->error . "'); window.location.href = '../endpoint/forgotpassword.php';</script>";
+            header("Location: ../endpoint/reset-password.php?reset=failure&token=" . urlencode($token));
             exit;
         }
 
-        // Check if any rows were affected
         if ($stmt->affected_rows > 0) {
             $password_updated = true;
-            // Password successfully updated, delete the token
+
+            // Delete the token after a successful password reset
             $stmt = $database->prepare("DELETE FROM password_reset_tokens WHERE email = ?");
             if (!$stmt) {
-                echo "<script>alert('Error preparing delete statement: " . $database->error . "'); window.location.href = '../endpoint/forgotpassword.php';</script>";
+                header("Location: ../endpoint/reset-password.php?reset=failure&token=" . urlencode($token));
                 exit;
             }
 
             $stmt->bind_param("s", $email);
             if (!$stmt->execute()) {
-                echo "<script>alert('Error executing delete statement: " . $stmt->error . "'); window.location.href = '../endpoint/forgotpassword.php';</script>";
+                header("Location: ../endpoint/reset-password.php?reset=failure&token=" . urlencode($token));
                 exit;
             }
 
-            echo "<script>alert('Password successfully updated.'); window.location.href = '../index.php';</script>";
+            // Redirect to success page after successful password reset
+            header("Location: ../endpoint/reset-password.php?reset=success&token=". urlencode($token));
             exit;
         }
     }
 
+    // If no password update occurred, handle failure
     if (!$password_updated) {
-        echo "<script>alert('Password reset failed. No rows updated. Please try again.'); window.location.href = '../endpoint/forgotpassword.php';</script>";
+        header("Location: ../endpoint/reset-password.php?reset=failure&token=" . urlencode($token));
+        exit;
     }
 }
 ?>

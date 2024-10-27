@@ -61,7 +61,7 @@ if (isset($_POST['student_name']) && isset($_POST['student_email'])) {
         $stmt->close();
 
         // Redirect to the success page with the student's name
-        header('Location: create-qr.php?status=qr_success&name=' . urlencode($studentName));
+        header('Location: create-qr2.php?status=qr_success&name=' . urlencode($studentName));
         exit();
     } else {
         // Redirect with error if the update query fails

@@ -9,31 +9,6 @@
   <link rel="stylesheet" href="./css/style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
-<style>
-  #loader {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    z-index: 1000;
-    width: 120px;
-    height: 120px;
-    margin: -76px 0 0 -76px;
-    border: 16px solid #f3f3f3;
-    border-radius: 50%;
-    border-top: 16px solid #095d40;
-    animation: spin 2s linear infinite;
-  }
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-</style>
 
 <body>
   <div class="container">
@@ -140,13 +115,7 @@
   <script src="./js/script.js"></script>
   <script>
 
-    function showModal(modalId) {
-      document.getElementById(modalId).style.display = "block";
-    }
 
-    function closeModal(modalId) {
-      document.getElementById(modalId).style.display = "none";
-    }
 
     // Show the appropriate modal based on URL parameters or session variables
     <?php if (isset($_GET['login']) && $_GET['login'] === 'error'): ?>
@@ -161,6 +130,13 @@
       };
     <?php endif; ?>
 
+    function showModal(modalId) {
+      document.getElementById(modalId).style.display = "block";
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = "none";
+    }
     // Signup form event listener
     document.querySelector('form[action="./endpoint/register.php"]').addEventListener('submit', function (e) {
       // Show the loader

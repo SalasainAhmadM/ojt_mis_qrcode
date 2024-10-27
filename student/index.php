@@ -67,12 +67,14 @@ if ($announcement_result->num_rows > 0) {
   <title>Intern - Home</title>
   <link rel="icon" href="../img/ccs.png" type="image/icon type">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="./css/style.css">
-  <link rel="stylesheet" href="./css/mobile.css">
-  <link rel="stylesheet" href="./css/index.css">
+  <link rel="stylesheet" href="../css/main.css">
+  <!-- <link rel="stylesheet" href="./css/style.css"> -->
+  <!-- <link rel="stylesheet" href="./css/index.css"> -->
+  <link rel="stylesheet" href="../css/mobile.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 </head>
+
 
 <body>
   <div class="header">
@@ -149,9 +151,11 @@ if ($announcement_result->num_rows > 0) {
 
     </ul>
   </div>
+
+
   <section class="home-section">
     <div class="home-content">
-      <i class="fas fa-bars bx-menu"></i>
+      <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
     </div>
     <div class="content-wrapper">
       <div class="intern-company">
@@ -164,12 +168,14 @@ if ($announcement_result->num_rows > 0) {
           <h2><?php echo !empty($student['company_name']) ? $student['company_name'] : 'Company Name' ?></h2>
           <label><?php echo !empty($student['company_address']) ? $student['company_address'] : 'Company Address' ?></label>
           <br>
-          <label><?php echo !empty($student['company_email']) ? $student['company_email'] : 'Company Email' ?> <span
-              style="color: #095d40;">|</span>
-            <?php echo !empty($student['company_number']) ? $student['company_number'] : 'Company Number' ?></label>
+          <div class="contact-info">
+            <span><?php echo !empty($student['company_email']) ? $student['company_email'] : 'Company Email' ?> <span
+                class="line"> |</span></span>
+
+            <span><?php echo !empty($student['company_number']) ? $student['company_number'] : 'Company Number' ?></span>
+          </div>
         </div>
       </div>
-
 
       <div class="main-box">
         <div class="left-box">
@@ -181,7 +187,7 @@ if ($announcement_result->num_rows > 0) {
                 <option value="PM">PM</option>
               </select>
               <input type="date" class="search-bar" placeholder="Search Date">
-              <button class="filter-btn"><i style="margin-right: 3px" class="fa-solid fa-filter"></i>Filter</button>
+              <!-- <button class="filter-btn"><i style="margin-right: 3px" class="fa-solid fa-filter"></i>Filter</button> -->
             </div>
           </h2>
           <table>

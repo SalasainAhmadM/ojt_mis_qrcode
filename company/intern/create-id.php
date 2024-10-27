@@ -163,12 +163,21 @@ if ($stmt = $database->prepare($student_query)) {
                 </ul>
             </li>
             <li>
-                <a href="../setting.php">
-                    <i class="fas fa-cog"></i>
-                    <span class="link_name">Settings</span>
+                <a href="../calendar.php">
+                    <i class="fa-regular fa-calendar-days"></i>
+                    <span class="link_name">Schedule</span>
                 </a>
                 <ul class="sub-menu blank">
-                    <li><a class="link_name" href="../setting.php">Settings</a></li>
+                    <li><a class="link_name" href="../calendar.php">Manage Schedule</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="../setting.php">
+                    <i class="fas fa-cog"></i>
+                    <span class="link_name">Manage Profile</span>
+                </a>
+                <ul class="sub-menu blank">
+                    <li><a class="link_name" href="../setting.php">Manage Profile</a></li>
                 </ul>
             </li>
             <li>

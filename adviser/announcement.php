@@ -109,7 +109,7 @@ $current_page = $pagination_data['current_page'];
                 </div>
                 <ul class="sub-menu">
                     <li><a class="link_name" href="interns.php">Manage Interns</a></li>
-                    <li><a href="./intern/intern-profile.php">Student Profile</a></li>
+                    <!-- <li><a href="./intern/intern-profile.php">Student Profile</a></li> -->
                     <li><a href="./intern/intern-reports.php">Intern Reports</a></li>
                 </ul>
             </li>

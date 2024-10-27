@@ -21,13 +21,13 @@
 
 /* For Mobile Screens */
 @media (max-width: 768px) {
-  .logout-icon {
+  /* .logout-icon {
     padding: 8px;
     font-size: 18px;
     margin-right: 10px;
     background-color: #095d40;
     color: white;
-  }
+  } */
 
   .header {
     display: flex;
@@ -98,7 +98,7 @@
   }
 
   /* Modal */
-  @media (max-width: 768px) {
+  /* @media (max-width: 768px) {
     .modal {
       z-index: 100;
     }
@@ -123,9 +123,33 @@
       padding: 10px 20px;
       font-size: 14px;
     }
+  } */
+
+  /* Modal */
+  @media (max-width: 600px) {
+    .modal-content {
+      width: 90%;
+      padding: 15px;
+    }
+
+    .modal-content h2 {
+      font-size: 20px;
+    }
+
+    .modal-content p {
+      font-size: 16px;
+    }
+
+    .proceed-btn,
+    .confirm-btn,
+    .cancel-btn {
+      font-size: 14px;
+      padding: 8px 15px;
+    }
   }
+
   /* index form-container */
-  @media (max-width: 900px) {
+  /* @media (max-width: 900px) {
     .main-box {
       flex-direction: column;
       width: 100%;
@@ -154,4 +178,101 @@
       font-size: 16px;
     }
   }
+ */
 
+
+
+
+
+
+ /* Responsive design */
+ @media (max-width: 790px) {
+  .content-wrapper {
+    flex-direction: column;
+  }
+
+  .sidebar.close~.home-section {
+    left: 78px;
+    width: 100%;
+  }
+
+  .home-section {
+    width: 100%;
+  }
+
+  .main-box {
+    margin-left: 0px;
+    flex-direction: column;
+  }
+
+  .left-box,
+  .right-box {
+    width: 100%;
+  }
+
+  .whole-box {
+    width: 100%;
+    padding: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
+  }
+
+  .content-wrapper {
+    margin-left: 0px;
+    margin-right: 0px;
+  }
+
+  /* Smaller font sizes and spacing for mobile view */
+  .home-content i {
+    font-size: 20px;
+  }
+
+  .details h2 {
+    font-size: 18px;
+  }
+
+  .details label {
+    font-size: 14px;
+  }
+
+  .filter-group select,
+  .filter-group input {
+    padding: 6px;
+    font-size: 12px;
+  }
+table {
+  padding-right: 6px;
+}
+  table th,
+  table td {
+    padding: 6px;
+    font-size: 12px;
+  }
+ 
+  .right-box h2,
+  .left-box h2 {
+    font-size: 16px;
+  }
+
+  .announcement h3 {
+    font-size: 14px;
+  }
+
+  .announcement p {
+    font-size: 12px;
+  }
+
+  .header-box {
+    margin-left: 0px;
+  }
+}
+
+/* @media (min-width: 769px) {
+  .left-box {
+    width: 70%;
+  }
+
+  .right-box {
+    width: 30%;
+  }
+} */
