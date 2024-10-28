@@ -223,6 +223,25 @@ CREATE TABLE `password_reset_tokens` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `feedback`
+--
+
+CREATE TABLE `feedback` (
+  `feedback_id` int(11) NOT NULL AUTO_INCREMENT,
+  `student_id` int(11) NOT NULL,
+  `question_1` int(11) NOT NULL COMMENT 'Rating for Question 1 as percentage',
+  `question_2` int(11) NOT NULL COMMENT 'Rating for Question 2 as percentage',
+  `question_3` int(11) NOT NULL COMMENT 'Rating for Question 3 as percentage',
+  `question_4` int(11) NOT NULL COMMENT 'Rating for Question 4 as percentage',
+  `question_5` int(11) NOT NULL COMMENT 'Rating for Question 5 as percentage',
+  `total_score` int(11) AS ((`question_1` + `question_2` + `question_3` + `question_4` + `question_5`) / 5) STORED COMMENT 'Overall score as a percentage',
+  `feedback_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`feedback_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `student`
 --
 
@@ -488,6 +507,10 @@ ALTER TABLE `adviser_announcement`
 -- Constraints for table `course_sections`
 ALTER TABLE `course_sections`
   ADD CONSTRAINT `course_sections_ibfk_1` FOREIGN KEY (`adviser_id`) REFERENCES `adviser` (`adviser_id`) ON DELETE CASCADE ON UPDATE CASCADE; 
+  
+-- Constraints for table `feedback`
+ALTER TABLE `feedback`
+  ADD CONSTRAINT `feedback_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `student` (`student_id`) ON DELETE CASCADE ON UPDATE CASCADE; 
 --
 -- Constraints for table `student_journal`
 --

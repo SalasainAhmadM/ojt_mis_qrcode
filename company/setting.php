@@ -53,8 +53,10 @@ if ($result = $database->query($query)) {
     <title>Company - Manage Company Profile</title>
     <link rel="icon" href="../img/ccs.png" type="image/icon type">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="./css/style.css">
-    <link rel="stylesheet" href="./css/mobile.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <!-- <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/mobile.css"> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
 
@@ -101,6 +103,15 @@ if ($result = $database->query($query)) {
                 </ul>
             </li>
             <li>
+                <a href="intern.php">
+                    <i class="fa-solid fa-user"></i>
+                    <span class="link_name">Interns</span>
+                </a>
+                <ul class="sub-menu blank">
+                    <li><a class="link_name" href="intern.php">Interns</a></li>
+                </ul>
+            </li>
+            <!-- <li>
                 <div class="iocn-link">
                     <a href="intern.php">
                         <i class="fa-solid fa-user"></i>
@@ -114,7 +125,7 @@ if ($result = $database->query($query)) {
                     <li><a href="./intern/create-qr.php">Create QR</a></li>
                     <li><a href="./intern/create-id.php">Create ID</a></li>
                 </ul>
-            </li>
+            </li> -->
             <li>
                 <a href="message.php">
                     <i class="fa-regular fa-comments"></i>
@@ -178,7 +189,8 @@ if ($result = $database->query($query)) {
     </div>
     <section class="home-section">
         <div class="home-content">
-            <i class="fas fa-bars bx-menu"></i>
+            <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
+        </div>
         </div>
 
         <form style="" class="form-container">

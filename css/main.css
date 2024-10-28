@@ -511,7 +511,16 @@ hr {
     background-color: rgba(0, 0, 0, 0.5);
     
   } */
-
+  .modal-content-date {
+    background-color: #fff;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    text-align: center;
+    width: 30%;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
   .modal-content-big {
     background-color: #fff;
     margin: auto;
@@ -521,7 +530,16 @@ hr {
     width: 50%;
     border-radius: 10px;
   }
-  
+  .modal-content-bigger {
+    background-color: #fff;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    text-align: center;
+    width: 40%;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
   /* MODALS */
   .modal {
     display: none;
@@ -597,6 +615,22 @@ hr {
     box-sizing: border-box;
   }
   .modal input[type="text"],
+  .modal input[type="date"],
+  .modal input[type="email"],
+  .modal select[type="text"], 
+  .modal select#dayType, 
+  .modal select#editDayType,
+  .modal input[type="time"],
+  .modal input[type="password"],
+  .modal textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+  }
+  .modal input[type="text"],
   .modal textarea {
     width: 100%;
   }
@@ -620,6 +654,7 @@ hr {
     height: 250px;
     resize: vertical;
   }
+
 
   .modal-btn {
     background-color: #095d40;
@@ -789,10 +824,10 @@ hr {
   .left-box tbody{
     display: block;
     max-height: 320px;
-    /* overflow-y: scroll; */
-    /* width: calc(100% + 17px); 
-    margin-right: -17px;  */
-    width: 100%;
+    overflow-y: scroll;
+    width: calc(100% + 17px); 
+    margin-right: -17px; 
+    /* width: 100%; */
   }
   .whole-box tbody {
     display: block;
@@ -922,7 +957,21 @@ hr {
     cursor: pointer;
     transition: background-color 0.3s ease;
   }
-
+  .action-view , .action-rate
+  /* , .action-id */
+  {
+    background-color: #095d40;
+    height: 100%;
+    width: 30%;
+    color: #fff;
+    border: 1px solid #888;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  } 
   th.action,
   td.action {
     width: 10%;
@@ -934,7 +983,12 @@ hr {
 .date {
   width: 15%;
 }
-
+td.maxlength , td.section , td.wmsu_id , td.contact {
+  max-width: 20%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 
   .whole-box table th.action,
   .whole-box table td.action , .main-box table th.action,
@@ -996,7 +1050,7 @@ hr {
     text-align: left;
   }
   
-  .time-in-info p {
+  .time-in-info p { 
     font-size: 16px;
     color: #333;
     text-align: center;
@@ -1075,6 +1129,92 @@ hr {
   }
 .clock-image img {
   width: 300px; height: 300px;
+}
+
+/* company qr */
+
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#qr-code-img {
+  width: 200px;
+  height: 200px;
+  margin-bottom: 10px;
+}
+
+.qr-name,
+.qr-date {
+  color: #095d40;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.time-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 10px;
+  padding: 0 20px;
+}
+
+.time-label {
+  font-size: 16px;
+  color: #333;
+  font-weight: bold;
+  margin-right: 5px;
+}
+.holiday {
+  color: #8B0000;
+}
+.suspended {
+  color: orange;
+}
+
+.holiday-label {
+  color: #8B0000; 
+  font-size: 18px; 
+  font-weight: bold;
+  text-align: center; 
+  margin-top: 4px; 
+}
+
+.time-label {
+  display: flex;
+  flex-direction: column; 
+  align-items: center;
+}
+
+.time-in-label,
+.time-out-label {
+  font-size: 16px;  
+  color: #333; 
+  font-weight: bold;
+}
+.action-buttons {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.action-buttons button {
+  background-color: #095d40;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  font-size: 16px;
+  cursor: pointer;
+  margin: 5px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+  /* display: none; */
+}
+
+.action-buttons button:hover {
+  background-color: #05613e;
 }
   /* QR CODE */
   /* pagination adviser */
@@ -1156,3 +1296,278 @@ hr {
   }
 
   /* Pagination Ends */
+
+/* Calendar */
+
+#calendar {
+  padding: 30px;
+  height: 500px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  width: 70%;
+}
+
+/*  Calendar ends*/
+
+/* View Modal UI */
+
+
+.modal-title {
+  font-size: 1.5em;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.input-group-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  align-items: center;
+}
+
+.input-group-mi,
+.input-group-fn,
+.input-group-ln {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-group-mi {
+  width: 50px;
+}
+
+.input-group-fn {
+  width: 30%;
+}
+
+.input-group-ln {
+  width: 50%;
+}
+
+
+#adviserMiddlename,
+#editAdviserMiddle,
+#mi {
+  width: 50px;
+}
+
+.profile-img-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.profile-preview-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.profile-img-label {
+  margin-top: 5px;
+  font-size: 0.9em;
+  color: #777;
+}
+th.image,
+td.image {
+    width: 70px;
+    text-align: center;
+    vertical-align: middle;
+    padding: 10px;
+}
+
+td.image img {
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border: 2px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Evaluation Modal */
+.checkbox-group {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: normal;
+  color: #333;
+}
+
+/* Evaluation Modal Ends */
+
+
+/* View UI Ends */
+
+
+  /* message Company Side */
+
+  /* CHAT CSS */
+.chat-container {
+  display: flex;
+  height: 600px;
+  background-color: #f1f1f1;
+  margin-left: 60px;
+  margin-right: 60px;
+}
+
+.adviser-list {
+  width: 25%;
+  border-right: 1px solid #ccc;
+  overflow-y: auto;
+  background-color: #fff;
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.adviser-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.3s ease;
+}
+
+.adviser-item:hover,
+.adviser-item.active {
+  background-color: #f0f0f0;
+}
+
+.adviser-item img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 15px;
+}
+
+.chat-box {
+  width: 75%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #fff;
+}
+
+.chat-header {
+  padding: 15px;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  background-color: #f5f5f5;
+}
+
+.chat-header img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background-color: #f1f1f1;
+}
+
+.message {
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 10px;
+  max-width: 70%;
+  clear: both;
+  word-wrap: break-word;
+}
+
+.message.sent {
+  background-color: #dcf8c6;
+  float: right;
+  text-align: right;
+}
+
+.message.received {
+  background-color: #f1f0f0;
+  float: left;
+  text-align: left;
+}
+
+.message .timestamp {
+  font-size: 10px;
+  color: #888;
+  margin-top: 5px;
+  display: block;
+}
+
+.chat-input {
+  padding: 15px;
+  border-top: 1px solid #ccc;
+  display: flex;
+  background-color: #f5f5f5;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  outline: none;
+  background-color: #fff;
+}
+
+.chat-input button {
+  background-color: #095d40;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 50%;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.unread-count {
+  position: relative;
+  display: inline-block;
+  margin-left: 4px;
+}
+
+.unread-count .fa-envelope {
+  font-size: 18px;
+  color: #095d40;
+  position: relative;
+}
+
+.unread-count .count {
+  background-color: red;
+  color: white;
+  padding: 2px 6px;
+  font-size: 10px;
+  border-radius: 50%;
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-weight: bold;
+  border: 2px solid #fff;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Message Company Ends */

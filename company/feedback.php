@@ -28,6 +28,185 @@ if ($stmt = $database->prepare($query)) {
     $stmt->close(); // Close the statement
 }
 
+// Fetch all course_sections for the dropdown
+$query = "SELECT * FROM course_sections";
+$course_sections = [];
+if ($stmt = $database->prepare($query)) {
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $course_sections[] = $row;
+    }
+    $stmt->close();
+}
+// Fetch students under the current company
+$student_query = "SELECT * FROM student WHERE company = ?";
+$students = [];
+if ($stmt = $database->prepare($student_query)) {
+    $stmt->bind_param("i", $company_id);
+    $stmt->execute();
+    $student_result = $stmt->get_result();
+
+    if ($student_result->num_rows > 0) {
+        while ($row = $student_result->fetch_assoc()) {
+            $students[] = $row; // Add each student to the array
+        }
+    }
+    $stmt->close();
+}
+// Fetch students and their course section names
+$student_query = "SELECT student.*, course_sections.course_section_name, student.generated_qr_code 
+                  FROM student 
+                  LEFT JOIN course_sections ON student.course_section = course_sections.id 
+                  WHERE student.company = ?";
+$students = [];
+if ($stmt = $database->prepare($student_query)) {
+    $stmt->bind_param("i", $company_id);
+    $stmt->execute();
+    $student_result = $stmt->get_result();
+
+    if ($student_result->num_rows > 0) {
+        while ($row = $student_result->fetch_assoc()) {
+            $students[] = $row; // Add each student to the array
+        }
+    }
+    $stmt->close();
+}
+
+// Capture the selected course_section and search query
+$selected_course_section = isset($_GET['course_section']) ? $_GET['course_section'] : '';
+$search_query = isset($_GET['search']) ? '%' . $_GET['search'] . '%' : '';
+
+// Function to get paginated and searched students
+// Updated function to get students with adviser full name
+function getStudents($database, $selected_course_section, $search_query, $company_id, $limit = 5)
+{
+    // Determine the current page for pagination
+    $page = isset($_GET['page']) && is_numeric($_GET['page']) ? intval($_GET['page']) : 1;
+    $offset = ($page - 1) * $limit;
+
+    // Base query to count total students for pagination
+    $total_students_query = "
+    SELECT COUNT(*) AS total 
+    FROM student 
+    WHERE company = ?";
+
+    // Base query to fetch students along with related data
+    $students_query = "
+    SELECT student.*, 
+           CONCAT(adviser.adviser_firstname, ' ', adviser.adviser_middle, '. ', adviser.adviser_lastname) AS adviser_fullname,
+           CONCAT(address.address_barangay, ', ', address.address_street) AS full_address,
+           company.company_name,
+           course_sections.course_section_name,
+           departments.department_name,
+           COALESCE(SUM(attendance.ojt_hours), 0) AS total_ojt_hours
+    FROM student 
+    LEFT JOIN adviser ON student.adviser = adviser.adviser_id
+    LEFT JOIN address ON student.student_address = address.address_id
+    LEFT JOIN company ON student.company = company.company_id
+    LEFT JOIN course_sections ON student.course_section = course_sections.id
+    LEFT JOIN departments ON student.department = departments.department_id
+    LEFT JOIN attendance ON student.student_id = attendance.student_id
+    WHERE student.company = ?";
+
+    // Add course section filter if selected
+    if (!empty($selected_course_section)) {
+        $total_students_query .= " AND student.course_section = ?";
+        $students_query .= " AND student.course_section = ?";
+    }
+
+    // Add search query filter if provided
+    if (!empty($search_query)) {
+        $total_students_query .= " AND (student_firstname LIKE ? OR student_middle LIKE ? OR student_lastname LIKE ?)";
+        $students_query .= " AND (student_firstname LIKE ? OR student_middle LIKE ? OR student_lastname LIKE ?)";
+    }
+
+    // Add pagination to the students query
+    // $students_query .= " ORDER BY student.student_id LIMIT ? OFFSET ?";
+    $students_query .= " GROUP BY student.student_id ORDER BY student.student_id LIMIT ? OFFSET ?";
+
+    // Prepare and execute the total students query
+    if ($stmt = $database->prepare($total_students_query)) {
+        // Bind parameters dynamically based on filters
+        if (!empty($selected_course_section) && !empty($search_query)) {
+            $stmt->bind_param("issss", $company_id, $selected_course_section, $search_query, $search_query, $search_query);
+        } elseif (!empty($selected_course_section)) {
+            $stmt->bind_param("is", $company_id, $selected_course_section);
+        } elseif (!empty($search_query)) {
+            $stmt->bind_param("isss", $company_id, $search_query, $search_query, $search_query);
+        } else {
+            $stmt->bind_param("i", $company_id);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $total_students = $result->fetch_assoc()['total'];
+        $stmt->close();
+    }
+
+    // Calculate total pages
+    $total_pages = ceil($total_students / $limit);
+
+    // Prepare and execute the students query with pagination
+    $students = [];
+    if ($stmt = $database->prepare($students_query)) {
+        // Bind parameters dynamically based on filters and pagination
+        if (!empty($selected_course_section) && !empty($search_query)) {
+            $stmt->bind_param("issssii", $company_id, $selected_course_section, $search_query, $search_query, $search_query, $limit, $offset);
+        } elseif (!empty($selected_course_section)) {
+            $stmt->bind_param("isii", $company_id, $selected_course_section, $limit, $offset);
+        } elseif (!empty($search_query)) {
+            $stmt->bind_param("isssii", $company_id, $search_query, $search_query, $search_query, $limit, $offset);
+        } else {
+            $stmt->bind_param("iii", $company_id, $limit, $offset);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $students[] = $row;
+        }
+        $stmt->close();
+    }
+
+    // Return paginated data and pagination info
+    return [
+        'students' => $students,
+        'total_pages' => $total_pages,
+        'current_page' => $page,
+    ];
+}
+
+
+// Function to render pagination links with course_section and search persistence
+function renderPaginationLinks($total_pages, $current_page, $selected_course_section, $search_query)
+{
+    $search_query_encoded = htmlspecialchars($_GET['search'] ?? '', ENT_QUOTES);
+    $course_section_query_encoded = htmlspecialchars($_GET['course_section'] ?? '', ENT_QUOTES);
+
+    // Display Previous button
+    if ($current_page > 1) {
+        echo '<a href="?page=' . ($current_page - 1) . '&course_section=' . $course_section_query_encoded . '&search=' . $search_query_encoded . '" class="prev">Previous</a>';
+    }
+
+    // Display page numbers (only show 7 page links)
+    for ($i = max(1, $current_page - 2); $i <= min($total_pages, $current_page + 2); $i++) {
+        $active = $i == $current_page ? 'active' : '';
+        echo '<a href="?page=' . $i . '&course_section=' . $course_section_query_encoded . '&search=' . $search_query_encoded . '" class="' . $active . '">' . $i . '</a>';
+    }
+
+    // Display Next button
+    if ($current_page < $total_pages) {
+        echo '<a href="?page=' . ($current_page + 1) . '&course_section=' . $course_section_query_encoded . '&search=' . $search_query_encoded . '" class="next">Next</a>';
+    }
+}
+
+$company_id = $_SESSION['user_id']; // Retrieve company_id from session
+$pagination_data = getStudents($database, $selected_course_section, $search_query, $company_id);
+$students = $pagination_data['students'];
+$total_pages = $pagination_data['total_pages'];
+$current_page = $pagination_data['current_page'];
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -38,8 +217,8 @@ if ($stmt = $database->prepare($query)) {
     <title>Company - Feedback</title>
     <link rel="icon" href="../img/ccs.png" type="image/icon type">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="./css/style.css">
-    <link rel="stylesheet" href="./css/mobile.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/mobile.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
 
@@ -86,6 +265,15 @@ if ($stmt = $database->prepare($query)) {
                 </ul>
             </li>
             <li>
+                <a href="intern.php">
+                    <i class="fa-solid fa-user"></i>
+                    <span class="link_name">Interns</span>
+                </a>
+                <ul class="sub-menu blank">
+                    <li><a class="link_name" href="intern.php">Interns</a></li>
+                </ul>
+            </li>
+            <!-- <li>
                 <div class="iocn-link">
                     <a href="intern.php">
                         <i class="fa-solid fa-user"></i>
@@ -99,7 +287,7 @@ if ($stmt = $database->prepare($query)) {
                     <li><a href="./intern/create-qr.php">Create QR</a></li>
                     <li><a href="./intern/create-id.php">Create ID</a></li>
                 </ul>
-            </li>
+            </li> -->
             <li>
                 <a href="message.php">
                     <i class="fa-regular fa-comments"></i>
@@ -163,9 +351,311 @@ if ($stmt = $database->prepare($query)) {
     </div>
     <section class="home-section">
         <div class="home-content">
-            <i class="fas fa-bars bx-menu"></i>
+            <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
         </div>
+
+        <div class="content-wrapper">
+
+            <div class="header-box">
+                <label style="color: #a6a6a6; margin-left: 5px;">Feedback</label>
+            </div>
+            <div class="main-box">
+                <div class="whole-box">
+                    <h2>
+                        Interns
+                    </h2>
+                    <div class="filter-group">
+                        <!-- Course_section Filter Form -->
+                        <form method="GET" action="">
+                            <select class="dropdown" name="course_section" onchange="this.form.submit()">
+                                <option value="">Select Section</option>
+                                <?php foreach ($course_sections as $course_section): ?>
+                                    <option value="<?php echo htmlspecialchars($course_section['id'], ENT_QUOTES); ?>" Use
+                                        the course_section ID as the value -->
+                                        <?php echo $selected_course_section == $course_section['id'] ? 'selected' : ''; ?>>
+                                        <!-- Check selected by ID -->
+                                        <?php echo htmlspecialchars($course_section['course_section_name'], ENT_QUOTES); ?>
+                                        <!-- Display the course section name -->
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <input type="hidden" name="search"
+                                value="<?php echo htmlspecialchars(isset($_GET['search']) ? $_GET['search'] : '', ENT_QUOTES); ?>">
+                        </form>
+
+
+                        <!-- Search Bar Form -->
+                        <form method="GET" action="">
+                            <input type="hidden" name="course_section"
+                                value="<?php echo htmlspecialchars($selected_course_section, ENT_QUOTES); ?>">
+                            <div class="search-bar-container">
+                                <input type="text" class="search-bar" name="search" placeholder="Search Student"
+                                    value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                                <button type="submit" class="search-bar-icon">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Reset Button Form -->
+                        <form method="GET" action="intern.php">
+                            <button type="submit" class="reset-bar-icon">
+                                <i class="fa fa-times-circle"></i>
+                            </button>
+                        </form>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="image">Profile</th>
+                                <th>Name</th>
+                                <th class="wmsu_id">Student ID</th>
+                                <th class="section">Section</th>
+                                <!-- <th>Email</th>
+                                <th class="contact">Contact Number</th> -->
+                                <th>Adviser</th>
+                                <th>OJT Hours</th>
+                                <th class="action">Action</th>
+                            </tr>
+                        </thead>
+                        <?php if (!empty($students)): ?>
+                            <?php foreach ($students as $student): ?>
+                                <tr>
+                                    <td class="image">
+                                        <img style="border-radius: 50%;"
+                                            src="../uploads/student/<?php echo !empty($student['student_image']) ? $student['student_image'] : 'user.png'; ?>"
+                                            alt="student Image">
+                                    </td>
+                                    <td class="maxlength">
+                                        <?php echo $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname']; ?>
+                                    </td>
+                                    <td class="wmsu_id"><?php echo $student['wmsu_id']; ?> </td>
+                                    <td class="section"><?php echo $student['course_section_name']; ?></td>
+                                    <!-- <td class="maxlength"><?php echo $student['student_email']; ?></td>
+                                    <td class="contact"><?php echo $student['contact_number']; ?></td> -->
+                                    <td><?php echo $student['adviser_fullname']; ?></td>
+                                    <td class="ojt-hours" data-hours="<?php echo $student['total_ojt_hours']; ?>"></td>
+                                    <td class="action">
+                                        <button class="action-rate edit-btn"
+                                            data-student-name="<?php echo $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname']; ?>"
+                                            data-student-email="<?php echo $student['student_email']; ?>"
+                                            data-student-id="<?php echo $student['student_id']; ?>">
+                                            <i class="fa-regular fa-star"></i>
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="5" style="text-align: center;">There's no intern yet in this company.</td>
+                            </tr>
+                        <?php endif; ?>
+
+                    </table>
+
+                    <!-- Display pagination links -->
+                    <div class="pagination">
+                        <?php renderPaginationLinks($total_pages, $current_page, $selected_course_section, $search_query); ?>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+
     </section>
+    <!-- Evaluation Modal -->
+    <div id="evaluationModal" class="modal">
+        <div class="modal-content-bigger">
+            <h2 style="color: #000;">Student Performance Evaluation</h2>
+            <form id="evaluationForm" action="submit_evaluation.php" method="POST">
+                <input type="hidden" id="eval_student_id" name="student_id">
+
+                <div class="evaluation-questions">
+                    <p>Evaluate <strong><span id="eval_student_name"></span></strong>'s performance:</p>
+
+                    <!-- Question 1 -->
+                    <label>1. Demonstrates initiative in completing tasks.</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="question_1" value="Strongly Agree"> Strongly
+                            Agree</label>
+                        <label><input type="checkbox" name="question_1" value="Agree"> Agree</label>
+                        <label><input type="checkbox" name="question_1" value="Neutral"> Neutral</label>
+                        <label><input type="checkbox" name="question_1" value="Disagree"> Disagree</label>
+                        <label><input type="checkbox" name="question_1" value="Strongly Disagree"> Strongly
+                            Disagree</label>
+                    </div>
+
+                    <!-- Question 2 -->
+                    <label>2. Works well with others in a team environment.</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="question_2" value="Strongly Agree"> Strongly
+                            Agree</label>
+                        <label><input type="checkbox" name="question_2" value="Agree"> Agree</label>
+                        <label><input type="checkbox" name="question_2" value="Neutral"> Neutral</label>
+                        <label><input type="checkbox" name="question_2" value="Disagree"> Disagree</label>
+                        <label><input type="checkbox" name="question_2" value="Strongly Disagree"> Strongly
+                            Disagree</label>
+                    </div>
+
+                    <!-- Question 3 -->
+                    <label>3. Demonstrates responsibility and accountability.</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="question_3" value="Strongly Agree"> Strongly
+                            Agree</label>
+                        <label><input type="checkbox" name="question_3" value="Agree"> Agree</label>
+                        <label><input type="checkbox" name="question_3" value="Neutral"> Neutral</label>
+                        <label><input type="checkbox" name="question_3" value="Disagree"> Disagree</label>
+                        <label><input type="checkbox" name="question_3" value="Strongly Disagree"> Strongly
+                            Disagree</label>
+                    </div>
+
+                    <!-- Question 4 -->
+                    <label>4. Effectively manages time to meet deadlines.</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="question_4" value="Strongly Agree"> Strongly
+                            Agree</label>
+                        <label><input type="checkbox" name="question_4" value="Agree"> Agree</label>
+                        <label><input type="checkbox" name="question_4" value="Neutral"> Neutral</label>
+                        <label><input type="checkbox" name="question_4" value="Disagree"> Disagree</label>
+                        <label><input type="checkbox" name="question_4" value="Strongly Disagree"> Strongly
+                            Disagree</label>
+                    </div>
+
+                    <!-- Question 5 -->
+                    <label>5. Communicates effectively in both written and verbal forms.</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="question_5" value="Strongly Agree"> Strongly
+                            Agree</label>
+                        <label><input type="checkbox" name="question_5" value="Agree"> Agree</label>
+                        <label><input type="checkbox" name="question_5" value="Neutral"> Neutral</label>
+                        <label><input type="checkbox" name="question_5" value="Disagree"> Disagree</label>
+                        <label><input type="checkbox" name="question_5" value="Strongly Disagree"> Strongly
+                            Disagree</label>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+                    <button type="submit" class="confirm-btn">Submit Evaluation</button>
+                    <button type="button" class="cancel-btn" onclick="closeModal('evaluationModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+    <!-- Feedback Success Modal -->
+    <div id="feedbackSuccessModal" class="modal">
+        <div class="modal-content">
+            <!-- Lottie Animation -->
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2>Feedback Submitted Successfully!</h2>
+            <p>Thank you for submitting your feedback!</p>
+            <button class="proceed-btn" onclick="closeModal('feedbackSuccessModal')">Close</button>
+        </div>
+    </div>
+
+
+    <script>
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = "block";
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+        }
+
+        // Show the appropriate modal based on session variables
+        window.onload = function () {
+            <?php if (isset($_SESSION['feedback_success'])): ?>
+                showModal('feedbackSuccessModal');
+                <?php unset($_SESSION['feedback_success']); ?>
+            <?php elseif (isset($_SESSION['feedback_error'])): ?>
+                showModal('feedbackErrorModal'); // Add an error modal if desired
+                <?php unset($_SESSION['feedback_error']); ?>
+            <?php endif; ?>
+        };
+        // Function to open the evaluation modal
+        function openEvaluationModal(studentName, studentId) {
+            document.getElementById('eval_student_name').textContent = studentName;
+            document.getElementById('eval_student_id').value = studentId;
+            openModal('evaluationModal');
+        }
+
+        // Function to open a modal by ID
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'block';
+            }
+        }
+
+        // Function to close a modal by ID
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Attach event listeners to "rate" buttons to trigger the evaluation modal
+        document.querySelectorAll('.action-rate').forEach(button => {
+            button.addEventListener('click', function () {
+                const studentName = this.getAttribute('data-student-name');
+                const studentId = this.getAttribute('data-student-id'); // Directly fetch the student_id
+
+                // Open the modal with student details
+                openEvaluationModal(studentName, studentId);
+            });
+        });
+
+        // Optional: Close modal when clicking outside of it
+        window.onclick = function (event) {
+            const modal = document.getElementById('evaluationModal');
+            if (event.target === modal) {
+                closeModal('evaluationModal');
+            }
+        };
+
+
+        function formatOjtHours(hoursDecimal) {
+            const hours = Math.floor(hoursDecimal);
+            const minutes = Math.round((hoursDecimal - hours) * 60);
+
+            const hoursLabel = hours === 1 ? "hr" : "hrs";
+            const minutesLabel = minutes === 1 ? "min" : "mins";
+
+            let formattedTime = "";
+            if (hours > 0) {
+                formattedTime += `${hours} ${hoursLabel}`;
+            }
+            if (minutes > 0) {
+                if (formattedTime) formattedTime += " ";
+                formattedTime += `${minutes} ${minutesLabel}`;
+            }
+
+            return formattedTime || "N/A";
+        }
+
+        document.querySelectorAll('.ojt-hours').forEach(cell => {
+            const hoursDecimal = parseFloat(cell.getAttribute('data-hours'));
+            cell.textContent = formatOjtHours(hoursDecimal);
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll('.ojt-hours').forEach(cell => {
+                const hoursDecimal = parseFloat(cell.getAttribute('data-hours'));
+                cell.textContent = formatOjtHours(hoursDecimal);
+            });
+        });
+    </script>
     <!-- Logout Confirmation Modal -->
     <div id="logoutModal" class="modal">
         <div class="modal-content">

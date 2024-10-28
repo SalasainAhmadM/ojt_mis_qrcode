@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../../conn/connection.php'; // Update this path to your actual connection file
+include('../../phpqrcode/qrlib.php');  // Include PHPQRCode library
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $schedule_id = $_POST['schedule_id'];
@@ -29,10 +30,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $time_out = empty($time_out) ? $existingSchedule['time_out'] : $time_out;
     $day_type = empty($day_type) ? $existingSchedule['day_type'] : $day_type;
 
-    // Update the schedule
-    $updateQuery = "UPDATE schedule SET time_in = ?, time_out = ?, day_type = ? WHERE schedule_id = ?";
+    // Determine the QR code path based on day_type
+    $fileName = $existingSchedule['generated_qr_code']; // Use existing QR code as default
+    if ($day_type === 'Suspended') {
+        $fileName = "../img/qr-code-error.png";  // Set to error QR for suspended days
+    } elseif ($day_type === 'Regular' || $day_type === 'Halfday') {
+        // Generate a new QR code for non-Suspended days
+        $qrData = "$company_id - {$existingSchedule['date']}";
+        $qrCodeDir = "../uploads/company/qrcodes/";
+
+        if (!is_dir($qrCodeDir)) {
+            mkdir($qrCodeDir, 0755, true);
+        }
+
+        $fileName = $qrCodeDir . "qr-schedule-" . $company_id . "-" . $existingSchedule['date'] . ".png";
+        QRcode::png($qrData, $fileName, QR_ECLEVEL_L, 10);
+    }
+
+    // Update the schedule with new values and QR code path
+    $updateQuery = "UPDATE schedule SET time_in = ?, time_out = ?, day_type = ?, generated_qr_code = ? WHERE schedule_id = ?";
     $stmt = $database->prepare($updateQuery);
-    $stmt->bind_param('sssi', $time_in, $time_out, $day_type, $schedule_id);
+    $stmt->bind_param('ssssi', $time_in, $time_out, $day_type, $fileName, $schedule_id);
 
     if ($stmt->execute()) {
         $_SESSION['edit_success'] = "Schedule updated successfully!";

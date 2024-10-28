@@ -140,7 +140,7 @@
         width: 60%;
         padding: 15px;
       }
-  
+
       .modal-content h2 {
         font-size: 20px;
       }
@@ -393,14 +393,45 @@
   width: 250px;
   height: 250px;
 }
+/* Message Company */
+.chat-container {
+  width: 80%;
+  flex-direction: column;
+  height: 600px;
+  /* background-color: #f1f1f1;  */
+  margin-left: 10px;
+  margin-right: 10px;
+  gap: 2;
+}
+.adviser-list {
+  width: 10%;
+  padding: 10px;
+}
 
-} 
-  /* @media (min-width: 769px) {
-    .left-box {
-      width: 70%;
-    }
-  
-    .right-box {
-      width: 30%;
-    }
-  } */
+.adviser-list {
+  width: 90%;
+  /* Full width in mobile */
+  height: 40vh;
+  /* Take 30% of the height */
+}
+
+.chat-box {
+  height: 70vh;
+  width: 90%;
+}
+
+
+
+#calendar {
+  padding: 30px;
+  width: 100%;
+}
+.fc-toolbar-title {
+  font-size: 1rem;
+}
+
+.fc-button {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+}
+}

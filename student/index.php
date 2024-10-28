@@ -176,7 +176,6 @@ if ($announcement_result->num_rows > 0) {
           </div>
         </div>
       </div>
-
       <div class="main-box">
         <div class="left-box">
           <h2>

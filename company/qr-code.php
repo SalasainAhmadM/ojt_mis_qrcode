@@ -65,6 +65,8 @@ if (!$holiday) {
         $stmt->close();
     }
 }
+$isSuspended = isset($schedule['day_type']) && $schedule['day_type'] === 'Suspended';
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -75,9 +77,11 @@ if (!$holiday) {
     <title>Company - QR Code</title>
     <link rel="icon" href="../img/ccs.png" type="image/icon type">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <!-- <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/index.css">
-    <link rel="stylesheet" href="./css/mobile.css">
+    <link rel="stylesheet" href="./css/mobile.css"> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 </head>
@@ -122,6 +126,15 @@ if (!$holiday) {
                 </ul>
             </li>
             <li>
+                <a href="intern.php">
+                    <i class="fa-solid fa-user"></i>
+                    <span class="link_name">Interns</span>
+                </a>
+                <ul class="sub-menu blank">
+                    <li><a class="link_name" href="intern.php">Interns</a></li>
+                </ul>
+            </li>
+            <!-- <li>
                 <div class="iocn-link">
                     <a href="intern.php">
                         <i class="fa-solid fa-user"></i>
@@ -135,7 +148,7 @@ if (!$holiday) {
                     <li><a href="./intern/create-qr.php">Create QR</a></li>
                     <li><a href="./intern/create-id.php">Create ID</a></li>
                 </ul>
-            </li>
+            </li> -->
             <li>
                 <a href="message.php">
                     <i class="fa-regular fa-comments"></i>
@@ -201,7 +214,8 @@ if (!$holiday) {
 
     <section class="home-section">
         <div class="home-content">
-            <i class="fas fa-bars bx-menu"></i>
+            <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
+        </div>
         </div>
 
         <div class="content-wrapper">
@@ -231,7 +245,7 @@ if (!$holiday) {
                             <p>Date: <strong></strong></p>
                         </div>
                         <div class="clock-image">
-                            <img src="../img/clock.png" alt="Clock Image" style="width: 350px; height: 350px;">
+                            <img src="../img/clock.png" alt="Clock Image" style="">
                         </div>
                     </div>
                 </div>
@@ -239,30 +253,54 @@ if (!$holiday) {
                 <div class="right-box-qr">
                     <h2 style="text-align: center;">Today's QR Code</h2>
                     <div class="qr-container">
-                        <img src="<?php echo !empty($schedule['generated_qr_code']) ? $schedule['generated_qr_code'] : '../img/qr-code-error.png'; ?>" alt="QR Code" id="qr-code-img" style="width: 200px; height: 200px;">
+                        <img src="<?php echo !empty($schedule['generated_qr_code']) ? $schedule['generated_qr_code'] : '../img/qr-code-error.png'; ?>"
+                            alt="QR Code" id="qr-code-img" style="">
                         <p class="qr-date"><?php echo date('F j, Y'); ?></p>
-                        <div style="flex-direction: column; align-items: center; " class="time-container">
-                            <?php if ($holiday): ?>
-                                <!-- Show holiday details if present -->
-                                 <p style="text-align: center;"class="holiday-label"><strong> <?php echo $holiday['holiday_name']; ?></strong></p>
-                                 <?php else: ?>
-                                 <?php
-                                 $timeIn = date('g:ia', strtotime($schedule['time_in']));
-                                 $timeOut = date('g:ia', strtotime($schedule['time_out']));
-                                 ?>
-                                 <div class="time-label">
+
+                        <div style="flex-direction: column; align-items: center;" class="time-container">
+                            <?php
+                            $isWeekend = date('N') >= 6; // 6 = Saturday, 7 = Sunday
+                            if ($holiday): ?>
+                                <p style="text-align: center;" class="holiday-label">
+                                    <strong><?php echo $holiday['holiday_name']; ?></strong>
+                                </p>
+                            <?php elseif ($isWeekend): ?>
+                                <p style="text-align: center; color: red" class="weekend-label">
+                                    <strong><?php echo date('l'); ?>: No Duty!</strong>
+                                </p>
+                            <?php elseif ($isSuspended): ?>
+                                <p style="text-align: center; color: orange" class="suspended-label">
+                                    <strong>No Duty</strong>
+                                </p>
+                            <?php else:
+                                $timeIn = date('g:ia', strtotime($schedule['time_in']));
+                                $timeOut = date('g:ia', strtotime($schedule['time_out']));
+                                ?>
+                                <div class="time-label">
                                     <p class="time-in-label"><?php echo "Time-in: $timeIn"; ?></p>
                                     <p class="time-out-label"><?php echo "Time-out: $timeOut"; ?></p>
                                 </div>
-                                <?php endif; ?>
-                            </div>
+                            <?php endif; ?>
+                        </div>
+
+
                         <p class="day-type">
-                            <strong id="day-type-text"><?php echo $holiday ? 'Holiday' : $schedule['day_type']; ?></strong>
+                            <strong id="day-type-text">
+                                <?php
+                                if ($holiday) {
+                                    echo 'Holiday';
+                                } elseif ($isWeekend) {
+                                    echo 'Weekend';
+                                } else {
+                                    echo $schedule['day_type'];
+                                }
+                                ?>
+                            </strong>
                         </p>
                     </div>
                 </div>
+
             </div>
-        </div>
     </section>
     <!-- QR Scan Time-in Modal -->
     <div id="qrsuccessTimeinModal" class="modal" style="display: none;">
@@ -315,55 +353,95 @@ if (!$holiday) {
         </div>
     </div>
     <script>
-  window.addEventListener('DOMContentLoaded', () => {
-    const dayType = "<?php echo $holiday ? 'Holiday' : $schedule['day_type']; ?>";
-    const qrDate = document.querySelector('.qr-date');
-    const dayTypeText = document.getElementById('day-type-text');
-    const timePeriod = document.getElementById('time-period');
-    const holidayLabel = document.querySelector('.holiday-label');
-    const holidayModal = document.getElementById('holidayModal'); 
+        window.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            const day = today.getDay(); // 0 = Sunday, 6 = Saturday
+            const isWeekend = day === 0 || day === 6;
 
-    if (dayType.trim() === 'Holiday') {
-        qrDate.classList.add('holiday');
-        dayTypeText.classList.add('holiday');
-        if (timePeriod) timePeriod.style.display = 'none'; // Hide time-in and time-out
+            const dayType = "<?php echo $holiday ? 'Holiday' : $schedule['day_type']; ?>";
+            const qrDate = document.querySelector('.qr-date');
+            const dayTypeText = document.getElementById('day-type-text');
+            const timePeriod = document.getElementById('time-period');
+            const holidayModal = document.getElementById('holidayModal');
+            const weekendModal = document.getElementById('weekendModal');
+            const suspendedModal = document.getElementById('suspendedModal');
 
-        // Show the holiday modal
-        if (holidayModal) {
-            holidayModal.style.display = 'block';
+            if (isWeekend) {
+                if (weekendModal) {
+                    weekendModal.style.display = 'block';
+                }
+            } else if (dayType.trim() === 'Holiday') {
+                qrDate.classList.add('holiday');
+                dayTypeText.classList.add('holiday');
+                if (timePeriod) timePeriod.style.display = 'none';
+
+                if (holidayModal) {
+                    holidayModal.style.display = 'block';
+                }
+            } else if (dayType.trim() === 'Suspended') {
+                // Apply suspended styles
+                qrDate.classList.add('suspended');
+                dayTypeText.classList.add('suspended');
+
+                if (suspendedModal) {
+                    suspendedModal.style.display = 'block';
+                }
+            } else if (dayType.trim() === 'Regular') {
+                if (timePeriod) timePeriod.style.display = '';
+                dayTypeText.parentElement.style.display = 'none';
+            } else if (dayType.trim() === '') {
+                if (timePeriod) timePeriod.style.display = 'none';
+                dayTypeText.parentElement.style.display = 'none';
+            }
+        });
+
+        // Close modal function
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
-    } else if (dayType.trim() === 'Regular') {
-        if (timePeriod) timePeriod.style.display = ''; // Show time-in and time-out
-        dayTypeText.parentElement.style.display = 'none';
-    } else if (dayType.trim() === '') {
-        if (timePeriod) timePeriod.style.display = 'none'; // Hide time-in and time-out
-        dayTypeText.parentElement.style.display = 'none';
-    }
-});
 
-// Close modal function
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-</script>
-<!-- Holiday Modal -->
-<div id="holidayModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div style="display: flex; justify-content: center; align-items: center;">
-            <lottie-player src="../animation/alert-8B0000.json" background="transparent" speed="1" 
-                           style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+    </script>
+    <!-- Holiday Modal -->
+    <div id="holidayModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/alert-8B0000.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+            </div>
+            <h2 style="color: #8B0000">It's a Holiday!</h2>
+            <p><strong><?php echo date('F j, Y'); ?></strong></p>
+            <p style="color: #8B0000"><strong><?php echo $holiday['holiday_name']; ?></strong></p>
+            <button class="proceed-btn" onclick="closeModal('holidayModal')">Close</button>
         </div>
-        <h2 style="color: #8B0000">It's a Holiday!</h2>
-        <p><strong><?php echo date('F j, Y'); ?></strong></p>
-        <p style="color: #8B0000"><strong><?php echo $holiday['holiday_name']; ?></strong></p>
-        <button class="proceed-btn" onclick="closeModal('holidayModal')">Close</button>
     </div>
-</div>
+    <!-- Suspended Modal -->
+    <div id="suspendedModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/alert-8B0000.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+            </div>
+            <h2 style="color: #8B0000">Schedule Suspended!</h2>
+            <p><strong><?php echo date('F j, Y'); ?></strong></p>
+            <button class="proceed-btn" onclick="closeModal('suspendedModal')">Close</button>
+        </div>
+    </div>
 
+    <!-- Weekend Modal -->
+    <div id="weekendModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/alert-8B0000.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+            </div>
+            <h2 style="color: #8B0000">It's a Weekend!</h2>
+            <p><strong><?php echo date('F j, Y'); ?></strong></p>
+            <button class="proceed-btn" onclick="closeModal('weekendModal')">Close</button>
+        </div>
+    </div>
 
     <script src="./js/script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>

@@ -405,7 +405,8 @@ $current_page = $pagination_data['current_page'];
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </button>
 
-                                            <button class="action-icon delete-btn" onclick="openDeleteModal(<?php echo $student['student_id']; ?>)">
+                                            <button class="action-icon delete-btn"
+                                                onclick="openDeleteModal(<?php echo $student['student_id']; ?>)">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
 
@@ -432,7 +433,7 @@ $current_page = $pagination_data['current_page'];
 
     <!-- Edit Student Modal -->
     <div id="editStudentModal" class="modal">
-        <div class="modal-content-big">
+        <div class="modal-content-bigger">
             <span class="close" id="closeEditStudentModal">&times;</span>
             <h2 class="modal-title">Edit Student</h2>
 
@@ -779,56 +780,56 @@ $current_page = $pagination_data['current_page'];
         }
 
         function openDeleteModal(studentId) {
-        document.getElementById("delete-student-id").value = studentId; // Store studentId in hidden field
-        document.getElementById("deleteModal").style.display = "block"; // Show modal
-    }
+            document.getElementById("delete-student-id").value = studentId; // Store studentId in hidden field
+            document.getElementById("deleteModal").style.display = "block"; // Show modal
+        }
 
-    function closeDeleteModal() {
-        document.getElementById("deleteModal").style.display = "none"; // Hide modal
-    }
-    function closeDeleteSuccessModal() {
-    document.getElementById('deleteSuccessModal').style.display = 'none';
-    window.location.reload();
-}
-    function confirmDelete() {
-        const studentId = document.getElementById("delete-student-id").value; // Get studentId from hidden input
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", "./others/delete_student.php", true);
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        function closeDeleteModal() {
+            document.getElementById("deleteModal").style.display = "none"; // Hide modal
+        }
+        function closeDeleteSuccessModal() {
+            document.getElementById('deleteSuccessModal').style.display = 'none';
+            window.location.reload();
+        }
+        function confirmDelete() {
+            const studentId = document.getElementById("delete-student-id").value; // Get studentId from hidden input
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "./others/delete_student.php", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                const response = JSON.parse(xhr.responseText);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
 
-                if (response.status === 'success') {
-                    showModal('deleteSuccessModal');
-                } else {
-                    alert(response.message);
+                    if (response.status === 'success') {
+                        showModal('deleteSuccessModal');
+                    } else {
+                        alert(response.message);
+                    }
                 }
-            }
-        };
+            };
 
-        xhr.send("id=" + studentId); 
+            xhr.send("id=" + studentId);
 
-        closeDeleteModal(); 
-    }
+            closeDeleteModal();
+        }
     </script>
     <div id="deleteModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <!-- Lottie Animation -->
-        <div style="display: flex; justify-content: center; align-items: center;">
-            <lottie-player src="../../animation/alert-095d40.json" background="transparent" speed="1"
-                style="width: 150px; height: 150px;" loop autoplay>
-            </lottie-player>
-        </div>
-        <h2 style="color: #000">Are you sure you want to delete?</h2>
-        <input type="hidden" id="delete-student-id" value="">
-        <div style="display: flex; justify-content: space-around; margin-top: 10px; margin-bottom: 20px">
-            <button class="confirm-btn" onclick="confirmDelete()">Confirm</button>
-            <button class="cancel-btn" onclick="closeDeleteModal()">Cancel</button>
+        <div class="modal-content">
+            <!-- Lottie Animation -->
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../../animation/alert-095d40.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2 style="color: #000">Are you sure you want to delete?</h2>
+            <input type="hidden" id="delete-student-id" value="">
+            <div style="display: flex; justify-content: space-around; margin-top: 10px; margin-bottom: 20px">
+                <button class="confirm-btn" onclick="confirmDelete()">Confirm</button>
+                <button class="cancel-btn" onclick="closeDeleteModal()">Cancel</button>
+            </div>
         </div>
     </div>
-</div>
 
     <div id="deleteSuccessModal" class="modal">
         <div class="modal-content">

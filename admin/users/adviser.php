@@ -266,7 +266,7 @@ $current_page = $pagination_data['current_page'];
     </section>
     <!-- Add Adviser Modal -->
     <div id="addAdviserModal" class="modal">
-        <div class="modal-content-big">
+        <div class="modal-content-bigger">
             <span class="close" id="closeAddAdviserModal">&times;</span>
             <h2 class="modal-title">Add Adviser</h2>
 
@@ -356,7 +356,7 @@ $current_page = $pagination_data['current_page'];
 
     <!-- Edit Adviser Modal -->
     <div id="editAdviserModal" class="modal">
-        <div class="modal-content-big">
+        <div class="modal-content-bigger">
             <span class="close" id="closeEditAdviserModal">&times;</span>
             <h2 class="modal-title">Edit Adviser</h2>
 
