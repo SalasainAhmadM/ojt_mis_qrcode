@@ -95,7 +95,7 @@ CREATE TABLE `adviser_announcement` (
 --
 
 INSERT INTO `adviser_announcement` (`announcement_id`, `adviser_id`, `announcement_name`, `announcement_date`, `announcement_description`) VALUES
-(1, 1, 'Announcement Name', '0000-00-00', 'Description');
+(1, 7, '2 Years Timeskip', '2024-10-29', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.');
 
 -- --------------------------------------------------------
 
@@ -312,6 +312,19 @@ CREATE TABLE `attendance` (
   `ojt_hours` DECIMAL(10,2) GENERATED ALWAYS AS (TIMESTAMPDIFF(SECOND, `time_in`, `time_out`) / 3600) STORED,
   PRIMARY KEY (`attendance_id`) 
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `attendance`
+--
+
+CREATE TABLE `attendance_remarks` (
+  `remark_id` int(11) NOT NULL AUTO_INCREMENT,
+  `attendance_id` int(11) NOT NULL,
+  `remark_type` ENUM('Late', 'Absent') NOT NULL,
+  `remark` VARCHAR(255) DEFAULT NULL,
+  PRIMARY KEY (`remark_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 -- --------------------------------------------------------
 
@@ -503,6 +516,11 @@ ALTER TABLE `attendance`
 --
 ALTER TABLE `adviser_announcement`
   ADD CONSTRAINT `adviser_announcement_ibfk_1` FOREIGN KEY (`adviser_id`) REFERENCES `adviser` (`adviser_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+--
+-- Constraints for table `attendance_remarks`
+--
+ALTER TABLE `attendance_remarks`
+  ADD CONSTRAINT `attendance_remarks_ibfk_1` FOREIGN KEY (`attendance_id`) REFERENCES `attendance` (`attendance_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- Constraints for table `course_sections`
 ALTER TABLE `course_sections`

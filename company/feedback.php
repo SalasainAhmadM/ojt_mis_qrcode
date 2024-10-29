@@ -93,21 +93,23 @@ function getStudents($database, $selected_course_section, $search_query, $compan
 
     // Base query to fetch students along with related data
     $students_query = "
-    SELECT student.*, 
-           CONCAT(adviser.adviser_firstname, ' ', adviser.adviser_middle, '. ', adviser.adviser_lastname) AS adviser_fullname,
-           CONCAT(address.address_barangay, ', ', address.address_street) AS full_address,
-           company.company_name,
-           course_sections.course_section_name,
-           departments.department_name,
-           COALESCE(SUM(attendance.ojt_hours), 0) AS total_ojt_hours
-    FROM student 
-    LEFT JOIN adviser ON student.adviser = adviser.adviser_id
-    LEFT JOIN address ON student.student_address = address.address_id
-    LEFT JOIN company ON student.company = company.company_id
-    LEFT JOIN course_sections ON student.course_section = course_sections.id
-    LEFT JOIN departments ON student.department = departments.department_id
-    LEFT JOIN attendance ON student.student_id = attendance.student_id
-    WHERE student.company = ?";
+SELECT student.*, 
+       CONCAT(adviser.adviser_firstname, ' ', adviser.adviser_middle, '. ', adviser.adviser_lastname) AS adviser_fullname,
+       CONCAT(address.address_barangay, ', ', address.address_street) AS full_address,
+       company.company_name,
+       course_sections.course_section_name,
+       departments.department_name,
+       COALESCE(SUM(attendance.ojt_hours), 0) AS total_ojt_hours,
+       EXISTS(SELECT 1 FROM feedback WHERE feedback.student_id = student.student_id) AS feedback_exists
+FROM student 
+LEFT JOIN adviser ON student.adviser = adviser.adviser_id
+LEFT JOIN address ON student.student_address = address.address_id
+LEFT JOIN company ON student.company = company.company_id
+LEFT JOIN course_sections ON student.course_section = course_sections.id
+LEFT JOIN departments ON student.department = departments.department_id
+LEFT JOIN attendance ON student.student_id = attendance.student_id
+WHERE student.company = ?";
+
 
     // Add course section filter if selected
     if (!empty($selected_course_section)) {
@@ -408,13 +410,13 @@ $current_page = $pagination_data['current_page'];
                         <thead>
                             <tr>
                                 <th class="image">Profile</th>
-                                <th>Name</th>
+                                <th class="name">Name</th>
                                 <th class="wmsu_id">Student ID</th>
                                 <th class="section">Section</th>
                                 <!-- <th>Email</th>
                                 <th class="contact">Contact Number</th> -->
-                                <th>Adviser</th>
-                                <th>OJT Hours</th>
+                                <th class="adviser">Adviser</th>
+                                <th class="ojthours">OJT Hours</th>
                                 <th class="action">Action</th>
                             </tr>
                         </thead>
@@ -426,23 +428,23 @@ $current_page = $pagination_data['current_page'];
                                             src="../uploads/student/<?php echo !empty($student['student_image']) ? $student['student_image'] : 'user.png'; ?>"
                                             alt="student Image">
                                     </td>
-                                    <td class="maxlength">
+                                    <td class="name">
                                         <?php echo $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname']; ?>
                                     </td>
                                     <td class="wmsu_id"><?php echo $student['wmsu_id']; ?> </td>
                                     <td class="section"><?php echo $student['course_section_name']; ?></td>
                                     <!-- <td class="maxlength"><?php echo $student['student_email']; ?></td>
                                     <td class="contact"><?php echo $student['contact_number']; ?></td> -->
-                                    <td><?php echo $student['adviser_fullname']; ?></td>
+                                    <td class="adviser"><?php echo $student['adviser_fullname']; ?></td>
                                     <td class="ojt-hours" data-hours="<?php echo $student['total_ojt_hours']; ?>"></td>
                                     <td class="action">
                                         <button class="action-rate edit-btn"
                                             data-student-name="<?php echo $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname']; ?>"
                                             data-student-email="<?php echo $student['student_email']; ?>"
-                                            data-student-id="<?php echo $student['student_id']; ?>">
+                                            data-student-id="<?php echo $student['student_id']; ?>"
+                                            data-has-feedback="<?php echo $student['feedback_exists'] ? 'true' : 'false'; ?>">
                                             <i class="fa-regular fa-star"></i>
                                         </button>
-
                                     </td>
 
                                 </tr>
@@ -471,6 +473,7 @@ $current_page = $pagination_data['current_page'];
         <div class="modal-content-bigger">
             <h2 style="color: #000;">Student Performance Evaluation</h2>
             <form id="evaluationForm" action="submit_evaluation.php" method="POST">
+
                 <input type="hidden" id="eval_student_id" name="student_id">
 
                 <div class="evaluation-questions">
@@ -544,9 +547,6 @@ $current_page = $pagination_data['current_page'];
             </form>
         </div>
     </div>
-
-
-
     <!-- Feedback Success Modal -->
     <div id="feedbackSuccessModal" class="modal">
         <div class="modal-content">
@@ -561,9 +561,227 @@ $current_page = $pagination_data['current_page'];
             <button class="proceed-btn" onclick="closeModal('feedbackSuccessModal')">Close</button>
         </div>
     </div>
+    <!-- Feedback Edit Success Modal -->
+    <div id="editSuccessModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <!-- Lottie Animation -->
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+            </div>
+            <h2>Feedback Updated Successfully!</h2>
+            <p>Thank you for updating the feedback!</p>
+            <button class="proceed-btn" onclick="closeModal('editSuccessModal')">Close</button>
+        </div>
+    </div>
+    <!-- Edit Feedback Modal -->
+    <div id="editFeedbackModal" class="modal">
+        <div class="modal-content-bigger">
+            <h2 style="color: #000;">Edit Feedback for <span id="edit_student_name"></span></h2>
+            <form id="editFeedbackForm" action="update_feedback.php" method="POST">
+                <input type="hidden" id="edit_student_id" name="student_id">
 
+                <div class="evaluation-questions">
+                    <p>Edit <strong><span id="edit_student_name"></span></strong>'s performance feedback:</p>
+
+                    <!-- Question 1 -->
+                    <label>1. Demonstrates initiative in completing tasks.</label>
+                    <div class="checkbox-group">
+                        <label><input type="radio" name="question_1" value="100"> Strongly Agree</label>
+                        <label><input type="radio" name="question_1" value="80"> Agree</label>
+                        <label><input type="radio" name="question_1" value="60"> Neutral</label>
+                        <label><input type="radio" name="question_1" value="40"> Disagree</label>
+                        <label><input type="radio" name="question_1" value="20"> Strongly Disagree</label>
+                    </div>
+
+                    <!-- Question 2 -->
+                    <label>2. Works well with others in a team environment.</label>
+                    <div class="checkbox-group">
+                        <label><input type="radio" name="question_2" value="100"> Strongly Agree</label>
+                        <label><input type="radio" name="question_2" value="80"> Agree</label>
+                        <label><input type="radio" name="question_2" value="60"> Neutral</label>
+                        <label><input type="radio" name="question_2" value="40"> Disagree</label>
+                        <label><input type="radio" name="question_2" value="20"> Strongly Disagree</label>
+                    </div>
+
+                    <!-- Question 3 -->
+                    <label>3. Demonstrates responsibility and accountability.</label>
+                    <div class="checkbox-group">
+                        <label><input type="radio" name="question_3" value="100"> Strongly Agree</label>
+                        <label><input type="radio" name="question_3" value="80"> Agree</label>
+                        <label><input type="radio" name="question_3" value="60"> Neutral</label>
+                        <label><input type="radio" name="question_3" value="40"> Disagree</label>
+                        <label><input type="radio" name="question_3" value="20"> Strongly Disagree</label>
+                    </div>
+
+                    <!-- Question 4 -->
+                    <label>4. Effectively manages time to meet deadlines.</label>
+                    <div class="checkbox-group">
+                        <label><input type="radio" name="question_4" value="100"> Strongly Agree</label>
+                        <label><input type="radio" name="question_4" value="80"> Agree</label>
+                        <label><input type="radio" name="question_4" value="60"> Neutral</label>
+                        <label><input type="radio" name="question_4" value="40"> Disagree</label>
+                        <label><input type="radio" name="question_4" value="20"> Strongly Disagree</label>
+                    </div>
+
+                    <!-- Question 5 -->
+                    <label>5. Communicates effectively in both written and verbal forms.</label>
+                    <div class="checkbox-group">
+                        <label><input type="radio" name="question_5" value="100"> Strongly Agree</label>
+                        <label><input type="radio" name="question_5" value="80"> Agree</label>
+                        <label><input type="radio" name="question_5" value="60"> Neutral</label>
+                        <label><input type="radio" name="question_5" value="40"> Disagree</label>
+                        <label><input type="radio" name="question_5" value="20"> Strongly Disagree</label>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+                    <button type="submit" class="confirm-btn">Update Feedback</button>
+                    <button type="button" class="cancel-btn" onclick="closeModal('editFeedbackModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Feedback Already Submitted Modal -->
+    <div id="feedbackExistsModal" class="modal">
+        <div class="modal-content">
+            <input type="hidden" id="data-student-id" name="student_id">
+            <h2 style="color: #000">feedback for <strong><span style="color: #095d40"
+                        id="feedback_exists_student_name"></span></strong>
+                already
+                submitted!</h2>
+            <p>Would you like to edit the existing feedback?</p>
+            <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+                <button type="button" class="update-btn" onclick="editFeedback()">Edit</button>
+                <button type="button" class="cancel-btn" onclick="closeModal('feedbackExistsModal')">Close</button>
+            </div>
+        </div>
+    </div>
+    <!-- Error Modal -->
+    <div id="feedbackErrorModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('feedbackErrorModal')">&times;</span>
+            <p>An error occurred while processing the feedback. Please try again.</p>
+        </div>
+    </div>
+    <script>
+        // Function to open the Edit Feedback Modal and populate it with data
+        function openEditFeedbackModal(studentName, studentId) {
+            document.getElementById('edit_student_name').textContent = studentName;
+            document.getElementById('edit_student_id').value = studentId;
+
+            // Fetch feedback data from the server
+            fetch(`fetch_feedback.php?student_id=${studentId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch feedback.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (Object.keys(data).length) {
+                        // Set radio buttons based on feedback values
+                        setRadioButton('question_1', data.question_1);
+                        setRadioButton('question_2', data.question_2);
+                        setRadioButton('question_3', data.question_3);
+                        setRadioButton('question_4', data.question_4);
+                        setRadioButton('question_5', data.question_5);
+                    } else {
+                        console.warn('No feedback found for this student.');
+                    }
+                    openModal('editFeedbackModal'); // Open modal only after setting data
+                })
+                .catch(error => console.error('Error fetching feedback:', error));
+        }
+
+        // Helper function to set radio buttons based on the value
+        function setRadioButton(question, value) {
+            const radios = document.querySelectorAll(`input[name=${question}]`);
+            radios.forEach(radio => {
+                radio.checked = parseInt(radio.value) === value;
+            });
+        }
+
+        // Function to open the modal
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        // Function to close the modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+
+
+        // Handle editing feedback after clicking "Edit" in feedbackExistsModal
+        function editFeedback() {
+            const studentName = document.getElementById('feedback_exists_student_name').textContent;
+            const studentEditId = document.getElementById('data-student-id').value;
+
+            closeModal('feedbackExistsModal');
+            openEditFeedbackModal(studentName, studentEditId);
+        }
+
+        // Show a modal by ID
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.style.display = 'block';
+        }
+
+        // Close a modal by ID
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.style.display = 'none';
+        }
+
+        // Handle editing feedback
+        function editFeedback() {
+            const studentName = document.getElementById('feedback_exists_student_name').textContent;
+            const studentEditId = document.getElementById('data-student-id').value;
+
+            closeModal('feedbackExistsModal');
+            openEditFeedbackModal(studentName, studentEditId);
+        }
+
+        // Attach event listeners to "rate" buttons to trigger the appropriate modal
+        document.querySelectorAll('.action-rate').forEach(button => {
+            button.addEventListener('click', function () {
+                const studentName = this.getAttribute('data-student-name');
+                const studentId = this.getAttribute('data-student-id');
+                const hasFeedback = this.getAttribute('data-has-feedback'); // Check if feedback exists
+
+                openEvaluationModal(studentName, studentId, hasFeedback);
+            });
+        });
+
+        // Open evaluation modal or feedback exists modal
+        function openEvaluationModal(studentName, studentId, hasFeedback) {
+            if (hasFeedback === 'true') {
+                document.getElementById('feedback_exists_student_name').textContent = studentName;
+                document.getElementById('data-student-id').value = studentId;
+                openModal('feedbackExistsModal');
+            } else {
+                document.getElementById('eval_student_name').textContent = studentName;
+                document.getElementById('eval_student_id').value = studentId;
+                openModal('evaluationModal');
+            }
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function (event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) closeModal(modal.id);
+            });
+        };
+
+    </script>
 
     <script>
+
         function showModal(modalId) {
             document.getElementById(modalId).style.display = "block";
         }
@@ -572,56 +790,17 @@ $current_page = $pagination_data['current_page'];
             document.getElementById(modalId).style.display = "none";
         }
 
-        // Show the appropriate modal based on session variables
         window.onload = function () {
             <?php if (isset($_SESSION['feedback_success'])): ?>
                 showModal('feedbackSuccessModal');
                 <?php unset($_SESSION['feedback_success']); ?>
             <?php elseif (isset($_SESSION['feedback_error'])): ?>
-                showModal('feedbackErrorModal'); // Add an error modal if desired
+                showModal('feedbackErrorModal');
                 <?php unset($_SESSION['feedback_error']); ?>
+            <?php elseif (isset($_SESSION['edit_success'])): ?>
+                showModal('editSuccessModal');
+                <?php unset($_SESSION['edit_success']); ?>
             <?php endif; ?>
-        };
-        // Function to open the evaluation modal
-        function openEvaluationModal(studentName, studentId) {
-            document.getElementById('eval_student_name').textContent = studentName;
-            document.getElementById('eval_student_id').value = studentId;
-            openModal('evaluationModal');
-        }
-
-        // Function to open a modal by ID
-        function openModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.style.display = 'block';
-            }
-        }
-
-        // Function to close a modal by ID
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        }
-
-        // Attach event listeners to "rate" buttons to trigger the evaluation modal
-        document.querySelectorAll('.action-rate').forEach(button => {
-            button.addEventListener('click', function () {
-                const studentName = this.getAttribute('data-student-name');
-                const studentId = this.getAttribute('data-student-id'); // Directly fetch the student_id
-
-                // Open the modal with student details
-                openEvaluationModal(studentName, studentId);
-            });
-        });
-
-        // Optional: Close modal when clicking outside of it
-        window.onclick = function (event) {
-            const modal = document.getElementById('evaluationModal');
-            if (event.target === modal) {
-                closeModal('evaluationModal');
-            }
         };
 
 

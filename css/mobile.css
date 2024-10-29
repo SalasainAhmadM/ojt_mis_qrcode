@@ -140,7 +140,11 @@
         width: 60%;
         padding: 15px;
       }
-
+      .modal-content-bigger {
+        z-index: 1000;
+        width: 60%;
+        padding: 15px;
+      }
       .modal-content h2 {
         font-size: 20px;
       }
@@ -167,6 +171,65 @@
         width: 100%;
         margin: 0px;
     }
+    .modal-title {
+      font-size: 10px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .profile-img-container {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    
+    .profile-preview-img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+    }
+    
+    .modal label {
+      display: block;
+      font-size: 10px;
+      font-weight: bold;
+      color: #333;
+  }
+  .modal input[type="text"],
+  .modal input[type="date"],
+  .modal input[type="email"],
+  .modal select[type="text"], 
+  .modal select#dayType, 
+  .modal select#editDayType,
+  .modal input[type="time"],
+  .modal input[type="password"],
+  .modal textarea {
+    width: 100%;
+    padding: 10px;
+    font-size: 8px;
+    margin: 2px 0 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+  }
+  .filter-group {
+    flex-direction: column;
+    align-items: stretch; 
+}
+
+.filter-group form {
+    width: 90%; 
+}
+
+.dropdown, .search-bar-container, .reset-bar-icon {
+    width: 80%;
+}
+.reset-bar-icon {
+  width: 10%;
+}
+.search-bar {
+    width: calc(90% - 1.5rem);
+}
     }
   
     /* index form-container */
@@ -284,11 +347,50 @@
       padding: 6px;
       font-size: 10px;
     }
+    th.description {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
     .right-box h2,
     .left-box h2 {
       font-size: 16px;
     }
-  
+    th.image,
+    td.image {
+        width: 15%;
+        text-align: center;
+        vertical-align: middle;
+        padding: 2px;
+        font-size: 10px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    th.name, td.name, 
+    th.wmsu_id, td.wmsu_id {
+      font-size: 8px;
+      width: 20%;
+    }
+    th.ojthours, td.ojt-hours {
+      font-size: 8px;
+      width: 15%;
+    }
+    td.action, th.action {
+      width: 15%;
+    }
+    th.adviser , th.section , td.adviser , td.section {
+      display: none;
+    }
+
+    td.image img {
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        object-fit: cover;
+        border: 2px solid #ddd;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
 
     .announcement h3 {
@@ -342,8 +444,11 @@
 .date {
   width: 10%;
 }
-.action-icon {
-  font-size: 10px;
+.action-icon, .action-view , .action-rate{
+  font-size: 12px;
+  }
+  .fa-search {
+    font-size: 8px;
   }
 .export-btn, .add-btn {
   font-size: 10px;
@@ -357,7 +462,9 @@
   flex-direction: column;
   align-items: center;
 }
-
+/* .left-box table th, .whole-box table th {
+  padding: 1px;
+} */
 /* Intern Details */
 .intern-timein-details, .time-in-details {
   flex-direction: column;

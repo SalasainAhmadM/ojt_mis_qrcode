@@ -687,7 +687,7 @@ hr {
   }
   /* Logout Modal */
   .confirm-btn,
-  .cancel-btn {
+  .cancel-btn, .update-btn {
     padding: 10px 20px;
     font-size: 16px;
     border-radius: 6px;
@@ -695,7 +695,7 @@ hr {
     cursor: pointer;
   }
   
-  .confirm-btn {
+  .confirm-btn , .update-btn {
     background-color: #095d40;
     color: white;
   }
@@ -705,7 +705,7 @@ hr {
     color: white;
   }
   
-  .confirm-btn:hover {
+  .confirm-btn:hover , .update-btn:hover {
     background-color: #073e2b;
   }
   
@@ -983,7 +983,7 @@ hr {
 .date {
   width: 15%;
 }
-td.maxlength , td.section , td.wmsu_id , td.contact {
+td.maxlength , td.section , td.wmsu_id , td.contact , td.adviser{
   max-width: 20%;
   overflow: hidden;
   white-space: nowrap;

@@ -409,13 +409,13 @@ $current_page = $pagination_data['current_page'];
                         <thead>
                             <tr>
                                 <th class="image">Profile</th>
-                                <th>Name</th>
+                                <th class="name">Name</th>
                                 <th class="wmsu_id">Student ID</th>
                                 <th class="section">Section</th>
-                                <th>Adviser</th>
+                                <th class="adviser">Adviser</th>
                                 <!-- <th>Email</th>
                                 <th class="contact">Contact Number</th> -->
-                                <th>OJT Hours</th>
+                                <th class="ojthours">OJT Hours</th>
                                 <th class="action">Action</th>
                             </tr>
                         </thead>
@@ -428,12 +428,12 @@ $current_page = $pagination_data['current_page'];
                                                 src="../uploads/student/<?php echo !empty($student['student_image']) ? $student['student_image'] : 'user.png'; ?>"
                                                 alt="student Image">
                                         </td>
-                                        <td class="maxlength">
+                                        <td class="name">
                                             <?php echo $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname']; ?>
                                         </td>
                                         <td class="wmsu_id"><?php echo $student['wmsu_id']; ?></td>
                                         <td class="section"><?php echo $student['course_section_name']; ?></td>
-                                        <td><?php echo $student['adviser_fullname']; ?></td>
+                                        <td class="adviser"><?php echo $student['adviser_fullname']; ?></td>
                                         <!-- <td class="maxlength"><?php echo $student['student_email']; ?></td>
                                         <td class="contact"><?php echo $student['contact_number']; ?></td> -->
                                         <td class="ojt-hours" data-hours="<?php echo $student['total_ojt_hours']; ?>"></td>
@@ -487,9 +487,9 @@ $current_page = $pagination_data['current_page'];
                     <label for="editStudentImage">
                         <img id="editImagePreview" src="" alt="Profile Preview" class="profile-preview-img" />
                     </label>
-                    <input type="file" id="editStudentImage" name="student_image" accept="image/*"
-                        onchange="previewEditImage()" style="display: none;">
-                    <p class="profile-img-label">Click to upload image</p>
+                    <!-- <input type="file" id="editStudentImage" name="student_image" accept="image/*"
+                        onchange="previewEditImage()" style="display: none;" readonly> -->
+                    <!-- <p class="profile-img-label">Click to upload image</p> -->
                 </div>
 
                 <!-- Full Name Row -->
