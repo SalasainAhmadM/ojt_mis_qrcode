@@ -728,7 +728,7 @@ hr {
     color: #333;
   }
 
-  .modal input[type="text"],
+  .modal input[type="text"],  .modal input[type="number"],
   .modal input[type="date"], .modal select[type="text"], .modal select#dayType, .modal input[type="email"],.modal input[type="time"],.modal input[type="password"],
   .modal textarea {
     width: 100%;

@@ -42,7 +42,7 @@ if ($stmt = $database->prepare($query)) {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" type="text/css" href="./css/style.css">
   <link rel="stylesheet" href="./css/index.css">
-  <link rel="stylesheet" type="text/css" href="./css/mobile.css">
+  <link rel="stylesheet" href="./css/mobile.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 </head>
@@ -241,7 +241,52 @@ if ($stmt = $database->prepare($query)) {
       ?>
 
     </div>
+
+    <div class="rectangles-container">
+      <div class='rectangle-box1' id="ojtHoursBox" onclick="openModal('updateOjtModal')">
+        <div class='box-left'>
+          <span class='box-name'>OJT HOURS</span><br>
+          <span class='box-number'>355 hours</span>
+        </div>
+        <div class='box-right'>
+          <i class="fa-solid fa-business-time"></i>
+        </div>
+      </div>
+    </div>
+
+
   </section>
+
+  <!-- Updating OJT Hours Modal -->
+  <div id="updateOjtModal" class="modal">
+    <div class="modal-content-others">
+      <span class="close" onclick="closeModal('updateOjtModal')">&times;</span>
+      <h2>Update OJT Hours</h2>
+      <form action="./others/update_ojt_hours.php" method="POST">
+        <div class="input-group">
+          <label for="ojtHours">OJT Hours</label>
+          <input type="number" id="ojtHours" name="ojtHours" placeholder="Enter new OJT hours" required>
+        </div>
+        <button type="submit" class="modal-btn">Update Hours</button>
+      </form>
+    </div>
+  </div>
+  <!-- Success Modal for Updating OJT Hours -->
+  <div id="updateOjtSuccessModal" class="modal">
+    <div class="modal-content">
+      <!-- Lottie Animation -->
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+          style="width: 150px; height: 150px;" loop autoplay>
+        </lottie-player>
+      </div>
+      <h2>Updated Successfully!</h2>
+      <p>The OJT hours updated successfully!</p>
+      <button class="proceed-btn" onclick="closeModal('updateOjtSuccessModal')">Close</button>
+    </div>
+  </div>
+
+
   <!-- Login Success Modal -->
   <div id="loginSuccessModal" class="modal">
     <div class="modal-content">
@@ -273,6 +318,7 @@ if ($stmt = $database->prepare($query)) {
     </div>
   </div>
   <script>
+
     // Function to open the modal
     function openModal(modalId) {
       document.getElementById(modalId).style.display = "block";

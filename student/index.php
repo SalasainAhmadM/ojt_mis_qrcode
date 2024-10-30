@@ -54,6 +54,19 @@ if ($announcement_result->num_rows > 0) {
     $announcements[] = $row;
   }
 }
+// Check if today is a holiday
+$today_date = date('Y-m-d');
+$holiday_query = "SELECT holiday_name FROM holiday WHERE holiday_date = ?";
+$holiday_stmt = $database->prepare($holiday_query);
+$holiday_stmt->bind_param("s", $today_date);
+$holiday_stmt->execute();
+$holiday_result = $holiday_stmt->get_result();
+
+$holiday = $holiday_result->num_rows > 0 ? $holiday_result->fetch_assoc() : null;
+$holiday_stmt->close();
+
+// Check if today is a weekend
+$is_weekend = date('N') >= 6;
 
 ?>
 
@@ -315,20 +328,7 @@ if ($announcement_result->num_rows > 0) {
       <button class="proceed-btn" onclick="closeModalprofile('profileUpdateSuccessModal')">Proceed</button>
     </div>
   </div>
-  <!-- Login Success Modal -->
-  <div id="loginSuccessModal" class="modal">
-    <div class="modal-content">
-      <!-- Lottie Animation -->
-      <div style="display: flex; justify-content: center; align-items: center;">
-        <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
-          style="width: 150px; height: 150px;" loop autoplay>
-        </lottie-player>
-      </div>
-      <h2>Login Successful!</h2>
-      <p>Welcome back, <span style="color: #095d40; font-size: 20px"><?php echo $_SESSION['full_name']; ?>!</span></p>
-      <button class="proceed-btn" onclick="closeModallogin('loginSuccessModal')">Proceed</button>
-    </div>
-  </div>
+
   <!-- Logout Confirmation Modal -->
   <div id="logoutModal" class="modal">
     <div class="modal-content">
@@ -345,7 +345,61 @@ if ($announcement_result->num_rows > 0) {
       </div>
     </div>
   </div>
+
+  <!-- Login Success Modal -->
+  <div id="loginSuccessModal" class="modal">
+    <div class="modal-content">
+      <!-- Lottie Animation -->
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+          style="width: 150px; height: 150px;" loop autoplay>
+        </lottie-player>
+      </div>
+      <h2>Login Successful!</h2>
+      <p>Welcome back, <span style="color: #095d40; font-size: 20px"><?php echo $_SESSION['full_name']; ?>!</span></p>
+      <button class="proceed-btn" onclick="closeModallogin('loginSuccessModal')">Proceed</button>
+    </div>
+  </div>
+  <!-- Holiday Modal -->
+  <div id="holidayModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <lottie-player src="../animation/alert-8B0000.json" background="transparent" speed="1"
+          style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+      </div>
+      <h2 style="color: #8B0000">It's a Holiday!</h2>
+      <p><strong><?php echo date('F j, Y'); ?></strong></p>
+      <p style="color: #8B0000"><strong><?php echo $holiday['holiday_name']; ?></strong></p>
+      <button class="proceed-btn" onclick="closeModal('holidayModal')">Close</button>
+    </div>
+  </div>
+  <!-- Suspended Modal -->
+  <div id="suspendedModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <lottie-player src="../animation/alert-8B0000.json" background="transparent" speed="1"
+          style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+      </div>
+      <h2 style="color: #8B0000">Schedule Suspended!</h2>
+      <p><strong><?php echo date('F j, Y'); ?></strong></p>
+      <button class="proceed-btn" onclick="closeModal('suspendedModal')">Close</button>
+    </div>
+  </div>
+
+  <!-- Weekend Modal -->
+  <div id="weekendModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <lottie-player src="../animation/alert-8B0000.json" background="transparent" speed="1"
+          style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+      </div>
+      <h2 style="color: #8B0000">It's a Weekend!</h2>
+      <p><strong><?php echo date('F j, Y'); ?></strong></p>
+      <button class="proceed-btn" onclick="closeModal('weekendModal')">Close</button>
+    </div>
+  </div>
   <script>
+
     function showModalprofile(modalId) {
       document.getElementById(modalId).style.display = "block";
     }
@@ -374,6 +428,8 @@ if ($announcement_result->num_rows > 0) {
       };
     <?php endif; ?>
   </script>
+
+
   <script src="./js/script.js"></script>
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>

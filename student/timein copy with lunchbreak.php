@@ -9,21 +9,28 @@ function formatTime($hours, $minutes)
     return $hoursString . ' ' . $minutesString;
 }
 
-// Get the QR data from the request
+function isLunchBreakTime()
+{
+    $currentTime = new DateTime('now', new DateTimeZone('Asia/Manila'));
+    $hour = (int) $currentTime->format('H'); // Get hour in 24-hour format
+
+    // Check if the current time falls between 11 AM to 1 PM
+    return $hour >= 11 && $hour < 13;
+}
+
 $data = json_decode(file_get_contents('php://input'), true);
 $qrData = $data['qrData'] ?? null;
 
 if ($qrData) {
-    // Fetch student details based on the QR code (wmsu_id)
     $query = "
     SELECT 
-          s.*, 
-          d.department_name AS department, 
-          c.company_name AS company, 
-          a.adviser_firstname, 
-          a.adviser_middle,
-          a.adviser_lastname,
-          cs.course_section_name AS course_section
+        s.*, 
+        d.department_name AS department, 
+        c.company_name AS company, 
+        a.adviser_firstname, 
+        a.adviser_middle,
+        a.adviser_lastname,
+        cs.course_section_name AS course_section
     FROM student s
     LEFT JOIN departments d ON s.department = d.department_id
     LEFT JOIN company c ON s.company = c.company_id
@@ -38,10 +45,9 @@ if ($qrData) {
 
         if ($result->num_rows > 0) {
             $student = $result->fetch_assoc();
-
-            // Check if the student already has a time-in record today
             $student_id = $student['student_id'];
             $date = date('Y-m-d');
+
             $checkQuery = "SELECT * FROM attendance WHERE student_id = ? AND DATE(time_in) = ? AND time_out IS NULL";
             if ($checkStmt = $database->prepare($checkQuery)) {
                 $checkStmt->bind_param("is", $student_id, $date);
@@ -49,16 +55,13 @@ if ($qrData) {
                 $checkResult = $checkStmt->get_result();
 
                 if ($checkResult->num_rows > 0) {
-                    // Student is timing out 
                     $attendanceRecord = $checkResult->fetch_assoc();
                     $attendance_id = $attendanceRecord['attendance_id'];
 
-                    // Update the attendance record with time-out and calculate the OJT hours
                     $updateQuery = "UPDATE attendance SET time_out = NOW() WHERE attendance_id = ?";
                     if ($updateStmt = $database->prepare($updateQuery)) {
                         $updateStmt->bind_param("i", $attendance_id);
                         if ($updateStmt->execute()) {
-                            // Fetch the updated time-out timestamp and OJT hours
                             $timeOutQuery = "
                             SELECT time_in, time_out, TIMESTAMPDIFF(MINUTE, time_in, time_out) AS total_minutes 
                             FROM attendance 
@@ -72,15 +75,11 @@ if ($qrData) {
                                     $time_out = (new DateTime($timeOutRow['time_out']))->format('h:i A');
                                     $date_in = (new DateTime($timeOutRow['time_in']))->format('F j, Y');
 
-                                    // Convert total minutes to hours and minutes
                                     $total_minutes = $timeOutRow['total_minutes'];
                                     $hours = floor($total_minutes / 60);
                                     $minutes = $total_minutes % 60;
-
-                                    // Format the OJT hours
                                     $ojt_hours = formatTime($hours, $minutes);
 
-                                    // Fetch total OJT hours for the student
                                     $totalHoursQuery = "
                                     SELECT SUM(TIMESTAMPDIFF(MINUTE, time_in, time_out)) AS total_ojt_minutes 
                                     FROM attendance 
@@ -95,45 +94,46 @@ if ($qrData) {
                                         $total_remaining_minutes = $total_minutes % 60;
                                         $total_ojt_hours = formatTime($total_hours, $total_remaining_minutes);
 
-                                        echo json_encode([
-                                            'success' => true,
-                                            'message' => 'Time-out successful',
-                                            'event_type' => 'Time-out',
-                                            'student_name' => $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname'],
-                                            'student_image' => $student['student_image'],
-                                            'wmsu_id' => $student['wmsu_id'],
-                                            'email' => $student['student_email'],
-                                            'time_out' => $time_out,
-                                            'date_in' => $date_in,
-                                            'ojt_hours' => $ojt_hours,
-                                            'total_ojt_hours' => $total_ojt_hours
-                                        ]);
+                                        // Check if this is a lunch break
+                                        if (isLunchBreakTime()) {
+                                            echo json_encode([
+                                                'success' => true,
+                                                'message' => 'Lunch Break Time-out detected!',
+                                                'event_type' => 'Lunch Break',
+                                                'student_name' => $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname'],
+                                                'student_image' => $student['student_image'],
+                                                'time_out' => $time_out,
+                                                'ojt_hours' => $ojt_hours,
+                                                'total_ojt_hours' => $total_ojt_hours
+                                            ]);
+                                        } else {
+                                            echo json_encode([
+                                                'success' => true,
+                                                'message' => 'Time-out successful',
+                                                'event_type' => 'Time-out',
+                                                'student_name' => $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname'],
+                                                'student_image' => $student['student_image'],
+                                                'time_out' => $time_out,
+                                                'ojt_hours' => $ojt_hours,
+                                                'total_ojt_hours' => $total_ojt_hours
+                                            ]);
+                                        }
                                         $totalHoursStmt->close();
                                     }
                                 }
                                 $timeOutStmt->close();
                             }
-                        } else {
-                            echo json_encode([
-                                'success' => false,
-                                'message' => 'Error saving time-out record.'
-                            ]);
                         }
                         $updateStmt->close();
                     }
                 } else {
-                    // Insert time-in for the student (no time-in today)
                     $insertQuery = "INSERT INTO attendance (student_id, time_in) VALUES (?, NOW())";
                     if ($insertStmt = $database->prepare($insertQuery)) {
                         $insertStmt->bind_param("i", $student_id);
                         if ($insertStmt->execute()) {
-                            // Fetch the time-in timestamp
-                            $timeInQuery = "
-                            SELECT time_in 
-                            FROM attendance 
-                            WHERE attendance_id = ?";
+                            $timeInQuery = "SELECT time_in FROM attendance WHERE attendance_id = ?";
                             if ($timeInStmt = $database->prepare($timeInQuery)) {
-                                $attendance_id = $insertStmt->insert_id; // Get the inserted attendance ID
+                                $attendance_id = $insertStmt->insert_id;
                                 $timeInStmt->bind_param("i", $attendance_id);
                                 $timeInStmt->execute();
                                 $timeInResult = $timeInStmt->get_result();
@@ -142,43 +142,17 @@ if ($qrData) {
                                     $time_in = (new DateTime($timeInRow['time_in']))->format('h:i A');
                                     $date_in = (new DateTime($timeInRow['time_in']))->format('F j, Y');
 
-                                    // Fetch total OJT hours for the student
-                                    $totalHoursQuery = "
-                                    SELECT SUM(TIMESTAMPDIFF(MINUTE, time_in, time_out)) AS total_ojt_minutes 
-                                    FROM attendance 
-                                    WHERE student_id = ? AND time_out IS NOT NULL";
-                                    if ($totalHoursStmt = $database->prepare($totalHoursQuery)) {
-                                        $totalHoursStmt->bind_param("i", $student_id);
-                                        $totalHoursStmt->execute();
-                                        $totalHoursResult = $totalHoursStmt->get_result();
-                                        $totalOjtHoursRow = $totalHoursResult->fetch_assoc();
-                                        $total_minutes = $totalOjtHoursRow['total_ojt_minutes'];
-                                        $total_hours = floor($total_minutes / 60);
-                                        $total_remaining_minutes = $total_minutes % 60;
-                                        $total_ojt_hours = formatTime($total_hours, $total_remaining_minutes);
-
-                                        echo json_encode([
-                                            'success' => true,
-                                            'message' => 'Time-in successful',
-                                            'event_type' => 'Time-in',
-                                            'student_image' => $student['student_image'],
-                                            'student_name' => $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname'],
-                                            'wmsu_id' => $student['wmsu_id'],
-                                            'email' => $student['student_email'],
-                                            'time_in' => $time_in,
-                                            'date_in' => $date_in,
-                                            'total_ojt_hours' => $total_ojt_hours
-                                        ]);
-                                        $totalHoursStmt->close();
-                                    }
+                                    echo json_encode([
+                                        'success' => true,
+                                        'message' => 'Time-in successful',
+                                        'event_type' => 'Time-in',
+                                        'student_name' => $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname'],
+                                        'time_in' => $time_in,
+                                        'total_ojt_hours' => 0
+                                    ]);
                                 }
                                 $timeInStmt->close();
                             }
-                        } else {
-                            echo json_encode([
-                                'success' => false,
-                                'message' => 'Error saving time-in record.'
-                            ]);
                         }
                         $insertStmt->close();
                     }
@@ -186,16 +160,10 @@ if ($qrData) {
                 $checkStmt->close();
             }
         } else {
-            echo json_encode([
-                'success' => false,
-                'message' => 'No student found for the scanned QR code.'
-            ]);
+            echo json_encode(['success' => false, 'message' => 'No student found for the scanned QR code.']);
         }
     }
 } else {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Invalid QR code.'
-    ]);
+    echo json_encode(['success' => false, 'message' => 'Invalid QR code.']);
 }
 ?>

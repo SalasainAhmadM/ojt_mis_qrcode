@@ -273,7 +273,7 @@ INSERT INTO `student` (`student_id`, `wmsu_id`, `student_image`, `student_firstn
 (1, '2024-206910', '', 'Maloi', 'K', 'Ricalde', 'maloi@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', '+639771036244', 'BSIT 4A', '2024-2025', '', '3', '', '2', '', ''),
 (2, '2024-206911', '', 'Traffy', 'D', 'Law', 'traffy@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', '+639771036245', 'BSIT 4B', '2024-2025', '', '3', '', '1', '../../uploads/qrcodes/qr-code-Law-2024-206911.png', ''),
 (3, '2024-206912', '', 'Shiro', 'D', 'Hige', 'shiro@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', '+639771036246', 'BSIT 4C', '2024-2025', '', '3', '', '3', '../../uploads/qrcodes/qr-code-Hige-2024-206912.png', ''),
-(4, '', '', 'Monkey', 'D', 'Luffy', 'binimaloi352@gmail.com', '$2y$10$drwEozKAgmONe05KqUwe2eX9UvaF8Y3qS.XH/a9RKXKVzWyxok7KO', '', '', '', '', '', '', '', '', '');
+(4, '', '', 'Monkey', 'D', 'Luffy', 'binimaloi352@gmail.com', '$2y$10$drwEozKAgmONe05KqUwe2eX9UvaF8Y3qS.XH/a9RKXKVzWyxok7KO', '', '', '', '', '7', '', '', '', '');
 
 -- --------------------------------------------------------
 
@@ -287,15 +287,17 @@ CREATE TABLE `student_journal` (
   `journal_name` varchar(255) NOT NULL,
   `journal_date` date NOT NULL,
   `journal_description` text NOT NULL,
-  `file_size` varchar(20) NOT NULL
+  `journal_image1` varchar(255) NOT NULL,
+  `journal_image2` varchar(255) NOT NULL,
+  `journal_image3` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `student_journal`
 --
 
-INSERT INTO `student_journal` (`journal_id`, `student_id`, `journal_name`, `journal_date`, `journal_description`, `file_size`) VALUES
-(1, 1, 'Journal Name', '2024-10-01', 'Description', '');
+INSERT INTO `student_journal` (`journal_id`, `student_id`, `journal_name`, `journal_date`, `journal_description`, `journal_image1`, `journal_image2`, `journal_image3`) VALUES
+(1, 1, 'Journal Name', '2024-10-01', 'Description', '', '', '');
 
 -- --------------------------------------------------------
 
@@ -312,6 +314,7 @@ CREATE TABLE `attendance` (
   `ojt_hours` DECIMAL(10,2) GENERATED ALWAYS AS (TIMESTAMPDIFF(SECOND, `time_in`, `time_out`) / 3600) STORED,
   PRIMARY KEY (`attendance_id`) 
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
 -- --------------------------------------------------------
 
 --
@@ -320,10 +323,22 @@ CREATE TABLE `attendance` (
 
 CREATE TABLE `attendance_remarks` (
   `remark_id` int(11) NOT NULL AUTO_INCREMENT,
-  `attendance_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `schedule_id` int(11) NOT NULL,
   `remark_type` ENUM('Late', 'Absent') NOT NULL,
   `remark` VARCHAR(255) DEFAULT NULL,
   PRIMARY KEY (`remark_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+
+--
+-- Table structure for table `required_hours`
+--
+
+CREATE TABLE `required_hours` (
+  `required_hours_id` int(11) NOT NULL AUTO_INCREMENT,
+  `required_hours` int(11) NOT NULL,
+  PRIMARY KEY (`required_hours_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 -- --------------------------------------------------------
@@ -520,7 +535,8 @@ ALTER TABLE `adviser_announcement`
 -- Constraints for table `attendance_remarks`
 --
 ALTER TABLE `attendance_remarks`
-  ADD CONSTRAINT `attendance_remarks_ibfk_1` FOREIGN KEY (`attendance_id`) REFERENCES `attendance` (`attendance_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `attendance_remarks_ibfk_1` FOREIGN KEY (`schedule_id`) REFERENCES `schedule` (`schedule_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `attendance_remarks_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `student` (`student_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- Constraints for table `course_sections`
 ALTER TABLE `course_sections`

@@ -4,57 +4,230 @@ require '../conn/connection.php';
 
 // Check if the user is logged in
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student') {
-  header("Location: ../index.php"); // Redirect to login page if not logged in
+  header("Location: ../index.php");
   exit();
 }
-
-// Fetch student details from the database
+// Fetch student details
 $student_id = $_SESSION['user_id'];
 $query = "SELECT * FROM student WHERE student_id = ?";
 if ($stmt = $database->prepare($query)) {
-  $stmt->bind_param("i", $student_id); // Bind parameters
-  $stmt->execute(); // Execute the query
-  $result = $stmt->get_result(); // Get the result
+  $stmt->bind_param("i", $student_id);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $student = $result->num_rows > 0 ? $result->fetch_assoc() : [
+    'student_firstname' => 'Unknown',
+    'student_middle' => 'U',
+    'student_lastname' => 'User',
+    'student_email' => 'unknown@wmsu.edu.ph'
+  ];
+  $stmt->close();
+}
+// Fetch company_id associated with the student
+$query = "
+    SELECT student.student_id, student.student_firstname, student.student_lastname, company.company_id 
+    FROM student 
+    JOIN company ON student.company = company.company_id 
+    WHERE student.student_id = ?";
+
+if ($stmt = $database->prepare($query)) {
+  $stmt->bind_param("i", $student_id);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows > 0) {
-    $student = $result->fetch_assoc(); // Fetch student details
-  } else {
-    // Handle case where student is not found
-    $student = [
-      'student_firstname' => 'Unknown',
-      'student_middle' => 'U',
-      'student_lastname' => 'User',
-      'student_email' => 'unknown@wmsu.edu.ph'
-    ];
+    $data = $result->fetch_assoc();
+    $company_id = $data['company_id'];
   }
-  $stmt->close(); // Close the statement
+  $stmt->close();
 }
-// Fetch student's journal entries
-$query = "SELECT * FROM student_journal WHERE student_id = ?";
-if ($stmt = $database->prepare($query)) {
-  $stmt->bind_param("i", $student_id); // Bind student ID parameter
-  $stmt->execute(); // Execute the query
-  $result = $stmt->get_result(); // Get the result
+// Function to check for "Absent" remark
+function isAbsent($student_id, $current_date)
+{
+  global $database;
+  $query = "SELECT * FROM attendance_remarks 
+            WHERE student_id = ? AND remark_type = 'Absent' 
+              AND EXISTS (SELECT 1 FROM schedule WHERE schedule_id = attendance_remarks.schedule_id AND date = ?)";
+
+  if ($stmt = $database->prepare($query)) {
+    $stmt->bind_param("is", $student_id, $current_date);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $is_absent = $result->num_rows > 0;
+    $stmt->close();
+    return $is_absent;
+  }
+  return false;
+}
+
+// Function to check if a day is Suspended
+function isSuspended($current_date)
+{
+  global $database;
+  $query = "SELECT * FROM schedule WHERE date = ? AND day_type = 'Suspended'";
+
+  if ($stmt = $database->prepare($query)) {
+    $stmt->bind_param("s", $current_date);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $is_suspended = $result->num_rows > 0;
+    $stmt->close();
+    return $is_suspended;
+  }
+  return false;
+}
+
+// Function to check if a day is a Holiday
+function isHoliday($current_date)
+{
+  global $database;
+  $query = "SELECT holiday_name FROM holiday WHERE holiday_date = ?";
+
+  if ($stmt = $database->prepare($query)) {
+    $stmt->bind_param("s", $current_date);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $holiday = $result->fetch_assoc();
+    $stmt->close();
+    return $holiday ? $holiday['holiday_name'] : false;
+  }
+  return false;
+}
+// Fetch the first schedule date for the student's company
+$schedule_query = "SELECT MIN(date) AS earliest_schedule FROM schedule WHERE company_id = ?";
+if ($stmt = $database->prepare($schedule_query)) {
+  $stmt->bind_param("i", $company_id);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $earliest_schedule = $result->fetch_assoc()['earliest_schedule'] ?? date('Y-m-d');
+  $stmt->close();
+}
+
+// Fetch the earliest journal entry date for the student
+$first_journal_query = "SELECT MIN(journal_date) AS earliest_date FROM student_journal WHERE student_id = ?";
+if ($stmt = $database->prepare($first_journal_query)) {
+  $stmt->bind_param("i", $student_id);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $earliest_date = $result->fetch_assoc()['earliest_date'] ?? date('Y-m-d');
+  $stmt->close();
+}
+
+// Calculate total weeks between the earliest journal entry and today
+$now = new DateTime();
+$earliest = new DateTime($earliest_date);
+$total_weeks = ceil($now->diff($earliest)->days / 7);
+
+// Determine the current page for pagination (latest week is page 1)
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? intval($_GET['page']) : 1;
+
+function getWeekRange($page)
+{
+  $now = new DateTime();
+  $offset = ($page - 1) * 7;  // Offset based on current week
+
+  $start_of_week = clone $now;
+  $start_of_week->modify("-$offset days")->modify('monday this week');
+
+  $end_of_week = clone $start_of_week;
+  $end_of_week->modify('sunday this week');
+
+  return [$start_of_week->format('Y-m-d'), $end_of_week->format('Y-m-d')];
+}
+
+// Fetch journals for the current week (most recent on Week 1)
+[$start_date, $end_date] = getWeekRange($page);
+
+// Fetch journals for the current week
+$journals_query = "
+  SELECT * FROM student_journal 
+  WHERE student_id = ? 
+    AND journal_date BETWEEN ? AND ?
+  ORDER BY journal_date DESC";
+
+if ($stmt = $database->prepare($journals_query)) {
+  $stmt->bind_param("iss", $student_id, $start_date, $end_date);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   $journals = [];
-  if ($result->num_rows > 0) {
-    // Fetch all journal entries
+  while ($row = $result->fetch_assoc()) {
+    $journals[] = $row;
+  }
+  $stmt->close();
+}
+// Check for absences on days without journal entries
+
+// Function to render pagination links with reverse week numbering
+function renderPaginationLinks($current_page, $total_weeks)
+{
+  $reversed_week_number = $total_weeks - $current_page + 1;
+
+  // Previous Week button (older weeks)
+  if ($current_page < $total_weeks) {
+    echo '<a href="?page=' . ($current_page + 1) . '" class="prev">Previous Week</a>';
+  }
+
+  // Show the current week as the active page
+  echo '<span class="active">Week ' . $reversed_week_number . '</span>';
+
+  // Next Week button (more recent weeks)
+  if ($current_page > 1) {
+    echo '<a href="?page=' . ($current_page - 1) . '" class="next">Next Week</a>';
+  }
+}
+
+$search_date = isset($_GET['search']) ? $_GET['search'] : null;
+
+// If search date is provided, fetch journal entries and statuses for that date
+if ($search_date) {
+  // Fetch journal for the specified date
+  $journals_query = "SELECT * FROM student_journal WHERE student_id = ? AND journal_date = ?";
+  if ($stmt = $database->prepare($journals_query)) {
+    $stmt->bind_param("is", $student_id, $search_date);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $journals = [];
     while ($row = $result->fetch_assoc()) {
       $journals[] = $row;
     }
+    $stmt->close();
   }
-  $stmt->close(); // Close the statement
+
+  // Check if the date is a holiday
+  $holiday_name = isHoliday($search_date);
+
+  // Check if the date is suspended
+  $is_suspended = isSuspended($search_date);
+
+  // Check if the student is marked as absent on the date
+  $is_absent = isAbsent($student_id, $search_date);
+} else {
+  // Handle regular pagination as in your original code
+  $page = isset($_GET['page']) && is_numeric($_GET['page']) ? intval($_GET['page']) : 1;
+  [$start_date, $end_date] = getWeekRange($page);
+  $journals_query = "
+      SELECT * FROM student_journal 
+      WHERE student_id = ? 
+        AND journal_date BETWEEN ? AND ?
+      ORDER BY journal_date DESC";
+  if ($stmt = $database->prepare($journals_query)) {
+    $stmt->bind_param("iss", $student_id, $start_date, $end_date);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $journals = [];
+    while ($row = $result->fetch_assoc()) {
+      $journals[] = $row;
+    }
+    $stmt->close();
+  }
 }
 
-include './others/filter_journal.php';
-
-$pagination_data = getStudentJournals($database, $student_id, $search_query);
-$journals = $pagination_data['journals'];
-$total_pages = $pagination_data['total_pages'];
-$current_page = $pagination_data['current_page'];
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
+<!-- include './others/filter_journal.php'; -->
 
 <head>
   <meta charset="UTF-8">
@@ -62,11 +235,13 @@ $current_page = $pagination_data['current_page'];
   <title>Intern - Journal</title>
   <link rel="icon" href="../img/ccs.png" type="image/icon type">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css" />
   <link rel="stylesheet" href="../css/main.css">
   <!-- <link rel="stylesheet" href="./css/style.css"> -->
   <!-- <link rel="stylesheet" href="./css/index.css"> -->
   <link rel="stylesheet" href="../css/mobile.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
   <style>
 
   </style>
@@ -150,9 +325,31 @@ $current_page = $pagination_data['current_page'];
     <div class="home-content">
       <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
     </div>
-    <style>
+    <?php
+    [$start_date, $end_date] = getWeekRange($page);
 
-    </style>
+    $current_week = [];
+    $period = new DatePeriod(
+      new DateTime($start_date),
+      new DateInterval('P1D'),
+      (new DateTime($end_date))->modify('+1 day')
+    );
+
+    foreach ($period as $day) {
+      if ($day->format("N") < 6) {
+        $current_week[$day->format("Y-m-d")] = null;
+      }
+    }
+
+    foreach ($journals as $journal) {
+      $journal_date = date("Y-m-d", strtotime($journal['journal_date']));
+      if (array_key_exists($journal_date, $current_week)) {
+        $current_week[$journal_date] = $journal;
+      }
+    }
+    ?>
+
+
     <div class="content-wrapper">
 
       <div class="header-box">
@@ -176,11 +373,47 @@ $current_page = $pagination_data['current_page'];
           <div class="filter-group">
             <form method="GET" action="journal.php">
               <div class="search-bar-container">
-                <input type="text" class="search-bar" name="search" placeholder="Search"
-                  value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                <input type="date" class="search-bar" id="searchDate" name="search"
+                  value="<?= htmlspecialchars($search_date); ?>">
                 <button type="submit" class="search-bar-icon">
                   <i class="fa fa-search"></i>
                 </button>
+              </div>
+            </form>
+            <script>
+              document.addEventListener('DOMContentLoaded', function () {
+                const searchDateInput = document.getElementById('searchDate');
+                const earliestScheduleDate = document.getElementById('earliestScheduleDate')?.value || '2024-01-01'; // Default fallback
+
+                searchDateInput.setAttribute('min', earliestScheduleDate);
+
+                const today = new Date().toISOString().split('T')[0];
+                searchDateInput.setAttribute('max', today);
+
+                // Prevent weekend selection
+                searchDateInput.addEventListener('input', function () {
+                  const selectedDate = new Date(this.value);
+                  const dayOfWeek = selectedDate.getDay();
+
+                  if (dayOfWeek === 6 || dayOfWeek === 0) {
+                    openModal('weekendSearchErrorModal'); // Open modal for error
+                    this.value = ''; // Clear invalid selection
+                  }
+                });
+              });
+            </script>
+            <!-- Dropdown form to navigate by week -->
+            <form method="GET" action="journal.php">
+              <div class="search-bar-container">
+                <select class="search-bar" name="page" onchange="this.form.submit()">
+                  <option value="" disabled selected>Select Week</option>
+                  <?php
+                  for ($i = 1; $i <= $total_weeks; $i++) {
+                    $reversed_week_number = $total_weeks - $i + 1;
+                    echo "<option value=\"$i\">Week $reversed_week_number</option>";
+                  }
+                  ?>
+                </select>
               </div>
             </form>
             <!-- Reset Button Form -->
@@ -196,24 +429,45 @@ $current_page = $pagination_data['current_page'];
                 <th class="title">Title</th>
                 <th class="description">Description</th>
                 <th class="date">Date Submitted</th>
-                <!-- <th class="size">Size</th> -->
                 <th class="action">Action</th>
               </tr>
             </thead>
             <tbody>
-              <?php if (!empty($journals)): ?>
-                <?php foreach ($journals as $journal): ?>
+              <?php
+              $today = new DateTime();
+              $dates_to_display = $search_date ? [$search_date] : array_keys($current_week); // Only show search date if provided
+              
+              foreach ($dates_to_display as $date) {
+                $current_date = new DateTime($date);
+
+                if ($current_date > $today && !$search_date) {
+                  // Skip future dates in weekly view, but include if it's the searched date
+                  continue;
+                }
+
+                $is_absent = isAbsent($student_id, $date);
+                $is_suspended = isSuspended($date);
+                $holiday_name = isHoliday($date);
+
+                // Determine CSS class and description
+                $status_class = $is_absent ? 'absent' : ($is_suspended ? 'suspended' : ($holiday_name ? 'holiday' : ''));
+                $description = $is_absent ? 'Absent as per attendance record'
+                  : ($is_suspended ? 'Suspended' : ($holiday_name ? "$holiday_name" : 'No Entry'));
+
+                // Fetch journal data if available for the date
+                $journal = isset($current_week[$date]) ? $current_week[$date] : null;
+                ?>
+
+                <?php if ($journal): ?>
                   <tr>
-                    <td class="title">
-                      <?php echo htmlspecialchars($journal['journal_name']); ?>
-                    </td>
-                    <td class="description">
-                      <?php echo htmlspecialchars($journal['journal_description']); ?>
-                    </td>
-                    <td class="date">
-                      <?php echo date("M d, Y", strtotime($journal['journal_date'])); ?>
-                    </td>
+                    <td class="title"><?php echo htmlspecialchars($journal['journal_name']); ?></td>
+                    <td class="description"><?php echo htmlspecialchars($journal['journal_description']); ?></td>
+                    <td class="date"><?php echo date("M d, Y", strtotime($journal['journal_date'])); ?></td>
                     <td class="action">
+                      <button class="action-icon delete-btn"
+                        onclick="openJournalImages(<?php echo $journal['journal_id']; ?>)">
+                        <i class="fa-solid fa-images"></i>
+                      </button>
                       <button class="action-icon edit-btn" data-id="<?php echo $journal['journal_id']; ?>"
                         data-student-id="<?php echo $journal['student_id']; ?>">
                         <i class="fa-solid fa-pen-to-square"></i>
@@ -222,27 +476,93 @@ $current_page = $pagination_data['current_page'];
                         onclick="openDeleteModal(<?php echo $journal['journal_id']; ?>)">
                         <i class="fa-solid fa-trash"></i>
                       </button>
+
                     </td>
                   </tr>
-                <?php endforeach; ?>
-              <?php else: ?>
-                <tr>
-                  <td colspan="4">No journal entries found.</td>
-                </tr>
-              <?php endif; ?>
+                <?php else: ?>
+                  <tr>
+                    <td class="title <?php echo $status_class; ?>">
+                      <?php echo $is_absent ? 'Absent' : ($is_suspended ? 'Suspended' : ($holiday_name ? 'Holiday' : 'No Entry')); ?>
+                    </td>
+                    <td class="description <?php echo $status_class; ?>"><?php echo $description; ?></td>
+                    <td class="date <?php echo $status_class; ?>"><?php echo date("M d, Y", strtotime($date)); ?></td>
+                    <td class="action">—</td>
+                  </tr>
+                <?php endif; ?>
+              <?php } ?>
             </tbody>
+
+
 
           </table>
 
-
-          <div class="pagination">
-            <?php renderPaginationLinks($total_pages, $current_page, $search_query); ?>
+          <!-- Pagination Links -->
+          <div class="paginationJournal">
+            <?php renderPaginationLinks($page, $total_weeks); ?>
           </div>
 
         </div>
       </div>
     </div>
     </div>
+
+    <!-- Images Modal -->
+    <div id="openJournalImages" class="modal-img">
+      <div class="modal-content-img">
+        <button class="close-btn-img" onclick="closeModal('openJournalImages')">&times;</button>
+        <h2>Journal Images</h2>
+
+        <!-- Swiper Container -->
+        <div class="swiper-container">
+          <div class="swiper-wrapper">
+            <div class="swiper-slide">
+              <img src="../img/adviser.png" alt="Journal Image 1" class="journal-image" />
+            </div>
+            <div class="swiper-slide">
+              <img src="../img/student.png" alt="Journal Image 2" class="journal-image" />
+            </div>
+            <div class="swiper-slide">
+              <img src="../img/company.png" alt="Journal Image 3" class="journal-image" />
+            </div>
+          </div>
+
+          <!-- Swiper Navigation -->
+          <div class="swiper-button-next"></div>
+          <div class="swiper-button-prev"></div>
+
+          <!-- Swiper Pagination -->
+          <div class="swiper-pagination"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function openJournalImages(journalId) {
+        const modal = document.getElementById('openJournalImages');
+        modal.style.display = 'flex';
+
+        // Initialize Swiper with centered slide effect
+        new Swiper('.swiper-container', {
+          loop: true,
+          centeredSlides: true, // Keep the active slide in the center
+          slidesPerView: 1, // Only one slide visible at a time
+          spaceBetween: 30, // Add space between slides
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+        });
+      }
+
+      function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+      }
+
+    </script>
 
     <!-- Add Modal -->
     <div id="addModal" style="padding-top: 50px;" class="modal">
@@ -251,6 +571,8 @@ $current_page = $pagination_data['current_page'];
         <h2>Add Journal Entry</h2>
 
         <form action="add_journal.php" method="POST">
+          <input type="hidden" id="earliestScheduleDate" value="<?php echo $earliest_schedule; ?>">
+          <input type="hidden" id="company" name="company" value="<?php echo $company_id; ?>">
           <div class="horizontal-group">
             <div class="input-group">
               <label for="journalTitle">Title</label>
@@ -274,6 +596,54 @@ $current_page = $pagination_data['current_page'];
       </div>
     </div>
     <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const journalDateInput = document.getElementById('journalDate');
+        const earliestScheduleDate = document.getElementById('earliestScheduleDate').value;
+
+        // Set the minimum and maximum date for journalDate input
+        journalDateInput.setAttribute('min', earliestScheduleDate);
+
+        // Set maximum date to today
+        const today = new Date().toISOString().split('T')[0];
+        journalDateInput.setAttribute('max', today);
+
+        // Disable weekends and trigger the modal if a weekend is selected
+        journalDateInput.addEventListener('input', function () {
+          const selectedDate = new Date(this.value);
+          const dayOfWeek = selectedDate.getDay();
+
+          // Check if the selected day is Saturday (6) or Sunday (0)
+          if (dayOfWeek === 6 || dayOfWeek === 0) {
+            openModal('weekendErrorModal'); // Trigger the modal
+            this.value = ""; // Clear the invalid selection
+          }
+        });
+      });
+    </script>
+
+    <script>
+      // Function to open the error modal
+      function openModal(modalId) {
+        document.getElementById(modalId).style.display = 'block';
+      }
+
+      // Function to close the error modal
+      function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+      }
+
+      // Disable weekends and trigger the modal if a weekend is selected
+      document.getElementById('journalDate').addEventListener('input', function () {
+        const input = this;
+        const selectedDate = new Date(input.value);
+        const dayOfWeek = selectedDate.getDay();
+
+        // Check if the selected day is Saturday (6) or Sunday (0)
+        if (dayOfWeek === 6 || dayOfWeek === 0) {
+          openModal('weekendErrorModal'); // Trigger the modal
+          input.value = ""; // Clear the invalid selection
+        }
+      });
       addBtn.onclick = function () {
         addModal.style.display = "block";
 
@@ -337,11 +707,12 @@ $current_page = $pagination_data['current_page'];
           </lottie-player>
         </div>
         <h2>Journal Submitted Successfully!</h2>
-        <p>Thank you for submitting your journal, <span
-            style="color: #095d40; font-size: 20px"><?php echo $_SESSION['full_name']; ?>!</span></p>
+        <p>Thank you for submitting your journal, <span style="color: #095d40; font-size: 20px">
+            <?php echo $_SESSION['full_name']; ?>!</span></p>
         <button class="proceed-btn" onclick="closeModal('journalSuccessModal')">Close</button>
       </div>
     </div>
+
 
     <!-- Success Modal for Journal Update -->
     <div id="journalUpdateSuccessModal" class="modal">
@@ -358,21 +729,76 @@ $current_page = $pagination_data['current_page'];
         <button class="proceed-btn" onclick="closeModal('journalUpdateSuccessModal')">Close</button>
       </div>
     </div>
-    <!-- Success Modal for Journal Deletion -->
-    <!-- <div id="journalDeleteSuccessModal" class="modal">
-      <div class="modal-content"> -->
-    <!-- Lottie Animation -->
-    <!-- <div style="display: flex; justify-content: center; align-items: center;">
-          <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+    <!-- Weekend Selection Error Modal -->
+    <div id="weekendErrorModal" class="modal">
+      <div class="modal-content">
+        <!-- Lottie Animation for Error -->
+        <div style="display: flex; justify-content: center; align-items: center;">
+          <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
             style="width: 150px; height: 150px;" loop autoplay>
           </lottie-player>
         </div>
-        <h2>Journal Deleted Successfully!</h2>
-        <p>Your journal entry has been deleted, <span
-            style="color: #095d40; font-size: 20px"><?php echo $_SESSION['full_name']; ?>!</span></p>
-        <button class="proceed-btn" onclick="closeModal('journalDeleteSuccessModal')">Close</button>
+        <h2 style="color: #8B0000">Weekends Are Not Selectable!</h2>
+        <p>Please choose a weekday for your journal entry.</p>
+        <button class="proceed-btn" onclick="closeModal('weekendErrorModal')">Close</button>
       </div>
-    </div> -->
+    </div>
+    <!-- Weekend Search Selection Error Modal -->
+    <div id="weekendSearchErrorModal" class="modal">
+      <div class="modal-content">
+        <!-- Lottie Animation for Error -->
+        <div style="display: flex; justify-content: center; align-items: center;">
+          <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
+            style="width: 150px; height: 150px;" loop autoplay>
+          </lottie-player>
+        </div>
+        <h2 style="color: #8B0000">Weekends Are Not Selectable!</h2>
+        <p>Please choose a weekday for your search.</p>
+        <button class="proceed-btn" onclick="closeModal('weekendSearchErrorModal')">Close</button>
+      </div>
+    </div>
+    <!-- Absent Error Modal -->
+    <div id="absentErrorModal" class="modal">
+      <div class="modal-content">
+        <!-- Lottie Animation for Error -->
+        <div style="display: flex; justify-content: center; align-items: center;">
+          <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
+            style="width: 150px; height: 150px;" loop autoplay>
+          </lottie-player>
+        </div>
+        <h2 style="color: #8B0000">You are Absent on this Day!</h2>
+        <p>Please choose another day for your journal entry.</p>
+        <button class="proceed-btn" onclick="closeModal('absentErrorModal')">Close</button>
+      </div>
+    </div>
+    <!-- Suspended Error Modal -->
+    <div id="suspendedErrorModal" class="modal">
+      <div class="modal-content">
+        <!-- Lottie Animation for Error -->
+        <div style="display: flex; justify-content: center; align-items: center;">
+          <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
+            style="width: 150px; height: 150px;" loop autoplay>
+          </lottie-player>
+        </div>
+        <h2 style="color: #8B0000">This day is Suspended!</h2>
+        <p>Please choose another day for your journal entry.</p>
+        <button class="proceed-btn" onclick="closeModal('suspendedErrorModal')">Close</button>
+      </div>
+    </div>
+    <!-- Holiday Error Modal -->
+    <div id="holidayErrorModal" class="modal">
+      <div class="modal-content">
+        <!-- Lottie Animation for Error -->
+        <div style="display: flex; justify-content: center; align-items: center;">
+          <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
+            style="width: 150px; height: 150px;" loop autoplay>
+          </lottie-player>
+        </div>
+        <h2 style="color: #8B0000">This day is Holiday!</h2>
+        <p>Please choose another day for your journal entry.</p>
+        <button class="proceed-btn" onclick="closeModal('holidayErrorModal')">Close</button>
+      </div>
+    </div>
     <!-- Success Modal for Journal Duplicate Day -->
     <div id="journalErrorSuccessModal" class="modal">
       <div class="modal-content">
@@ -382,8 +808,8 @@ $current_page = $pagination_data['current_page'];
             style="width: 150px; height: 150px;" loop autoplay>
           </lottie-player>
         </div>
-        <h2 style="color: #8B0000">You've Already Submitted Today!</h2>
-        <p>Just edit your journal for today, <span
+        <h2 style="color: #8B0000">You've Already Submitted On This Date!</h2>
+        <p>Just edit your journal, <span
             style="color: #095d40; font-size: 20px"><?php echo $_SESSION['full_name']; ?>!</span></p>
         <button class="proceed-btn" onclick="closeModal('journalErrorSuccessModal')">Close</button>
       </div>
@@ -460,6 +886,16 @@ $current_page = $pagination_data['current_page'];
       <?php elseif (isset($_SESSION['journal_delete_success'])): ?>
         showModal('journalDeleteSuccessModal');
         <?php unset($_SESSION['journal_delete_success']); ?>
+
+      <?php elseif (isset($_SESSION['journal_absent'])): ?>
+        showModal('absentErrorModal');
+        <?php unset($_SESSION['journal_absent']); ?>
+      <?php elseif (isset($_SESSION['journal_suspended'])): ?>
+        showModal('suspendedErrorModal');
+        <?php unset($_SESSION['journal_suspended']); ?>
+      <?php elseif (isset($_SESSION['journal_holiday'])): ?>
+        showModal('holidayErrorModal');
+        <?php unset($_SESSION['journal_holiday']); ?>
 
       <?php elseif (isset($_SESSION['journal_error'])): ?>
         showModal('journalErrorSuccessModal');
@@ -565,6 +1001,7 @@ $current_page = $pagination_data['current_page'];
   </script>
 
   <script src="./js/script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

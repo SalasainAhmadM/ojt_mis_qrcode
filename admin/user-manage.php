@@ -229,6 +229,7 @@ if ($stmt = $database->prepare($query)) {
             </div>
             <div class="main-box">
                 <div class="whole-box">
+
                     <div class="button-container">
                         <!-- Adviser Button -->
                         <a href="./users/adviser.php" class="button-box">

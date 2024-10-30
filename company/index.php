@@ -27,7 +27,43 @@ if ($stmt = $database->prepare($query)) {
   }
   $stmt->close(); // Close the statement
 }
+$company_id = $_SESSION['user_id'];
 
+// Query to fetch students under the logged-in company
+$students_query = "
+    SELECT s.student_id, s.student_firstname, s.student_middle, s.student_lastname, 
+          a.time_in, a.time_out, a.ojt_hours
+    FROM student s
+    LEFT JOIN attendance a ON s.student_id = a.student_id 
+    WHERE s.company = ?
+    ORDER BY s.student_lastname, a.time_in ASC"; // Sort by last name and time-in
+
+if ($stmt = $database->prepare($students_query)) {
+  $stmt->bind_param("i", $company_id); // Bind the company ID parameter
+  $stmt->execute(); // Execute the query
+  $result = $stmt->get_result(); // Get the result set
+
+  $students = [];
+  while ($row = $result->fetch_assoc()) {
+    $students[$row['student_id']][] = $row; // Group attendance by student ID
+  }
+  $stmt->close(); // Close the statement
+}
+// Function to format hours into "X hrs Y mins"
+function formatDuration($hours)
+{
+  $totalMinutes = $hours * 60; // Convert hours to minutes
+  $hrs = floor($totalMinutes / 60); // Extract the hours
+  $mins = $totalMinutes % 60; // Extract the remaining minutes
+
+  $formatted = '';
+  if ($hrs > 0)
+    $formatted .= $hrs . ' hr' . ($hrs > 1 ? 's' : '') . ' ';
+  if ($mins > 0)
+    $formatted .= $mins . ' min' . ($mins > 1 ? 's' : '');
+
+  return trim($formatted) ?: '0 mins'; // Default to '0 mins' if both are zero
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -176,7 +212,146 @@ if ($stmt = $database->prepare($query)) {
     <div class="home-content">
       <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
     </div>
+
+    <div class="content-wrapper">
+      <div class="intern-company">
+        <div class="company-logo">
+          <img
+            src="../uploads/company/<?php echo !empty($company['company_image']) ? $company['company_image'] : 'user.png'; ?>"
+            alt="Company Logo">
+        </div>
+        <div class="details">
+          <h2><?php echo !empty($company['company_name']) ? $company['company_name'] : 'Company Name' ?></h2>
+          <label><?php echo !empty($company['company_address']) ? $company['company_address'] : 'Company Address' ?></label>
+          <br>
+          <div class="contact-info">
+            <span><?php echo !empty($company['company_email']) ? $company['company_email'] : 'Company Email' ?> <span
+                class="line"> |</span></span>
+
+            <span><?php echo !empty($company['company_number']) ? $company['company_number'] : 'Company Number' ?></span>
+          </div>
+        </div>
+      </div>
+      <div class="main-box">
+        <div class="left-box">
+          <h2>Attendance - <span style="color: #095d40"><?php echo date('F d, Y'); ?></span></h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Intern Name</th>
+                <th>Time-in</th>
+                <th>Time-out</th>
+                <th>Duration</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <?php
+            $today = date('Y-m-d');
+            ?>
+
+            <tbody>
+              <?php if (!empty($students)): ?>
+                <?php foreach ($students as $student_id => $attendances): ?>
+                  <?php
+                  // Filter attendances for today
+                  $today_attendances = array_filter($attendances, function ($attendance) use ($today) {
+                    return date('Y-m-d', strtotime($attendance['time_in'])) == $today;
+                  });
+
+                  // Initialize variables to store attendance details
+                  $first_time_in = null;
+                  $latest_time_in_without_out = null;
+                  $latest_time_out = null;
+                  $total_hours_today = 0;
+
+                  foreach ($today_attendances as $attendance) {
+                    if (!$first_time_in || strtotime($attendance['time_in']) < strtotime($first_time_in)) {
+                      $first_time_in = $attendance['time_in'];
+                    }
+
+                    // Check for the latest "Time-in" without "Time-out"
+                    if ($attendance['time_in'] && !$attendance['time_out']) {
+                      $latest_time_in_without_out = $attendance['time_in'];
+                    }
+
+                    // Find the latest "Time-out" if it exists
+                    if ($attendance['time_out'] && (!$latest_time_out || strtotime($attendance['time_out']) > strtotime($latest_time_out))) {
+                      $latest_time_out = $attendance['time_out'];
+                    }
+
+                    // Accumulate total hours for today
+                    $total_hours_today += $attendance['ojt_hours'] ?? 0;
+                  }
+
+                  // Determine the Time-out display: if there's a latest Time-in without Time-out, display it as empty in Time-out
+                  $displayed_time_out = $latest_time_in_without_out ? '' : ($latest_time_out ? date('h:i A', strtotime($latest_time_out)) : 'N/A');
+
+                  // Determine the status: "Timed-in" if there is a Time-in without Time-out; otherwise, "Timed-out"
+                  $status = $latest_time_in_without_out ? '<span style="color:green;">Timed-in</span>' : '<span style="color:red;">Timed-out</span>';
+                  ?>
+
+                  <tr>
+                    <td><?php echo $attendances[0]['student_firstname'] . ' ' . $attendances[0]['student_lastname']; ?></td>
+                    <td><?php echo $first_time_in ? date('h:i A', strtotime($first_time_in)) : 'N/A'; ?></td>
+                    <td><?php echo $displayed_time_out; ?></td>
+                    <td><?php echo $total_hours_today > 0 ? formatDuration($total_hours_today) : 'N/A'; ?></td>
+                    <td><?php echo $status; ?></td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php else: ?>
+                <tr>
+                  <td colspan="5">No attendance records found.</td>
+                </tr>
+              <?php endif; ?>
+            </tbody>
+
+
+          </table>
+        </div>
+
+        <div class="right-box">
+          <h2>Target Hours: <span style="color: #095d40"><strong>300hrs</strong></span></h2>
+          <?php if (!empty($students)): ?>
+            <?php foreach ($students as $student_id => $attendances): ?>
+              <?php
+              // Calculate total hours for each student
+              $total_hours = array_reduce($attendances, function ($carry, $attendance) {
+                return $carry + ($attendance['ojt_hours'] ?? 0);
+              }, 0);
+              // Calculate progress percentage based on 300 hours target
+              $progress_percentage = min(100, ($total_hours / 100) * 100); // Limit to 100%
+              ?>
+              <div class="student-progress">
+                <div class="label">
+                  <span><?php echo $attendances[0]['student_firstname'] . ' ' . $attendances[0]['student_lastname']; ?></span>
+                  <span><?php echo round($progress_percentage); ?>%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress" style="width: <?php echo $progress_percentage; ?>%;"
+                    data-progress="<?php echo $progress_percentage; ?>"></div>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <p>No progress records found.</p>
+          <?php endif; ?>
+        </div>
+      </div>
+
+      <script>
+        // Dynamically adjust progress bar color based on percentage
+        document.querySelectorAll('.progress').forEach(function (progressBar) {
+          const progress = progressBar.getAttribute('data-progress'); // Get the progress percentage
+          // Calculate green shade from light (0%) to dark (100%)
+          const shade = 0.6 * (progress / 100);
+          progressBar.style.backgroundColor = `rgba(9, 93, 64, ${shade + 0.4})`; // Minimum opacity of 0.4
+        });
+      </script>
+
     </div>
+    </div>
+
+
   </section>
 
   <!-- Login Success Modal -->
