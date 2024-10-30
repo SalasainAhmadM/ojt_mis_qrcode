@@ -153,11 +153,29 @@
         width: 60%;
         padding: 15px;
       }
+      .modal-content-big {
+        z-index: 1000;
+        width: 60%;
+        padding: 15px;
+      }
+      .image-upload-row {
+        gap: 5px;
+      }
+      
+      .journal-preview-img.square-img {
+        width: 45px; 
+        height: 45px; 
+      }
+      
+      .journal-img-label {
+        font-size: 8px; 
+      }
       .modal-content {
         z-index: 1000;
         width: 60%;
         padding: 15px;
       }
+      
       .modal-content-late , .modal-content-absent,
       .modal-content-bigger {
         z-index: 1000;
@@ -387,7 +405,11 @@
         text-overflow: ellipsis;
     }
     th.name, td.name, 
-    th.wmsu_id, td.wmsu_id {
+    th.wmsu_id, td.wmsu_id, 
+    th.timein, td.timein,
+    th.timeout, td.timeout,
+    th.duration, td.duration,
+    th.status, td.status  {
       font-size: 8px;
       width: 20%;
     }
@@ -562,7 +584,7 @@
 }
 
 
-.paginationJournal {
+.paginationJournal , .paginationDay {
   font-size: 12px;
 }
 

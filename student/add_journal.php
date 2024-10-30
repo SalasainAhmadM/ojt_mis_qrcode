@@ -13,7 +13,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $journalTitle = $_POST['journalTitle'];
     $journalDate = $_POST['journalDate'];
     $journalDescription = $_POST['journalDescription'];
-    $journalSize = strlen($journalDescription);
+
+    // Directory for image uploads
+    $uploadDir = "../uploads/student/journals/";
 
     // Check for suspended day
     $suspendedQuery = "
@@ -96,10 +98,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header("Location: journal.php");
             exit();
         } else {
+            // Image upload logic
+            $images = [];
+            for ($i = 1; $i <= 3; $i++) {
+                $imageKey = "image$i";
+                if (isset($_FILES[$imageKey]) && $_FILES[$imageKey]['error'] == 0) {
+                    $imageName = basename($_FILES[$imageKey]["name"]);
+                    $imagePath = $uploadDir . uniqid("journal_") . "_" . $imageName;
+                    if (move_uploaded_file($_FILES[$imageKey]["tmp_name"], $imagePath)) {
+                        $images[$i] = $imagePath;
+                    } else {
+                        $images[$i] = null;
+                    }
+                } else {
+                    $images[$i] = null;
+                }
+            }
+
             // Insert the new journal entry
-            $query = "INSERT INTO student_journal (student_id, journal_name, journal_date, journal_description, file_size) VALUES (?, ?, ?, ?, ?)";
+            $query = "
+                INSERT INTO student_journal 
+                (student_id, journal_name, journal_date, journal_description, journal_image1, journal_image2, journal_image3)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ";
             if ($stmt = $database->prepare($query)) {
-                $stmt->bind_param("isssi", $student_id, $journalTitle, $journalDate, $journalDescription, $journalSize);
+                $stmt->bind_param(
+                    "issssss",
+                    $student_id,
+                    $journalTitle,
+                    $journalDate,
+                    $journalDescription,
+                    $images[1],
+                    $images[2],
+                    $images[3]
+                );
                 $stmt->execute();
 
                 $_SESSION['journal_success'] = true;

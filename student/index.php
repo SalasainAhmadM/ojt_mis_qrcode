@@ -42,6 +42,63 @@ if ($stmt = $database->prepare($query)) {
   $stmt->close(); // Close the statement
 }
 
+// Fetch student ID from session
+$student_id = $_SESSION['user_id'];
+
+// Check if a specific date is being filtered
+$filter_date = isset($_GET['filter_date']) ? $_GET['filter_date'] : null;
+
+// Prepare the SQL query based on the filter
+$attendance_query = "
+    SELECT DATE_FORMAT(time_in, '%b %d, %Y') AS attendance_date, 
+           TIME_FORMAT(time_in, '%h:%i %p') AS time_in, 
+           TIME_FORMAT(time_out, '%h:%i %p') AS time_out, 
+           IFNULL(ojt_hours, 0) AS total_hours
+    FROM attendance
+    WHERE student_id = ?
+";
+
+if ($filter_date) {
+  $attendance_query .= " AND DATE(time_in) = ?"; // Add date filter if provided
+}
+
+$attendance_query .= " ORDER BY time_in DESC";
+
+$attendance_data = [];
+if ($stmt = $database->prepare($attendance_query)) {
+  if ($filter_date) {
+    $stmt->bind_param("is", $student_id, $filter_date);
+  } else {
+    $stmt->bind_param("i", $student_id);
+  }
+
+  $stmt->execute();
+  $attendance_result = $stmt->get_result();
+
+  while ($row = $attendance_result->fetch_assoc()) {
+    $attendance_data[] = $row;
+  }
+  $stmt->close();
+}
+
+// Function to convert hours into "X hrs Y mins" format
+function formatOjtHours($decimalHours)
+{
+  $totalMinutes = (int) round($decimalHours * 60); // Convert hours to minutes
+  $hours = intdiv($totalMinutes, 60); // Get whole hours
+  $minutes = $totalMinutes % 60; // Get remaining minutes
+
+  $formatted = [];
+  if ($hours > 0) {
+    $formatted[] = $hours . ($hours > 1 ? 'hrs' : 'hr');
+  }
+  if ($minutes > 0) {
+    $formatted[] = $minutes . 'mins';
+  }
+
+  return !empty($formatted) ? implode(' ', $formatted) : '0 mins';
+}
+
 // Fetch announcements
 $announcement_query = "SELECT announcement_name, announcement_date, announcement_description 
                        FROM adviser_announcement 
@@ -54,20 +111,61 @@ if ($announcement_result->num_rows > 0) {
     $announcements[] = $row;
   }
 }
+
 // Check if today is a holiday
-$today_date = date('Y-m-d');
+$today = date('Y-m-d'); // Get the current date
+$holiday_message = '';
+
 $holiday_query = "SELECT holiday_name FROM holiday WHERE holiday_date = ?";
-$holiday_stmt = $database->prepare($holiday_query);
-$holiday_stmt->bind_param("s", $today_date);
-$holiday_stmt->execute();
-$holiday_result = $holiday_stmt->get_result();
+if ($stmt = $database->prepare($holiday_query)) {
+  $stmt->bind_param("s", $today);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
-$holiday = $holiday_result->num_rows > 0 ? $holiday_result->fetch_assoc() : null;
-$holiday_stmt->close();
+  if ($result->num_rows > 0) {
+    $holiday = $result->fetch_assoc();
+    $holiday_message = "Today is a Holiday: " . $holiday['holiday_name']; // Store holiday message
+  }
+  $stmt->close();
+}
 
-// Check if today is a weekend
-$is_weekend = date('N') >= 6;
+// Fetch company_id associated with the student
+$query = "
+    SELECT student.student_id, student.student_firstname, student.student_lastname, company.company_id 
+    FROM student 
+    JOIN company ON student.company = company.company_id 
+    WHERE student.student_id = ?";
 
+if ($stmt = $database->prepare($query)) {
+  $stmt->bind_param("i", $student_id);
+  $stmt->execute();
+  $result = $stmt->get_result();
+
+  if ($result->num_rows > 0) {
+    $data = $result->fetch_assoc();
+    $company_id = $data['company_id'];
+  }
+  $stmt->close();
+}
+// Check if today's schedule for the student's company is marked as "Suspended"
+$suspended_message = '';
+$schedule_query = "SELECT day_type FROM schedule WHERE company_id = ? AND date = ?";
+if ($stmt = $database->prepare($schedule_query)) {
+  $stmt->bind_param("is", $company_id, $today);
+  $stmt->execute();
+  $result = $stmt->get_result();
+
+  if ($result->num_rows > 0) {
+    $schedule = $result->fetch_assoc();
+    if ($schedule['day_type'] === 'Suspended') {
+      $suspended_message = "No Duty! Today is Suspended.";
+    }
+  }
+  $stmt->close();
+}
+
+// Determine final message (either holiday or suspension notice)
+$login_message = $holiday_message ?: $suspended_message;
 ?>
 
 
@@ -194,12 +292,11 @@ $is_weekend = date('N') >= 6;
           <h2>
             Attendance Details
             <div class="filter-group">
-              <select class="dropdown">
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
-              <input type="date" class="search-bar" placeholder="Search Date">
-              <!-- <button class="filter-btn"><i style="margin-right: 3px" class="fa-solid fa-filter"></i>Filter</button> -->
+              <form method="GET" action="">
+                <input type="date" class="search-bar" name="filter_date"
+                  value="<?php echo isset($_GET['filter_date']) ? htmlspecialchars($_GET['filter_date']) : ''; ?>"
+                  onchange="this.form.submit()">
+              </form>
             </div>
           </h2>
           <table>
@@ -212,87 +309,24 @@ $is_weekend = date('N') >= 6;
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
+              <?php if (!empty($attendance_data)): ?>
+                <?php foreach ($attendance_data as $attendance): ?>
+                  <tr>
+                    <td><?php echo htmlspecialchars($attendance['attendance_date']); ?></td>
+                    <td><?php echo htmlspecialchars($attendance['time_in']); ?></td>
+                    <td><?php echo htmlspecialchars($attendance['time_out'] ?? 'N/A'); ?></td>
+                    <td><?php echo formatOjtHours($attendance['total_hours']); ?></td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php else: ?>
+                <tr>
+                  <td colspan="4">No attendance records found.</td>
+                </tr>
+              <?php endif; ?>
             </tbody>
           </table>
         </div>
+
         <div class="right-box">
           <h2>Announcements</h2>
 
@@ -357,9 +391,16 @@ $is_weekend = date('N') >= 6;
       </div>
       <h2>Login Successful!</h2>
       <p>Welcome back, <span style="color: #095d40; font-size: 20px"><?php echo $_SESSION['full_name']; ?>!</span></p>
+
+      <!-- Display Holiday or Suspension Message -->
+      <?php if ($login_message): ?>
+        <p style="color: #e74c3c; font-size: 18px;"><?php echo $login_message; ?></p>
+      <?php endif; ?>
+
       <button class="proceed-btn" onclick="closeModallogin('loginSuccessModal')">Proceed</button>
     </div>
   </div>
+
   <!-- Holiday Modal -->
   <div id="holidayModal" class="modal" style="display: none;">
     <div class="modal-content">

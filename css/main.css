@@ -539,6 +539,30 @@ hr {
     width: 50%;
     border-radius: 10px;
   }
+
+
+  .image-upload-row {
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+  }
+
+  .journal-img-container {
+    text-align: center;
+  }
+
+  .journal-preview-img.square-img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+
+  .journal-img-label {
+    font-size: 12px;
+    color: #666;
+  }
   .modal-content-bigger {
     background-color: #fff;
     margin: auto;
@@ -1204,6 +1228,40 @@ td.maxlength , td.section , td.wmsu_id , td.contact , td.adviser{
   background-color: #095d40;
   color: white;
 }
+/* Pagination by day */
+.paginationDay {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.paginationDay a,
+.paginationDay span {
+  margin: 0 5px;
+  padding: 8px 12px;
+  text-decoration: none;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  color: #333;
+}
+
+.paginationDay a.prev,
+.paginationDay a.next {
+  font-weight: bold;
+}
+
+.paginationDay a.active,
+.paginationDay span.active {
+  background-color: #095d40;
+  color: white;
+}
+#noInternsMessage {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  margin-top: 10px;
+}
 
 .absent {
   color: #FF474D;
@@ -1713,3 +1771,59 @@ td.image img {
 }
 
 /* Progress UI Ends */
+
+
+/* Assign Company UI */
+.no-students-message ,.no-journals-message {
+  color: lightgray;
+  font-style: italic;
+  text-align: center;
+  padding: 10px;
+}
+.green-palette {
+  background-color: #e8f5e9;
+  border: 1px solid #81c784;
+  padding: 10px;
+  border-radius: 5px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.green-palette .student-item , .green-palette .journal-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #c8e6c9;
+}
+
+.green-palette .student-item:last-child , .green-palette .journal-item:last-child {
+  border-bottom: none;
+}
+
+.student-checkbox , .journal-checkbox {
+  margin-right: 10px;
+}
+
+.assign-btn {
+  background-color: #095d40;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.assign-btn:hover {
+  background-color: #074f34;
+}
+
+#studentSearch {
+  padding: 8px;
+  width: 100%;
+  margin-bottom: 10px;
+  border: 1px solid #c8e6c9;
+  border-radius: 5px;
+}
+
+/* Assign Company UI END */

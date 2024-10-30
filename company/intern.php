@@ -362,9 +362,14 @@ $current_page = $pagination_data['current_page'];
             </div>
             <div class="main-box">
                 <div class="whole-box">
-                    <h2>
-                        Interns
-                    </h2>
+                    <div class="header-group">
+                        <h2>Intern Details</h2>
+                        <div class="button-container">
+                            <button id="openAddStudentModalBtn" class="add-btn">
+                                <i class="fa-solid fa-plus"></i> Add
+                            </button>
+                        </div>
+                    </div>
                     <div class="filter-group">
                         <!-- Course_section Filter Form -->
                         <form method="GET" action="">
@@ -472,6 +477,174 @@ $current_page = $pagination_data['current_page'];
             </div>
         </div>
     </section>
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" id="closeAddStudentModal">&times;</span>
+            <h2>Assign Student to Company</h2>
+            <input type="text" id="studentSearch" placeholder="Search student by name">
+
+            <!-- Styled student list with checkboxes -->
+            <ul id="studentList" class="green-palette">
+                <!-- Student list items with checkboxes will be dynamically inserted here -->
+            </ul>
+
+            <button id="assignStudentsBtn" class="assign-btn">Assign Selected Students</button>
+        </div>
+    </div>
+
+    <script>
+        let students = []; // Store all students fetched
+        const checkedStudents = new Set(); // Track checked students
+
+        // Fetch students and populate list
+        document.getElementById('openAddStudentModalBtn').addEventListener('click', function () {
+            fetch('get_students_no_company.php')
+                .then(response => response.json())
+                .then(data => {
+                    students = data; // Store data for future filtering
+                    renderStudentList(students);
+                })
+                .catch(error => console.error('Error fetching students:', error));
+
+            document.getElementById('addStudentModal').style.display = 'block';
+        });
+
+        // Render the student list, prioritizing checked students
+        function renderStudentList(data) {
+            const studentList = document.getElementById('studentList');
+            studentList.innerHTML = ''; // Clear existing list
+
+            if (data.length === 0) {
+                // Display a message if no students are found
+                const noStudentsMessage = document.createElement('li');
+                noStudentsMessage.textContent = "No intern with no company is found!";
+                noStudentsMessage.classList.add('no-students-message');
+                studentList.appendChild(noStudentsMessage);
+                return;
+            }
+
+            // Sort to keep checked students at the top
+            data.sort((a, b) => checkedStudents.has(b.student_id) - checkedStudents.has(a.student_id));
+
+            data.forEach(student => {
+                const li = document.createElement('li');
+                li.classList.add('student-item');
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = student.student_id;
+                checkbox.classList.add('student-checkbox');
+                checkbox.checked = checkedStudents.has(student.student_id);
+
+                // Event listener to manage checked students
+                checkbox.addEventListener('change', function () {
+                    if (checkbox.checked) {
+                        checkedStudents.add(student.student_id);
+                    } else {
+                        checkedStudents.delete(student.student_id);
+                    }
+                    renderStudentList(students); // Re-render list
+                });
+
+                const label = document.createElement('label');
+                label.textContent = `${student.student_firstname} ${student.student_middle} ${student.student_lastname}`;
+                label.prepend(checkbox);
+
+                li.appendChild(label);
+                studentList.appendChild(li);
+            });
+        }
+
+
+        // Filter the student list based on search input
+        document.getElementById('studentSearch').addEventListener('input', function () {
+            const searchQuery = this.value.toLowerCase();
+            const filteredStudents = students.filter(student =>
+                `${student.student_firstname} ${student.student_lastname}`.toLowerCase().includes(searchQuery)
+            );
+
+            renderStudentList(filteredStudents);
+        });
+
+        document.getElementById('closeAddStudentModal').addEventListener('click', function () {
+            document.getElementById('addStudentModal').style.display = 'none';
+        });
+
+        // Optional: Close modal when clicking outside of it
+        window.addEventListener('click', function (event) {
+            const modal = document.getElementById('addStudentModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Assign button event listener
+        document.getElementById('assignStudentsBtn').addEventListener('click', function () {
+            const selectedStudents = Array.from(checkedStudents); // Convert Set to Array
+            if (selectedStudents.length > 0) {
+                fetch('assign_students.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        company_id: <?php echo json_encode($company_id); ?>, // Pass the company_id from PHP
+                        student_ids: selectedStudents
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('addStudentModal').style.display = 'none';
+                            document.getElementById('updateSuccessModal').style.display = 'block';
+                            checkedStudents.clear(); // Clear selected students
+                            renderStudentList(students); // Re-render the list
+
+                        } else {
+                            alert('Failed to assign students.');
+                        }
+                    })
+                    .catch(error => console.error('Error assigning students:', error));
+            } else {
+                alert('Please select at least one student to assign.');
+            }
+        });
+
+    </script>
+    <!-- Update Success Modal -->
+    <div id="updateSuccessModal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2>Update Successful!</h2>
+            <p>Company assignment has been successfully updated.</p>
+            <button class="proceed-btn" onclick="closeModal('updateSuccessModal')">Proceed</button>
+        </div>
+    </div>
+
+    <script>
+        // Function to open the modal
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = "block";
+        }
+
+        // Function to close the modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+        }
+
+        // Automatically open the modal when the page loads, if update was successful
+        window.onload = function () {
+            <?php if (isset($_SESSION['update_success']) && $_SESSION['update_success']): ?>
+                openModal('updateSuccessModal');
+                <?php unset($_SESSION['update_success']); // Clear the session variable ?>
+            <?php endif; ?>
+        };
+    </script>
 
 
     <!-- View Student Modal -->

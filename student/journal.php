@@ -364,10 +364,10 @@ if ($search_date) {
               <button id="openAddModalBtn" class="add-btn">
                 <i class="fa-solid fa-plus"></i>Add
               </button>
-              <button class="export-btn"
-                onclick="window.location.href='export_journal.php?student_id=<?php echo $student_id; ?>'">
+              <button class="export-btn" id="openJournalModalBtn">
                 <i class="fa-solid fa-file-export"></i> Export
               </button>
+
             </div>
           </div>
           <div class="filter-group">
@@ -505,6 +505,144 @@ if ($search_date) {
       </div>
     </div>
     </div>
+    <style>
+      .journal-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        /* Adds space between items */
+      }
+
+      .journal-item input[type="checkbox"] {
+        margin-right: 10px;
+        /* Adds space between checkbox and label */
+      }
+    </style>
+    <!-- Journal Selection Modal -->
+    <div id="journalModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <span class="close" id="closeJournalModal">&times;</span>
+        <h2>Select Journals to Export</h2>
+
+        <input type="date" id="searchDate" class="search-input" />
+
+        <!-- Styled journal list with checkboxes -->
+        <ul id="journalList" class="green-palette">
+          <!-- Journal list items with checkboxes will be dynamically inserted here -->
+        </ul>
+
+        <button id="exportSelectedJournalsBtn" class="assign-btn">Export Selected Journals</button>
+      </div>
+    </div>
+
+    <!-- No Journals Found Error Modal -->
+    <div id="noJournalsModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <div style="display: flex; justify-content: center; align-items: center;">
+          <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
+            style="width: 150px; height: 150px;" loop autoplay>
+          </lottie-player>
+        </div>
+        <h2 style="color: #8B0000">No Journals Found!</h2>
+        <p>No journal entries match the selected date.</p>
+        <button class="proceed-btn" onclick="closeModal('noJournalsModal')">Close</button>
+      </div>
+    </div>
+
+
+    <script>
+      let allJournals = []; // Store all fetched journals
+      const selectedJournals = new Set(); // Track selected journals
+
+      // Fetch journals when the modal opens
+      document.getElementById('openJournalModalBtn').addEventListener('click', function () {
+        fetch(`get_journals.php?student_id=<?php echo $student_id; ?>`)
+          .then(response => response.json())
+          .then(data => {
+            allJournals = data.sort((a, b) => new Date(b.journal_date) - new Date(a.journal_date)); // Sort latest first
+            renderJournalList(allJournals); // Render all journals
+            document.getElementById('journalModal').style.display = 'block';
+          })
+          .catch(error => console.error('Error fetching journals:', error));
+      });
+
+      // Render the journal list, prioritizing selected journals
+      function renderJournalList(journals) {
+        const journalList = document.getElementById('journalList');
+        journalList.innerHTML = ''; // Clear existing list
+
+        if (journals.length === 0) {
+          const noJournalsMessage = document.createElement('li');
+          noJournalsMessage.textContent = "No journals found!";
+          noJournalsMessage.classList.add('no-journals-message');
+          journalList.appendChild(noJournalsMessage);
+          return;
+        }
+
+        // Sort to keep selected journals at the top
+        journals.sort((a, b) => selectedJournals.has(b.journal_id) - selectedJournals.has(a.journal_id));
+
+        journals.forEach(journal => {
+          const li = document.createElement('li');
+          li.classList.add('journal-item');
+
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.value = journal.journal_id;
+          checkbox.checked = selectedJournals.has(journal.journal_id);
+
+          // Track selected journals
+          checkbox.addEventListener('change', function () {
+            if (checkbox.checked) {
+              selectedJournals.add(journal.journal_id);
+            } else {
+              selectedJournals.delete(journal.journal_id);
+            }
+            renderJournalList(journals); // Re-render list to keep order
+          });
+
+          const label = document.createElement('label');
+          label.textContent = `${journal.journal_name} (${journal.journal_date})`;
+          label.prepend(checkbox);
+
+          li.appendChild(label);
+          journalList.appendChild(li);
+        });
+      }
+
+      // Filter the journal list based on the selected date
+      document.getElementById('searchDate').addEventListener('input', function () {
+        const searchDate = this.value;
+        const filteredJournals = allJournals.filter(journal =>
+          journal.journal_date.startsWith(searchDate) // Match the beginning of the date string
+        );
+        renderJournalList(filteredJournals); // Render the filtered list
+      });
+
+      // Close the journal modal
+      document.getElementById('closeJournalModal').addEventListener('click', function () {
+        document.getElementById('journalModal').style.display = 'none';
+      });
+
+      // Optional: Close the modal when clicking outside of it
+      window.addEventListener('click', function (event) {
+        const modal = document.getElementById('journalModal');
+        if (event.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+
+      // Export selected journals
+      document.getElementById('exportSelectedJournalsBtn').addEventListener('click', function () {
+        const selected = Array.from(selectedJournals).join(',');
+        if (selected.length === 0) {
+          alert('Please select at least one journal to export.');
+          return;
+        }
+        window.location.href = `export_journal.php?student_id=<?php echo $student_id; ?>&journal_ids=${selected}`;
+      });
+
+    </script>
 
     <!-- Images Modal -->
     <div id="openJournalImages" class="modal-img">
@@ -515,15 +653,7 @@ if ($search_date) {
         <!-- Swiper Container -->
         <div class="swiper-container">
           <div class="swiper-wrapper">
-            <div class="swiper-slide">
-              <img src="../img/adviser.png" alt="Journal Image 1" class="journal-image" />
-            </div>
-            <div class="swiper-slide">
-              <img src="../img/student.png" alt="Journal Image 2" class="journal-image" />
-            </div>
-            <div class="swiper-slide">
-              <img src="../img/company.png" alt="Journal Image 3" class="journal-image" />
-            </div>
+            <!-- Dynamic slides will be added here -->
           </div>
 
           <!-- Swiper Navigation -->
@@ -536,31 +666,58 @@ if ($search_date) {
       </div>
     </div>
 
+
     <script>
       function openJournalImages(journalId) {
         const modal = document.getElementById('openJournalImages');
         modal.style.display = 'flex';
 
-        // Initialize Swiper with centered slide effect
-        new Swiper('.swiper-container', {
-          loop: true,
-          centeredSlides: true, // Keep the active slide in the center
-          slidesPerView: 1, // Only one slide visible at a time
-          spaceBetween: 30, // Add space between slides
-          navigation: {
-            nextEl: '.swiper-button-next',
-            prevEl: '.swiper-button-prev',
-          },
-          pagination: {
-            el: '.swiper-pagination',
-            clickable: true,
-          },
-        });
+        const swiperWrapper = document.querySelector('.swiper-wrapper');
+        swiperWrapper.innerHTML = '';
+
+        fetch(`get_journal_images.php?journal_id=${journalId}`)
+          .then(response => response.json())
+          .then(images => {
+            if (images.length === 0) {
+              addSlide('../img/empty.png');
+            } else {
+              images.forEach(image => {
+                addSlide(image.path);
+              });
+            }
+
+            new Swiper('.swiper-container', {
+              loop: true,
+              centeredSlides: true,
+              slidesPerView: 1,
+              spaceBetween: 30,
+              navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+              },
+              pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+              },
+            });
+          })
+          .catch(error => {
+            console.error('Error fetching images:', error);
+            addSlide('../img/empty.png');
+          });
+
+        function addSlide(imagePath) {
+          const slide = document.createElement('div');
+          slide.classList.add('swiper-slide');
+          slide.innerHTML = `<img src="${imagePath}" alt="Journal Image" class="journal-image" />`;
+          swiperWrapper.appendChild(slide);
+        }
       }
 
       function closeModal(modalId) {
         document.getElementById(modalId).style.display = 'none';
       }
+
 
     </script>
 
@@ -570,7 +727,7 @@ if ($search_date) {
         <span class="close" id="closeAddModal">&times;</span>
         <h2>Add Journal Entry</h2>
 
-        <form action="add_journal.php" method="POST">
+        <form action="add_journal.php" method="POST" enctype="multipart/form-data">
           <input type="hidden" id="earliestScheduleDate" value="<?php echo $earliest_schedule; ?>">
           <input type="hidden" id="company" name="company" value="<?php echo $company_id; ?>">
           <div class="horizontal-group">
@@ -585,16 +742,54 @@ if ($search_date) {
             </div>
           </div>
 
-          <input type="hidden" id="journalSize" name="journalSize" required>
+          <!-- <input type="hidden" id="journalSize" name="journalSize" required> -->
 
           <label for="journalDescription">Description</label>
           <textarea id="journalDescription" name="journalDescription" placeholder="Input Journal Description"
             required></textarea>
+          <div class="image-upload-row">
+            <!-- Image 1 -->
+            <div class="journal-img-container">
+              <label for="image1">
+                <img id="imagePreview1" src="../img/default.png" alt="journal Preview 1"
+                  class="journal-preview-img square-img" />
+              </label>
+              <input type="file" id="image1" name="image1" accept="image/*" onchange="previewAddImage(1)"
+                style="display: none;">
+              <p class="journal-img-label">Click to upload image 1</p>
+            </div>
 
+            <!-- Image 2 -->
+            <div class="journal-img-container">
+              <label for="image2">
+                <img id="imagePreview2" src="../img/default.png" alt="journal Preview 2"
+                  class="journal-preview-img square-img" />
+              </label>
+              <input type="file" id="image2" name="image2" accept="image/*" onchange="previewAddImage(2)"
+                style="display: none;">
+              <p class="journal-img-label">Click to upload image 2</p>
+            </div>
+
+            <!-- Image 3 -->
+            <div class="journal-img-container">
+              <label for="image3">
+                <img id="imagePreview3" src="../img/default.png" alt="journal Preview 3"
+                  class="journal-preview-img square-img" />
+              </label>
+              <input type="file" id="image3" name="image3" accept="image/*" onchange="previewAddImage(3)"
+                style="display: none;">
+              <p class="journal-img-label">Click to upload image 3</p>
+            </div>
+          </div>
           <button type="submit" class="modal-btn">Add Entry</button>
         </form>
       </div>
     </div>
+
+
+    <script>
+
+    </script>
     <script>
       document.addEventListener('DOMContentLoaded', function () {
         const journalDateInput = document.getElementById('journalDate');
@@ -669,7 +864,7 @@ if ($search_date) {
         <span class="close" id="closeEditModal">&times;</span>
         <h2>Edit Journal Entry</h2>
 
-        <form action="edit_journal.php" method="POST">
+        <form action="edit_journal.php" method="POST" enctype="multipart/form-data">
           <input type="hidden" id="journalIdDisplay" name="journalIdDisplay" disabled>
           <input type="hidden" id="studentIdDisplay" name="studentIdDisplay" disabled
             value="<?php echo $student_id; ?>">
@@ -690,11 +885,71 @@ if ($search_date) {
 
           <label for="editJournalDescription">Description</label>
           <textarea id="editJournalDescription" name="editJournalDescription" required></textarea>
+          <div class="image-upload-row">
+            <!-- Image 1 -->
+            <div class="journal-img-container">
+              <label for="imageEdit1">
+                <img id="imageEditPreview1" src="../img/default.png" alt="journal Preview 1"
+                  class="journal-preview-img square-img" />
+              </label>
+              <input type="file" id="imageEdit1" name="imageEdit1" accept="image/*" onchange="previewEditImage(1)"
+                style="display: none;">
+              <p class="journal-img-label">Click to upload image 1</p>
+            </div>
+
+            <!-- Image 2 -->
+            <div class="journal-img-container">
+              <label for="imageEdit2">
+                <img id="imageEditPreview2" src="../img/default.png" alt="journal Preview 2"
+                  class="journal-preview-img square-img" />
+              </label>
+              <input type="file" id="imageEdit2" name="imageEdit2" accept="image/*" onchange="previewEditImage(2)"
+                style="display: none;">
+              <p class="journal-img-label">Click to upload image 2</p>
+            </div>
+
+            <!-- Image 3 -->
+            <div class="journal-img-container">
+              <label for="imageEdit3">
+                <img id="imageEditPreview3" src="../img/default.png" alt="journal Preview 3"
+                  class="journal-preview-img square-img" />
+              </label>
+              <input type="file" id="imageEdit3" name="imageEdit3" accept="image/*" onchange="previewEditImage(3)"
+                style="display: none;">
+              <p class="journal-img-label">Click to upload image 3</p>
+            </div>
+          </div>
 
           <button type="submit" class="modal-btn">Save Changes</button>
         </form>
       </div>
     </div>
+    <script>
+      function previewEditImage(imageNumber) {
+        const fileInput = document.getElementById(`imageEdit${imageNumber}`);
+        const previewImage = document.getElementById(`imageEditPreview${imageNumber}`);
+
+        if (fileInput.files && fileInput.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            previewImage.src = e.target.result;
+          };
+          reader.readAsDataURL(fileInput.files[0]);
+        }
+      }
+      function previewAddImage(imageAddNumber) {
+        const input = document.getElementById(`image${imageAddNumber}`);
+        const preview = document.getElementById(`imagePreview${imageAddNumber}`);
+
+        if (input.files && input.files[0]) {
+          const addreader = new FileReader();
+          addreader.onload = function (e) {
+            preview.src = e.target.result;
+          };
+          addreader.readAsDataURL(input.files[0]);
+        }
+      }
+    </script>
 
 
     <!-- Success Modal for Journal Submission -->
@@ -867,6 +1122,7 @@ if ($search_date) {
 
 
   <script>
+
     function showModal(modalId) {
       document.getElementById(modalId).style.display = "block";
     }
@@ -954,6 +1210,26 @@ if ($search_date) {
             document.getElementById('editJournalDescription').value = data.journal_description;
             document.getElementById('journalIdDisplay').value = data.journal_id;
             document.getElementById('journalId').value = data.journal_id;
+
+            // Load current images if they exist
+            if (data.journal_image1) {
+              document.getElementById('imageEditPreview1').src = data.journal_image1;
+            } else {
+              document.getElementById('imageEditPreview1').src = "../img/default.png";
+            }
+
+            if (data.journal_image2) {
+              document.getElementById('imageEditPreview2').src = data.journal_image2;
+            } else {
+              document.getElementById('imageEditPreview2').src = "../img/default.png";
+            }
+
+            if (data.journal_image3) {
+              document.getElementById('imageEditPreview3').src = data.journal_image3;
+            } else {
+              document.getElementById('imageEditPreview3').src = "../img/default.png";
+            }
+
             editModal.style.display = 'block';
           })
           .catch(error => console.error('Error:', error));

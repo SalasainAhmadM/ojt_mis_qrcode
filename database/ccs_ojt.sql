@@ -289,7 +289,8 @@ CREATE TABLE `student_journal` (
   `journal_description` text NOT NULL,
   `journal_image1` varchar(255) NOT NULL,
   `journal_image2` varchar(255) NOT NULL,
-  `journal_image3` varchar(255) NOT NULL
+  `journal_image3` varchar(255) NOT NULL,
+  `adviser_viewed` TINYINT(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
@@ -297,7 +298,7 @@ CREATE TABLE `student_journal` (
 --
 
 INSERT INTO `student_journal` (`journal_id`, `student_id`, `journal_name`, `journal_date`, `journal_description`, `journal_image1`, `journal_image2`, `journal_image3`) VALUES
-(1, 1, 'Journal Name', '2024-10-01', 'Description', '', '', '');
+(1, 1, 'Journal Name', '2024-10-01', 'Description', '', '', '', 0);
 
 -- --------------------------------------------------------
 
