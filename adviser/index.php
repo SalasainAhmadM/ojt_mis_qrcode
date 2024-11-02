@@ -29,7 +29,6 @@ if ($stmt = $database->prepare($query)) {
   }
   $stmt->close(); // Close the statement
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -40,9 +39,11 @@ if ($stmt = $database->prepare($query)) {
   <title>Adviser - Home</title>
   <link rel="icon" href="../img/ccs.png" type="image/icon type">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="./css/index.css">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/mobile.css">
+  <!-- <link rel="stylesheet" href="./css/index.css">
   <link rel="stylesheet" href="./css/style.css">
-  <link rel="stylesheet" href="./css/mobile.css">
+  <link rel="stylesheet" href="./css/mobile.css"> -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 </head>
@@ -168,79 +169,9 @@ if ($stmt = $database->prepare($query)) {
     </ul>
   </div>
 
-  <style>
-    .rectangles-container {
-      display: flex;
-      justify-content: space-between;
-      height: 15%;
-      margin-bottom: 20px;
-    }
-
-    .rectangle-box1,
-    .rectangle-box2,
-    .rectangle-box3 {
-      background-color: #fff;
-      color: #095d40;
-      padding: 10px;
-      text-align: center;
-      width: 20%;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .rectangle-box1 {
-      margin-left: 120px;
-    }
-
-    .rectangle-box3 {
-      margin-right: 120px;
-    }
-
-    .rectangle-box1,
-    .rectangle-box2,
-    .rectangle-box3 {
-      border-left: 3px solid #095d40;
-    }
-
-    .box-left {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      padding-left: 10px;
-    }
-
-    .box-name {
-      font-size: 16px;
-      font-weight: bold;
-    }
-
-    .box-number {
-      font-size: 20px;
-      text-align: center;
-      font-weight: bold;
-      color: #000;
-      justify-content: center;
-    }
-
-    .box-right i {
-      font-size: 32px;
-    }
-
-    .box-right {
-      font-size: 24px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding-right: 20px;
-    }
-  </style>
-
   <section class="home-section">
     <div class="home-content">
-      <i class="fas fa-bars bx-menu"></i>
+      <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
     </div>
 
     <div class="rectangles-container">
@@ -302,24 +233,33 @@ if ($stmt = $database->prepare($query)) {
           <div class="filter-group-home">
 
             <?php
-            $course_section_query = "SELECT course_section_name FROM course_sections";
-            $course_section_result = $database->query($course_section_query);
-            ?>
+            // Fetch sections assigned to the adviser
+            $course_section_query = "SELECT course_section_name FROM course_sections WHERE adviser_id = ?";
+            if ($section_stmt = $database->prepare($course_section_query)) {
+              $section_stmt->bind_param("i", $adviser_id);
+              $section_stmt->execute();
+              $course_section_result = $section_stmt->get_result();
+              ?>
 
-            <div class="section-section">
-              <span><strong>Section</strong></span><br>
-              <select class="dropdown">
-                <?php
-                if ($course_section_result->num_rows > 0) {
-                  while ($row = $course_section_result->fetch_assoc()) {
-                    echo "<option value='" . htmlspecialchars($row['course_section_name']) . "'>" . htmlspecialchars($row['course_section_name']) . "</option>";
+              <div class="section-section">
+                <span><strong>Section</strong></span><br>
+                <select class="dropdown">
+                  <?php
+                  if ($course_section_result->num_rows > 0) {
+                    while ($row = $course_section_result->fetch_assoc()) {
+                      echo "<option value='" . htmlspecialchars($row['course_section_name']) . "'>" . htmlspecialchars($row['course_section_name']) . "</option>";
+                    }
+                  } else {
+                    echo "<option value=''>No sections available</option>";
                   }
-                } else {
-                  echo "<option value=''>No companies available</option>";
-                }
-                ?>
-              </select>
-            </div>
+                  ?>
+                </select>
+              </div>
+
+              <?php
+              $section_stmt->close();
+            }
+            ?>
 
             <?php
             $company_query = "SELECT company_name FROM company";
@@ -350,141 +290,71 @@ if ($stmt = $database->prepare($query)) {
             </div>
           </div>
 
+
           <table>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Section</th>
-                <th>Date</th>
-                <th>Time-in</th>
-                <th>Time-out</th>
-                <th>Time-in</th>
-                <th>Time-out</th>
-                <th>Total Hours</th>
+                <th class="image">Profile</th>
+                <th class="name">Intern Name</th>
+                <th class="timein">Time-in</th>
+                <th class="timeout">Time-out</th>
+                <th class="duration">Duration</th>
+                <th class="status">Status</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Maloi</td>
-                <td>BSIT-4B</td>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>12:00 pm</td>
-                <td>1:00 pm</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>Maloi</td>
-                <td>BSIT-4B</td>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>12:00 pm</td>
-                <td>1:00 pm</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>Maloi</td>
-                <td>BSIT-4B</td>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>12:00 pm</td>
-                <td>1:00 pm</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>Maloi</td>
-                <td>BSIT-4B</td>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>12:00 pm</td>
-                <td>1:00 pm</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>Maloi</td>
-                <td>BSIT-4B</td>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>12:00 pm</td>
-                <td>1:00 pm</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>Maloi</td>
-                <td>BSIT-4B</td>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>12:00 pm</td>
-                <td>1:00 pm</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>Maloi</td>
-                <td>BSIT-4B</td>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>12:00 pm</td>
-                <td>1:00 pm</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>Maloi</td>
-                <td>BSIT-4B</td>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>12:00 pm</td>
-                <td>1:00 pm</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>Maloi</td>
-                <td>BSIT-4B</td>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>12:00 pm</td>
-                <td>1:00 pm</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>Maloi</td>
-                <td>BSIT-4B</td>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>12:00 pm</td>
-                <td>1:00 pm</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>Maloi</td>
-                <td>BSIT-4B</td>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>12:00 pm</td>
-                <td>1:00 pm</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
-              <tr>
-                <td>Maloi</td>
-                <td>BSIT-4B</td>
-                <td>August 20, 2024</td>
-                <td>8:00 am</td>
-                <td>12:00 pm</td>
-                <td>1:00 pm</td>
-                <td>5:00 pm</td>
-                <td>9 hours</td>
-              </tr>
+              <?php if (!empty($students)): ?>
+                <?php foreach ($students as $student_id => $attendances): ?>
+                  <?php
+                  $first_time_in = null;
+                  $latest_time_in_without_out = null;
+                  $latest_time_out = null;
+                  $total_hours_today = 0;
+
+                  foreach ($attendances as $attendance) {
+                    if (!$first_time_in || strtotime($attendance['time_in']) < strtotime($first_time_in)) {
+                      $first_time_in = $attendance['time_in'];
+                    }
+                    if ($attendance['time_in'] && !$attendance['time_out']) {
+                      $latest_time_in_without_out = $attendance['time_in'];
+                    }
+                    if ($attendance['time_out'] && (!$latest_time_out || strtotime($attendance['time_out']) > strtotime($latest_time_out))) {
+                      $latest_time_out = $attendance['time_out'];
+                    }
+                    $total_hours_today += $attendance['ojt_hours'] ?? 0;
+                  }
+
+                  $displayed_time_out = $latest_time_in_without_out ? '' : ($latest_time_out ? date('h:i A', strtotime($latest_time_out)) : 'N/A');
+                  $status = $latest_time_in_without_out ? '<span style="color:green;">Timed-in</span>' : '<span style="color:red;">Timed-out</span>';
+                  ?>
+                  <tr>
+                    <td class="image">
+                      <img style="border-radius: 50%;"
+                        src="../uploads/student/<?php echo !empty($attendance['student_image']) ? $attendance['student_image'] : 'user.png'; ?>"
+                        alt="Student Image">
+                    </td>
+                    <td class="name">
+                      <?php echo $attendances[0]['student_firstname'] . ' ' . $attendances[0]['student_middle'] . '.' . ' ' . $attendances[0]['student_lastname']; ?>
+                    </td>
+                    <td class="timein">
+                      <?php echo $first_time_in ? date('h:i A', strtotime($first_time_in)) : 'N/A'; ?>
+                    </td>
+                    <td class="timeout"><?php echo $displayed_time_out; ?></td>
+                    <td class="duration">
+                      <?php echo $total_hours_today > 0 ? formatDuration($total_hours_today) : 'N/A'; ?>
+                    </td>
+                    <td class="status"><?php echo $status; ?></td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php else: ?>
+                <tr>
+                  <td colspan="6">No attendance yet for this day.</td>
+                </tr>
+              <?php endif; ?>
             </tbody>
+          </table>
+
+
           </table>
         </div>
       </div>

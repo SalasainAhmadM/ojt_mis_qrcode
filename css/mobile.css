@@ -406,12 +406,17 @@
     }
     th.name, td.name, 
     th.wmsu_id, td.wmsu_id, 
+    th.email, td.email, 
+    th.company, td.company, 
     th.timein, td.timein,
     th.timeout, td.timeout,
     th.duration, td.duration,
     th.status, td.status  {
       font-size: 8px;
       width: 20%;
+      overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
     }
     th.ojthours, td.ojt-hours {
       font-size: 8px;
@@ -486,9 +491,9 @@
   width: 10%;
 }
 .action-icon, .action-view , .action-rate{
-  font-size: 12px;
+  font-size: 10px;
   }
-  .fa-search {
+  .fa-search .fa-star{
     font-size: 8px;
   }
 .export-btn, .add-btn {
@@ -546,21 +551,18 @@
   width: 80%;
   flex-direction: column;
   height: 600px;
-  /* background-color: #f1f1f1;  */
   margin-left: 10px;
   margin-right: 10px;
   gap: 2;
 }
-.adviser-list {
+.adviser-list , .company-list {
   width: 10%;
   padding: 10px;
 }
 
-.adviser-list {
+.adviser-list , .company-list {
   width: 90%;
-  /* Full width in mobile */
   height: 40vh;
-  /* Take 30% of the height */
 }
 
 .chat-box {
@@ -588,6 +590,84 @@
   font-size: 12px;
 }
 
+
+.box-name {
+  font-size: 7px;
+}
+
+.box-number {
+  font-size: 9px;
+}
+
+.box-right i {
+  font-size: 14px;
+}
+
+.rectangles-container {
+  flex-direction: column;
+  align-items: center;
+  gap: 10px; 
+  margin-right: 65px;
+}
+.rectangle-box1 {
+  margin-left: 0px;
+}
+
+.rectangle-box3 {
+  margin-right: 0px;
+}
+.rectangle-box1,
+.rectangle-box2,
+.rectangle-box3 {
+  width: 60%; 
+  margin:  0;
+  padding: 8px;
+}
+
+.content-wrapper {
+  margin-top: 90px; 
+  width: 100%; 
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.filter-group-home {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  justify-content: space-between;
+}
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.section-section {
+  margin-right: 0px;
+}
+.company-section {
+  margin-right: 0px;
+}
+.date-section {
+  margin-right: 0px;
+}
+.search-section {
+  margin-right: 0px;
+}
+.search-section span strong{
+  font-size: 8px;
+}
+.dropdown,
+.search-bar,
+.filter-btn {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  font-size: 8px;
+}
 /* .paginationJournal a,
 .paginationJournal span {
   margin: 0 5px;
@@ -602,4 +682,16 @@
   background-color: #095d40;
   color: white;
 } */
+}
+
+@media (max-width: 600px) {
+  .filter-group-home {
+    flex-wrap: wrap;
+  }
+
+
+  .search-section {
+    flex: 1 1 100%; /* Moves the search section to a new row */
+    margin-top: 10px; /* Adds space between rows */
+  }
 }

@@ -161,7 +161,7 @@ if ($stmt = $database->prepare($query)) {
     </div>
     <section class="home-section">
         <div class="home-content">
-            <i class="fas fa-bars bx-menu"></i>
+            <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
         </div>
 
 

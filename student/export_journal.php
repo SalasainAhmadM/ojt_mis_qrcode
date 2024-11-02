@@ -22,7 +22,7 @@ $result = $stmt->get_result();
 // Fetch student, company, course section, and adviser details
 $sqlStudent = "
     SELECT 
-        s.student_firstname, s.student_middle, s.student_lastname, 
+        s.student_firstname, s.student_middle, s.student_lastname, s.wmsu_id,
         c.course_section_name, 
         cm.company_name, 
         CONCAT(cm.company_rep_firstname, ' ', cm.company_rep_middle, ' ', cm.company_rep_lastname) AS company_rep, 
@@ -48,11 +48,14 @@ $subHeaderFontStyle = ['bold' => true, 'size' => 9];
 $headerParagraphStyle = ['alignment' => 'center'];
 $labelStyle = ['bold' => true, 'size' => 11];
 $valueStyle = ['size' => 11];
-$textParagraphStyle = ['alignment' => 'both'];
+$textParagraphStyle = [
+    'alignment' => 'both',
+    'indentation' => ['firstLine' => 720] // Adds a first-line indent (720 twips = 0.5 inch)
+];
 
-// Paths to logos
-$logoLeftPath = '../img/wmsu.png'; // Replace with the actual path to the left logo
-$logoRightPath = '../img/ccs.png'; // Replace with the actual path to the right logo
+
+$logoLeftPath = '../img/wmsu.png';
+$logoRightPath = '../img/ccs.png';
 
 while ($row = $result->fetch_assoc()) {
     $journalName = $row['journal_name'];
@@ -60,34 +63,28 @@ while ($row = $result->fetch_assoc()) {
     $journalDescription = $row['journal_description'];
     $images = array_filter([$row['journal_image1'], $row['journal_image2'], $row['journal_image3']], fn($img) => !empty ($img));
 
-    // Add a new section for each journal
+
     $section = $phpWord->addSection();
 
-    // Header with logos and school name
     $header = $section->addHeader();
     $headerTable = $header->addTable();
     $headerTable->addRow();
 
-    // Left logo
     $headerTable->addCell(2500)->addImage($logoLeftPath, ['width' => 50, 'height' => 50]);
 
-    // Center text with font size adjustments
     $headerCell = $headerTable->addCell(5000);
     $headerCell->addText("Western Mindanao State University", $headerFontStyle, $headerParagraphStyle);
     $headerCell->addText("College of Computing Studies", $headerFontStyle, $headerParagraphStyle);
     $headerCell->addText("DEPARTMENT OF INFORMATION TECHNOLOGY", $subHeaderFontStyle, $headerParagraphStyle);
     $headerCell->addText("Zamboanga City", $headerFontStyle, $headerParagraphStyle);
 
-    // Right logo aligned to the top right
     $headerTable->addCell(2500)->addImage($logoRightPath, ['width' => 50, 'height' => 50, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::RIGHT]);
 
-    // Green line after header
     $lineTable = $section->addTable();
     $lineTable->addRow();
-    $lineTable->addCell(9000, ['borderBottomSize' => 18, 'borderBottomColor' => '095d40']); // Green line
-    $section->addTextBreak(); // Add margin after green line
+    $lineTable->addCell(9000, ['borderBottomSize' => 18, 'borderBottomColor' => '095d40']);
+    $section->addTextBreak();
 
-    // Student and journal details in rows
     $infoTable = $section->addTable();
 
     // Row 1: Name and Date
@@ -106,14 +103,13 @@ while ($row = $result->fetch_assoc()) {
     $infoTable->addCell(4500)->addText("Representative: " . $student['company_rep'], $labelStyle);
 
     $section->addTextBreak();
-    // Journal Title
+
     $section->addText($journalName, ['bold' => true, 'size' => 14], ['alignment' => 'center']);
     $section->addTextBreak();
-    // Journal description content
+
     $section->addText($journalDescription, $valueStyle, $textParagraphStyle);
     $section->addTextBreak(2);
 
-    // Adjust image sizes based on the number of images
     if (count($images) === 1) {
         $section->addImage($images[0], ['width' => 150, 'height' => 150, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
     } elseif (count($images) === 2) {
@@ -135,14 +131,12 @@ while ($row = $result->fetch_assoc()) {
     $section->addPageBreak();
 }
 
-// Save the Word document to a temporary file
-$fileName = 'journals_export_' . date('Ymd_His') . '.docx';
+$fileName = 'journal_' . strtolower($student['student_lastname']) . '_' . $student['wmsu_id'] . '.docx';
 $tempFilePath = sys_get_temp_dir() . '/' . $fileName;
 
 $objWriter = IOFactory::createWriter($phpWord, 'Word2007');
 $objWriter->save($tempFilePath);
 
-// Force download of the generated Word document
 header('Content-Description: File Transfer');
 header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
 header('Content-Disposition: attachment; filename="' . $fileName . '"');
@@ -153,7 +147,6 @@ header('Pragma: public');
 header('Content-Length: ' . filesize($tempFilePath));
 readfile($tempFilePath);
 
-// Delete the temporary file after download
 unlink($tempFilePath);
 exit;
 ?>

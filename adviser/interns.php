@@ -215,9 +215,8 @@ $current_page = $pagination_data['current_page'];
     <title>Adviser - Interns</title>
     <link rel="icon" href="../img/ccs.png" type="image/icon type">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="./css/index.css">
-    <link rel="stylesheet" href="./css/mobile.css">
-    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/mobile.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 </head>
@@ -335,7 +334,7 @@ $current_page = $pagination_data['current_page'];
     </div>
     <section class="home-section">
         <div class="home-content">
-            <i class="fas fa-bars bx-menu"></i>
+            <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
         </div>
 
 
@@ -379,11 +378,11 @@ $current_page = $pagination_data['current_page'];
                         <thead>
                             <tr>
                                 <th class="image">Profile</th>
-                                <th>Full Name</th>
-                                <th>WMSU ID</th>
-                                <th>Email</th>
+                                <th class="name">Full Name</th>
+                                <th class="wmsu_id">WMSU ID</th>
+                                <th class="email">Email</th>
                                 <!-- <th>Contact Number</th> -->
-                                <th>Company</th>
+                                <th class="company">Company</th>
                                 <!-- <th>Section</th>
                                 <th>Department</th>
                                 <th>Batch Year</th>
@@ -400,12 +399,13 @@ $current_page = $pagination_data['current_page'];
                                                 src="../uploads/student/<?php echo !empty($student['student_image']) ? $student['student_image'] : 'user.png'; ?>"
                                                 alt="student Image">
                                         </td>
-                                        <td><?php echo $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname']; ?>
+                                        <td class="name">
+                                            <?php echo $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname']; ?>
                                         </td>
-                                        <td><?php echo $student['wmsu_id']; ?></td>
-                                        <td><?php echo $student['student_email']; ?></td>
+                                        <td class="wmsu_id"><?php echo $student['wmsu_id']; ?></td>
+                                        <td class="email"><?php echo $student['student_email']; ?></td>
                                         <!-- <td><?php echo $student['contact_number']; ?></td> -->
-                                        <td>
+                                        <td class="company">
                                             <?php if (!empty($student['company_name'])): ?>
                                                 <?php echo $student['company_name']; ?>
                                             <?php else: ?>
@@ -795,34 +795,85 @@ $current_page = $pagination_data['current_page'];
 
         }
 
+    </script>
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <!-- Lottie Animation -->
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/alert-095d40.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2 style="color: #000">Are you sure you want to delete?</h2>
+            <input type="hidden" id="delete-student-id" value="">
+            <div style="display: flex; justify-content: space-around; margin-top: 10px; margin-bottom: 20px">
+                <button class="confirm-btn" onclick="confirmDeleteAction()">Confirm</button>
+                <button class="cancel-btn" onclick="closeDeleteModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="deleteSuccessModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <!-- Lottie Animation -->
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/delete.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2>Student Deleted Successfully!</h2>
+            <p>Student has been deleted successfully by <br> <span
+                    style="color: #095d40; font-size: 20px;"><?php echo $_SESSION['full_name']; ?>!</span></p>
+            <button class="proceed-btn" onclick="closeDeleteSuccessModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
         function confirmDelete(studentId) {
-            const confirmation = confirm("Are you sure you want to delete this student?");
-
-            if (confirmation) {
-                const xhr = new XMLHttpRequest();
-                xhr.open("POST", "./others/delete_student.php", true);
-                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState === 4 && xhr.status === 200) {
-                        const response = JSON.parse(xhr.responseText);
-
-                        if (response.status === 'success') {
-                            alert(response.message);
-                            location.reload();
-                        } else {
-                            alert(response.message);
-                        }
-                    }
-                };
-
-                xhr.send("id=" + studentId);
-            } else {
-                console.log("Deletion canceled.");
-            }
+            // Set the student ID in the hidden input
+            document.getElementById('delete-student-id').value = studentId;
+            // Show the delete confirmation modal
+            document.getElementById('deleteModal').style.display = 'block';
         }
 
+        function confirmDeleteAction() {
+            const studentId = document.getElementById('delete-student-id').value;
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "./others/delete_student.php", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+
+                    // Hide the delete modal
+                    document.getElementById('deleteModal').style.display = 'none';
+
+                    if (response.status === 'success') {
+                        // Show the success modal
+                        document.getElementById('deleteSuccessModal').style.display = 'block';
+                    } else {
+                        alert(response.message);
+                    }
+                }
+            };
+
+            xhr.send("id=" + studentId);
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+        function closeDeleteSuccessModal() {
+            document.getElementById('deleteSuccessModal').style.display = 'none';
+            location.reload();
+        }
     </script>
+
     <script src="./js/scripts.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>

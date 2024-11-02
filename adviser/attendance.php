@@ -30,6 +30,91 @@ if ($stmt = $database->prepare($query)) {
     $stmt->close(); // Close the statement
 }
 
+function formatDuration($hours)
+{
+    $totalMinutes = $hours * 60;
+    $hrs = floor($totalMinutes / 60);
+    $mins = $totalMinutes % 60;
+
+    $formatted = '';
+    if ($hrs > 0)
+        $formatted .= $hrs . ' hr' . ($hrs > 1 ? 's' : '') . ' ';
+    if ($mins > 0)
+        $formatted .= $mins . ' min' . ($mins > 1 ? 's' : '');
+
+    return trim($formatted) ?: '0 mins';
+}
+
+// Set the selected day (or default to today)
+$selected_day = isset($_GET['day']) ? $_GET['day'] : date('Y-m-d');
+
+// Calculate previous and next day for pagination
+$previous_day = date('Y-m-d', strtotime($selected_day . ' -1 day'));
+$next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
+
+// Fetch students and their attendance records for the logged-in adviser
+$query = "
+    SELECT s.student_id, s.student_image, s.student_firstname, s.student_middle, s.student_lastname,
+           a.time_in, a.time_out, a.ojt_hours
+    FROM student s
+    LEFT JOIN attendance a ON s.student_id = a.student_id AND DATE(a.time_in) = ?
+    WHERE s.adviser = ?";
+$stmt = $database->prepare($query);
+$stmt->bind_param("si", $selected_day, $adviser_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$students = [];
+while ($row = $result->fetch_assoc()) {
+    $students[$row['student_id']][] = $row;
+}
+$stmt->close();
+// $adviser_id = $_SESSION['user_id'];
+
+// Get the selected day (or default to today)
+
+// // Handle search query
+// $search = isset($_GET['search']) ? '%' . $_GET['search'] . '%' : null;
+
+// // Query to fetch students and attendance based on search or day
+// $students_query = "
+//     SELECT s.student_id, s.student_firstname, s.student_middle, s.student_lastname, 
+//            s.student_image, a.time_in, a.time_out, a.ojt_hours
+//     FROM student s
+//     LEFT JOIN attendance a ON s.student_id = a.student_id 
+//     WHERE s.company = ? AND DATE(a.time_in) = ?
+// ";
+
+// If a search is provided, add the search condition
+// if ($search) {
+//     $students_query .= " AND (s.student_firstname LIKE ? OR s.student_lastname LIKE ?)";
+//     $query_params = [$adviser_id, $selected_day, $search, $search];
+// } else {
+//     $query_params = [$adviser_id, $selected_day];
+// }
+
+// $students_query .= " ORDER BY s.student_lastname, a.time_in ASC";
+
+// if ($stmt = $database->prepare($students_query)) {
+//     $stmt->bind_param(str_repeat("s", count($query_params)), ...$query_params);
+//     $stmt->execute();
+//     $result = $stmt->get_result();
+
+//     $students = [];
+//     while ($row = $result->fetch_assoc()) {
+//         $students[$row['student_id']][] = $row;
+//     }
+//     $stmt->close();
+// }
+
+// Function to format hours into "X hrs Y mins"
+
+
+// Calculate previous and next day for pagination
+// $previous_day = date('Y-m-d', strtotime($selected_day . ' -1 day'));
+// $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -40,9 +125,11 @@ if ($stmt = $database->prepare($query)) {
     <title>Adviser - Attendance</title>
     <link rel="icon" href="../img/ccs.png" type="image/icon type">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <!-- <link rel="stylesheet" href="./css/index.css">
     <link rel="stylesheet" href="./css/mobile.css">
-    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/style.css"> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 </head>
@@ -169,7 +256,119 @@ if ($stmt = $database->prepare($query)) {
     </div>
     <section class="home-section">
         <div class="home-content">
-            <i class="fas fa-bars bx-menu"></i>
+            <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
+        </div>
+
+        <div class="content-wrapper">
+
+            <div class="header-box">
+                <label style="color: #a6a6a6; margin-left: 5px;">Attendance</label>
+            </div>
+            <div class="main-box">
+                <div class="whole-box">
+                    <h2>Attendance - <span
+                            style="color: #095d40"><?php echo date('F d, Y', strtotime($selected_day)); ?></span>
+                    </h2>
+
+                    <div class="filter-group">
+                        <!-- Search Bar Form -->
+                        <form method="GET" action="">
+                            <input type="hidden" name="day"
+                                value="<?php echo htmlspecialchars($selected_day, ENT_QUOTES); ?>">
+                            <div class="search-bar-container">
+                                <input type="text" class="search-bar" name="search" placeholder="Search Student"
+                                    value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                                <button type="submit" class="search-bar-icon">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Reset Button Form -->
+                        <form method="GET" action="">
+                            <input type="hidden" name="day"
+                                value="<?php echo htmlspecialchars($selected_day, ENT_QUOTES); ?>">
+                            <button type="submit" class="reset-bar-icon">
+                                <i class="fa fa-times-circle"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="image">Profile</th>
+                                <th class="name">Intern Name</th>
+                                <th class="timein">Time-in</th>
+                                <th class="timeout">Time-out</th>
+                                <th class="duration">Duration</th>
+                                <th class="status">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($students)): ?>
+                                <?php foreach ($students as $student_id => $attendances): ?>
+                                    <?php
+                                    $first_time_in = null;
+                                    $latest_time_in_without_out = null;
+                                    $latest_time_out = null;
+                                    $total_hours_today = 0;
+
+                                    foreach ($attendances as $attendance) {
+                                        if (!$first_time_in || strtotime($attendance['time_in']) < strtotime($first_time_in)) {
+                                            $first_time_in = $attendance['time_in'];
+                                        }
+                                        if ($attendance['time_in'] && !$attendance['time_out']) {
+                                            $latest_time_in_without_out = $attendance['time_in'];
+                                        }
+                                        if ($attendance['time_out'] && (!$latest_time_out || strtotime($attendance['time_out']) > strtotime($latest_time_out))) {
+                                            $latest_time_out = $attendance['time_out'];
+                                        }
+                                        $total_hours_today += $attendance['ojt_hours'] ?? 0;
+                                    }
+
+                                    $displayed_time_out = $latest_time_in_without_out ? '' : ($latest_time_out ? date('h:i A', strtotime($latest_time_out)) : 'N/A');
+                                    $status = $latest_time_in_without_out ? '<span style="color:green;">Timed-in</span>' : '<span style="color:red;">Timed-out</span>';
+                                    ?>
+                                    <tr>
+                                        <td class="image">
+                                            <img style="border-radius: 50%;"
+                                                src="../uploads/student/<?php echo !empty($attendance['student_image']) ? $attendance['student_image'] : 'user.png'; ?>"
+                                                alt="Student Image">
+                                        </td>
+                                        <td class="name">
+                                            <?php echo $attendances[0]['student_firstname'] . ' ' . $attendances[0]['student_middle'] . '.' . ' ' . $attendances[0]['student_lastname']; ?>
+                                        </td>
+                                        <td class="timein">
+                                            <?php echo $first_time_in ? date('h:i A', strtotime($first_time_in)) : 'N/A'; ?>
+                                        </td>
+                                        <td class="timeout"><?php echo $displayed_time_out; ?></td>
+                                        <td class="duration">
+                                            <?php echo $total_hours_today > 0 ? formatDuration($total_hours_today) : 'N/A'; ?>
+                                        </td>
+                                        <td class="status"><?php echo $status; ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="6">No attendance yet for this day.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+
+                    <div class="paginationDay">
+                        <a href="?day=<?php echo $previous_day; ?>" class="prev">Previous Day</a>
+                        <a href="?day=<?php echo date('Y-m-d'); ?>"
+                            class="<?php echo ($selected_day == date('Y-m-d')) ? 'active' : ''; ?>">Today</a>
+                        <?php if ($selected_day != date('Y-m-d')): ?>
+                            <a href="?day=<?php echo $next_day; ?>" class="next">Next Day</a>
+                        <?php endif; ?>
+                    </div>
+
+                    </table>
+                </div>
+            </div>
         </div>
     </section>
     <!-- Logout Confirmation Modal -->

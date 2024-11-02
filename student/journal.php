@@ -517,6 +517,15 @@ if ($search_date) {
         margin-right: 10px;
         /* Adds space between checkbox and label */
       }
+
+      .search-input-journal {
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #fff;
+        font-size: 14px;
+        margin-bottom: 4px;
+      }
     </style>
     <!-- Journal Selection Modal -->
     <div id="journalModal" class="modal" style="display:none;">
@@ -524,9 +533,11 @@ if ($search_date) {
         <span class="close" id="closeJournalModal">&times;</span>
         <h2>Select Journals to Export</h2>
 
-        <input type="date" id="searchDate" class="search-input" />
+        <select id="weekDropdown" class="search-input-journal">
+          <!-- Week options will be dynamically inserted here -->
+        </select>
 
-        <!-- Styled journal list with checkboxes -->
+
         <ul id="journalList" class="green-palette">
           <!-- Journal list items with checkboxes will be dynamically inserted here -->
         </ul>
@@ -535,38 +546,52 @@ if ($search_date) {
       </div>
     </div>
 
-    <!-- No Journals Found Error Modal -->
-    <div id="noJournalsModal" class="modal" style="display:none;">
-      <div class="modal-content">
-        <div style="display: flex; justify-content: center; align-items: center;">
-          <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
-            style="width: 150px; height: 150px;" loop autoplay>
-          </lottie-player>
-        </div>
-        <h2 style="color: #8B0000">No Journals Found!</h2>
-        <p>No journal entries match the selected date.</p>
-        <button class="proceed-btn" onclick="closeModal('noJournalsModal')">Close</button>
-      </div>
-    </div>
+
 
 
     <script>
-      let allJournals = []; // Store all fetched journals
+      let allJournals = {}; // Store journals by week
       const selectedJournals = new Set(); // Track selected journals
+      let selectedWeeks = new Set(); // Track weeks with selected journals
 
-      // Fetch journals when the modal opens
+      // Open the modal and fetch journals
       document.getElementById('openJournalModalBtn').addEventListener('click', function () {
         fetch(`get_journals.php?student_id=<?php echo $student_id; ?>`)
           .then(response => response.json())
           .then(data => {
-            allJournals = data.sort((a, b) => new Date(b.journal_date) - new Date(a.journal_date)); // Sort latest first
-            renderJournalList(allJournals); // Render all journals
+            allJournals = data;
+            const weeks = Object.keys(allJournals);
+            populateWeekDropdown(weeks); // Populate dropdown with week options
+            renderJournalList(allJournals[weeks[weeks.length - 1]]); // Render the latest week's journals by default
+            document.getElementById('weekDropdown').value = weeks[weeks.length - 1]; // Select the latest week in dropdown
             document.getElementById('journalModal').style.display = 'block';
           })
           .catch(error => console.error('Error fetching journals:', error));
       });
 
-      // Render the journal list, prioritizing selected journals
+      // Populate the week dropdown, with selected weeks at the top
+      function populateWeekDropdown(weeks) {
+        const dropdown = document.getElementById('weekDropdown');
+        dropdown.innerHTML = ''; // Clear existing options
+
+        // Sort weeks: selected weeks at the top
+        const sortedWeeks = Array.from(selectedWeeks).concat(weeks.filter(week => !selectedWeeks.has(week)));
+
+        sortedWeeks.forEach(week => {
+          const option = document.createElement('option');
+          option.value = week;
+          option.textContent = week;
+          dropdown.appendChild(option);
+        });
+
+        // Handle week selection
+        dropdown.addEventListener('change', function () {
+          const selectedWeek = this.value;
+          renderJournalList(allJournals[selectedWeek] || []);
+        });
+      }
+
+      // Render the journal list with checkboxes and track selected journals by week
       function renderJournalList(journals) {
         const journalList = document.getElementById('journalList');
         journalList.innerHTML = ''; // Clear existing list
@@ -579,9 +604,6 @@ if ($search_date) {
           return;
         }
 
-        // Sort to keep selected journals at the top
-        journals.sort((a, b) => selectedJournals.has(b.journal_id) - selectedJournals.has(a.journal_id));
-
         journals.forEach(journal => {
           const li = document.createElement('li');
           li.classList.add('journal-item');
@@ -591,14 +613,21 @@ if ($search_date) {
           checkbox.value = journal.journal_id;
           checkbox.checked = selectedJournals.has(journal.journal_id);
 
-          // Track selected journals
           checkbox.addEventListener('change', function () {
             if (checkbox.checked) {
               selectedJournals.add(journal.journal_id);
+              // Add the week to selectedWeeks
+              const weekLabel = getCurrentWeekLabel(journal.journal_date);
+              selectedWeeks.add(weekLabel);
             } else {
               selectedJournals.delete(journal.journal_id);
+              // Remove week from selectedWeeks if no journals remain selected
+              const weekLabel = getCurrentWeekLabel(journal.journal_date);
+              if (![...selectedJournals].some(id => allJournals[weekLabel]?.find(j => j.journal_id === id))) {
+                selectedWeeks.delete(weekLabel);
+              }
             }
-            renderJournalList(journals); // Re-render list to keep order
+            populateWeekDropdown(Object.keys(allJournals)); // Re-populate dropdown to keep order
           });
 
           const label = document.createElement('label');
@@ -610,21 +639,22 @@ if ($search_date) {
         });
       }
 
-      // Filter the journal list based on the selected date
-      document.getElementById('searchDate').addEventListener('input', function () {
-        const searchDate = this.value;
-        const filteredJournals = allJournals.filter(journal =>
-          journal.journal_date.startsWith(searchDate) // Match the beginning of the date string
-        );
-        renderJournalList(filteredJournals); // Render the filtered list
-      });
+      // Utility function to get the week label based on the date
+      function getCurrentWeekLabel(date) {
+        for (const weekLabel in allJournals) {
+          if (allJournals[weekLabel].some(j => j.journal_date === date)) {
+            return weekLabel;
+          }
+        }
+        return null;
+      }
 
-      // Close the journal modal
+      // Close the modal
       document.getElementById('closeJournalModal').addEventListener('click', function () {
         document.getElementById('journalModal').style.display = 'none';
       });
 
-      // Optional: Close the modal when clicking outside of it
+      // Close the modal when clicking outside it
       window.addEventListener('click', function (event) {
         const modal = document.getElementById('journalModal');
         if (event.target === modal) {
@@ -643,6 +673,21 @@ if ($search_date) {
       });
 
     </script>
+
+
+    <!-- No Journals Found Error Modal -->
+    <div id="noJournalsModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <div style="display: flex; justify-content: center; align-items: center;">
+          <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
+            style="width: 150px; height: 150px;" loop autoplay>
+          </lottie-player>
+        </div>
+        <h2 style="color: #8B0000">No Journals Found!</h2>
+        <p>No journal entries match the selected date.</p>
+        <button class="proceed-btn" onclick="closeModal('noJournalsModal')">Close</button>
+      </div>
+    </div>
 
     <!-- Images Modal -->
     <div id="openJournalImages" class="modal-img">

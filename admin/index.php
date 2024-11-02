@@ -136,7 +136,7 @@ if ($stmt = $database->prepare($query)) {
   </div>
   <section class="home-section">
     <div class="home-content">
-      <i class="fas fa-bars bx-menu"></i>
+      <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
     </div>
 
     <div class="rectangles-container">
@@ -242,18 +242,24 @@ if ($stmt = $database->prepare($query)) {
 
     </div>
 
+    <?php
+    $sql = "SELECT required_hours FROM required_hours ORDER BY required_hours_id DESC LIMIT 1";
+    $result = $database->query($sql);
+    $currentOjtHours = ($result->num_rows > 0) ? $result->fetch_assoc()['required_hours'] : 0;
+
+    $database->close();
+    ?>
     <div class="rectangles-container">
       <div class='rectangle-box1' id="ojtHoursBox" onclick="openModal('updateOjtModal')">
         <div class='box-left'>
           <span class='box-name'>OJT HOURS</span><br>
-          <span class='box-number'>355 hours</span>
+          <span class='box-number'><?php echo $currentOjtHours; ?> hours</span>
         </div>
         <div class='box-right'>
           <i class="fa-solid fa-business-time"></i>
         </div>
       </div>
     </div>
-
 
   </section>
 
@@ -265,16 +271,18 @@ if ($stmt = $database->prepare($query)) {
       <form action="./others/update_ojt_hours.php" method="POST">
         <div class="input-group">
           <label for="ojtHours">OJT Hours</label>
-          <input type="number" id="ojtHours" name="ojtHours" placeholder="Enter new OJT hours" required>
+          <input type="number" id="ojtHours" name="ojtHours" placeholder="Enter new OJT hours"
+            value="<?php echo $currentOjtHours; ?>" required>
         </div>
         <button type="submit" class="modal-btn">Update Hours</button>
       </form>
     </div>
   </div>
+
+
   <!-- Success Modal for Updating OJT Hours -->
   <div id="updateOjtSuccessModal" class="modal">
     <div class="modal-content">
-      <!-- Lottie Animation -->
       <div style="display: flex; justify-content: center; align-items: center;">
         <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
           style="width: 150px; height: 150px;" loop autoplay>
@@ -285,7 +293,6 @@ if ($stmt = $database->prepare($query)) {
       <button class="proceed-btn" onclick="closeModal('updateOjtSuccessModal')">Close</button>
     </div>
   </div>
-
 
   <!-- Login Success Modal -->
   <div id="loginSuccessModal" class="modal">
@@ -318,7 +325,6 @@ if ($stmt = $database->prepare($query)) {
     </div>
   </div>
   <script>
-
     // Function to open the modal
     function openModal(modalId) {
       document.getElementById(modalId).style.display = "block";
@@ -329,14 +335,25 @@ if ($stmt = $database->prepare($query)) {
       document.getElementById(modalId).style.display = "none";
     }
 
-    // Automatically open the modal when the page loads, if login was successful
+    // Function to open a modal by its ID
+    function showModal(modalId) {
+      document.getElementById(modalId).style.display = 'block';
+    }
+
+    // Check session variables for success messages and open respective modals
     window.onload = function () {
+      <?php if (isset($_SESSION['update_success'])): ?>
+        showModal('updateOjtSuccessModal');
+        <?php unset($_SESSION['update_success']); // Remove after displaying ?>
+      <?php endif; ?>
+
       <?php if (isset($_SESSION['login_success']) && $_SESSION['login_success']): ?>
         openModal('loginSuccessModal');
-        <?php unset($_SESSION['login_success']); // Clear the session variable ?>
+        <?php unset($_SESSION['login_success']); // Clear after displaying ?>
       <?php endif; ?>
     };
   </script>
+
   <script src="./js/script.js"></script>
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>

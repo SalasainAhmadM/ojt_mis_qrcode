@@ -1556,7 +1556,38 @@ td.image img {
   object-fit: cover;
   margin-right: 15px;
 }
+/* company */
+.company-list {
+  width: 25%;
+  border-right: 1px solid #ccc;
+  overflow-y: auto;
+  background-color: #fff;
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
 
+.company-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.3s ease;
+}
+
+.company-item:hover,
+.company-item.active {
+  background-color: #f0f0f0;
+}
+
+.company-item img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 15px;
+}
+/* company */
 .chat-box {
   width: 75%;
   display: flex;
@@ -1827,3 +1858,158 @@ td.image img {
 }
 
 /* Assign Company UI END */
+
+/* Adviser Filter */
+
+.filter-group-home {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  justify-content: space-between;
+}
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.section-section {
+  margin-right: 20px;
+}
+.company-section {
+  margin-right: 20px;
+}
+.date-section {
+  margin-right: 20px;
+}
+.search-section {
+  margin-left: auto;
+}
+.dropdown,
+.search-bar,
+.filter-btn {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  font-size: 14px;
+}
+
+/* Dashboard 3 Boxes Adviser */
+.rectangles-container {
+  display: flex;
+  justify-content: space-between;
+  height: 15%;
+  margin-bottom: 20px;
+}
+
+.rectangle-box1,
+.rectangle-box2,
+.rectangle-box3 {
+  background-color: #fff;
+  color: #095d40;
+  padding: 10px;
+  text-align: center;
+  width: 20%;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rectangle-box1 {
+  margin-left: 120px;
+}
+
+.rectangle-box3 {
+  margin-right: 120px;
+}
+
+.rectangle-box1,
+.rectangle-box2,
+.rectangle-box3 {
+  border-left: 3px solid #095d40;
+}
+
+.box-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-left: 10px;
+}
+
+.box-name {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.box-number {
+  font-size: 20px;
+  text-align: center;
+  font-weight: bold;
+  color: #000;
+  justify-content: center;
+}
+
+.box-right i {
+  font-size: 32px;
+}
+
+.box-right {
+  font-size: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-right: 20px;
+}
+
+/* Tooltip Icon Styling */
+.tooltip-icon {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.tooltip-icon.absent {
+  background-color: darkred;
+}
+
+.tooltip-icon.late {
+  background-color: orange;
+}
+
+textarea#approvalReason {
+  width: 90%;
+  margin-top: 15px;
+  height: 60px;
+  resize: none;
+}
+.modal-content h2#remarkTypeTitle[data-remark-type="Late"] {
+  color: orange;
+}
+
+.modal-content h2#remarkTypeTitle[data-remark-type="Absent"] {
+  color: darkred;
+}
+
+#remarkText {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  text-align: left;
+  padding: 10px;
+  margin: 15px 0;
+  color: #333;
+}

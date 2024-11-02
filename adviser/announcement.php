@@ -61,9 +61,11 @@ $current_page = $pagination_data['current_page'];
     <title>Adviser - Announcement</title>
     <link rel="icon" href="../img/ccs.png" type="image/icon type">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <!-- <link rel="stylesheet" href="./css/index.css">
     <link rel="stylesheet" href="./css/style.css">
-    <link rel="stylesheet" href="./css/mobile.css">
+    <link rel="stylesheet" href="./css/mobile.css"> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 </head>
@@ -190,7 +192,7 @@ $current_page = $pagination_data['current_page'];
     </div>
     <section class="home-section">
         <div class="home-content">
-            <i class="fas fa-bars bx-menu"></i>
+            <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
         </div>
         <div class="content-wrapper">
 
@@ -204,7 +206,7 @@ $current_page = $pagination_data['current_page'];
 
                         <div class="button-container">
                             <button id="openAddModalBtn" class="add-btn">
-                                <i class="fa-solid fa-plus"></i>Add Announcement
+                                <i class="fa-solid fa-plus"></i>Add
                             </button>
                         </div>
                     </div>
@@ -230,31 +232,23 @@ $current_page = $pagination_data['current_page'];
                     <table>
                         <thead>
                             <tr>
-                                <th style='width: 20%;'>Title</th>
-                                <th>Description</th>
-                                <th style='width: 15%;'>Date Submitted</th>
+                                <th class="title">Title</th>
+                                <th class="description">Description</th>
+                                <th class="date">Date Submitted</th>
                                 <th class="action">Action</th>
                             </tr>
                         </thead>
-                        <style>
-                            td.description {
-                                max-width: 300px;
-                                overflow: hidden;
-                                white-space: nowrap;
-                                text-overflow: ellipsis;
-                            }
-                        </style>
                         <tbody>
                             <?php if (!empty($announcements)): ?>
                                 <?php foreach ($announcements as $announcement): ?>
                                     <tr>
-                                        <td style="width: 20%;">
+                                        <td class="title">
                                             <?php echo htmlspecialchars($announcement['announcement_name']); ?>
                                         </td>
                                         <td class="description">
                                             <?php echo htmlspecialchars($announcement['announcement_description']); ?>
                                         </td>
-                                        <td style="width: 15%;">
+                                        <td class="date">
                                             <?php echo date("M d, Y", strtotime($announcement['announcement_date'])); ?>
                                         </td>
                                         <td class="action">

@@ -29,6 +29,31 @@ if ($stmt = $database->prepare($query)) {
 }
 $company_id = $_SESSION['user_id'];
 
+// Check if today is a holiday
+$today = date('Y-m-d');
+$holiday_name = null;
+$holiday_query = "SELECT holiday_name FROM holiday WHERE holiday_date = ?";
+if ($stmt = $database->prepare($holiday_query)) {
+  $stmt->bind_param("s", $today);
+  $stmt->execute();
+  $stmt->bind_result($holiday_name);
+  $stmt->fetch();
+  $stmt->close();
+}
+
+// Check if today is a suspended day for the company
+$is_suspended = false;
+$schedule_query = "SELECT day_type FROM schedule WHERE date = ? AND company_id = ?";
+if ($stmt = $database->prepare($schedule_query)) {
+  $stmt->bind_param("si", $today, $company_id);
+  $stmt->execute();
+  $stmt->bind_result($day_type);
+  if ($stmt->fetch() && $day_type === 'Suspended') {
+    $is_suspended = true;
+  }
+  $stmt->close();
+}
+
 // Query to fetch students under the logged-in company
 $students_query = "
     SELECT s.student_id, s.student_firstname, s.student_middle, s.student_lastname, 
@@ -49,6 +74,7 @@ if ($stmt = $database->prepare($students_query)) {
   }
   $stmt->close(); // Close the statement
 }
+
 // Function to format hours into "X hrs Y mins"
 function formatDuration($hours)
 {
@@ -234,7 +260,27 @@ function formatDuration($hours)
       </div>
       <div class="main-box">
         <div class="left-box">
-          <h2>Attendance - <span style="color: #095d40"><?php echo date('F d, Y'); ?></span></h2>
+          <h2>
+            Attendance - <span style="color: 
+          <?php
+          if ($holiday_name) {
+            echo '#8B0000';
+          } elseif ($is_suspended) {
+            echo '#FFA500';
+          } else {
+            echo '#095d40';
+          }
+          ?>">
+              <?php
+              if ($holiday_name) {
+                echo $holiday_name . " (" . date('F d, Y') . ")";
+              } elseif ($is_suspended) {
+                echo "Suspended (" . date('F d, Y') . ")";
+              } else {
+                echo date('F d, Y');
+              }
+              ?> </span>
+          </h2>
           <table>
             <thead>
               <tr>
@@ -291,7 +337,9 @@ function formatDuration($hours)
                   ?>
 
                   <tr>
-                    <td><?php echo $attendances[0]['student_firstname'] . ' ' . $attendances[0]['student_lastname']; ?></td>
+                    <td>
+                      <?php echo $attendances[0]['student_firstname'] . ' ' . $attendances[0]['student_middle'] . ' ' . $attendances[0]['student_lastname']; ?>
+                    </td>
                     <td><?php echo $first_time_in ? date('h:i A', strtotime($first_time_in)) : 'N/A'; ?></td>
                     <td><?php echo $displayed_time_out; ?></td>
                     <td><?php echo $total_hours_today > 0 ? formatDuration($total_hours_today) : 'N/A'; ?></td>
@@ -309,8 +357,17 @@ function formatDuration($hours)
           </table>
         </div>
 
+        <?php
+
+        $sql = "SELECT required_hours FROM required_hours ORDER BY required_hours_id DESC LIMIT 1";
+        $result = $database->query($sql);
+        $target_hours = ($result->num_rows > 0) ? (int) $result->fetch_assoc()['required_hours'] : 300;
+
+        $database->close();
+        ?>
+
         <div class="right-box">
-          <h2>Target Hours: <span style="color: #095d40"><strong>300hrs</strong></span></h2>
+          <h2>Target Hours: <span style="color: #095d40"><strong><?php echo $target_hours; ?> hrs</strong></span></h2>
           <?php if (!empty($students)): ?>
             <?php foreach ($students as $student_id => $attendances): ?>
               <?php
@@ -318,12 +375,12 @@ function formatDuration($hours)
               $total_hours = array_reduce($attendances, function ($carry, $attendance) {
                 return $carry + ($attendance['ojt_hours'] ?? 0);
               }, 0);
-              // Calculate progress percentage based on 300 hours target
-              $progress_percentage = min(100, ($total_hours / 100) * 100); // Limit to 100%
+              // Calculate progress percentage based on dynamic target hours
+              $progress_percentage = min(100, ($total_hours / $target_hours) * 100); // Limit to 100%
               ?>
               <div class="student-progress">
                 <div class="label">
-                  <span><?php echo $attendances[0]['student_firstname'] . ' ' . $attendances[0]['student_lastname']; ?></span>
+                  <span><?php echo $attendances[0]['student_firstname'] . ' ' . $attendances[0]['student_middle'] . ' ' . $attendances[0]['student_lastname']; ?></span>
                   <span><?php echo round($progress_percentage); ?>%</span>
                 </div>
                 <div class="progress-bar">
@@ -336,8 +393,8 @@ function formatDuration($hours)
             <p>No progress records found.</p>
           <?php endif; ?>
         </div>
-      </div>
 
+      </div>
       <script>
         // Dynamically adjust progress bar color based on percentage
         document.querySelectorAll('.progress').forEach(function (progressBar) {
@@ -347,6 +404,7 @@ function formatDuration($hours)
           progressBar.style.backgroundColor = `rgba(9, 93, 64, ${shade + 0.4})`; // Minimum opacity of 0.4
         });
       </script>
+
 
     </div>
     </div>

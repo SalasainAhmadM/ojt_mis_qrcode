@@ -32,6 +32,42 @@ $company_id = $_SESSION['user_id'];
 // Get the selected day (or default to today)
 $selected_day = isset($_GET['day']) ? $_GET['day'] : date('Y-m-d');
 
+// Check if the selected day is a holiday
+$holiday_name = '';
+$holiday_query = "SELECT holiday_name FROM holiday WHERE holiday_date = ?";
+if ($stmt = $database->prepare($holiday_query)) {
+    $stmt->bind_param("s", $selected_day);
+    $stmt->execute();
+    $stmt->bind_result($holiday_name);
+    $stmt->fetch();
+    $stmt->close();
+}
+
+// Check if the selected day is suspended based on schedule
+$schedule_day_type = 'Regular';
+$schedule_query = "SELECT day_type FROM schedule WHERE company_id = ? AND date = ?";
+if ($stmt = $database->prepare($schedule_query)) {
+    $stmt->bind_param("is", $company_id, $selected_day);
+    $stmt->execute();
+    $stmt->bind_result($schedule_day_type);
+    $stmt->fetch();
+    $stmt->close();
+}
+
+// Set display text and color based on holiday or suspension status
+$display_text = '';
+$display_color = '#095d40'; // Default color
+
+if ($schedule_day_type === 'Suspended') {
+    $display_text = "Suspended (" . date('F d, Y', strtotime($selected_day)) . ")";
+    $display_color = 'orange';
+} elseif ($holiday_name) {
+    $display_text = "$holiday_name (" . date('F d, Y', strtotime($selected_day)) . ")";
+    $display_color = 'darkred';
+} else {
+    $display_text = date('F d, Y', strtotime($selected_day));
+}
+
 // Handle search query
 $search = isset($_GET['search']) ? '%' . $_GET['search'] . '%' : null;
 
@@ -81,7 +117,22 @@ function formatDuration($hours)
 
     return trim($formatted) ?: '0 mins';
 }
+$remarks_query = "
+    SELECT student_id, remark_type 
+    FROM attendance_remarks 
+    WHERE schedule_id = (SELECT schedule_id FROM schedule WHERE company_id = ? AND date = ?)
+";
+$remarks = [];
+if ($stmt = $database->prepare($remarks_query)) {
+    $stmt->bind_param("is", $company_id, $selected_day);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
+    while ($row = $result->fetch_assoc()) {
+        $remarks[$row['student_id']] = $row['remark_type'];
+    }
+    $stmt->close();
+}
 // Calculate previous and next day for pagination
 $previous_day = date('Y-m-d', strtotime($selected_day . ' -1 day'));
 $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
@@ -112,6 +163,11 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
                 width: calc(100%);
                 margin-right: 0px;
             }
+        }
+
+        .modal-content {
+            max-height: 80%;
+            overflow-y: auto;
         }
     </style>
 </head>
@@ -252,9 +308,12 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
             </div>
             <div class="main-box">
                 <div class="whole-box">
-                    <h2>Attendance - <span
-                            style="color: #095d40"><?php echo date('F d, Y', strtotime($selected_day)); ?></span>
+                    <h2>Attendance -
+                        <span style="color: <?php echo $display_color; ?>">
+                            <?php echo $display_text; ?>
+                        </span>
                     </h2>
+
 
                     <div class="filter-group">
                         <!-- Search Bar Form -->
@@ -292,9 +351,10 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (!empty($students)): ?>
-                                <?php foreach ($students as $student_id => $attendances): ?>
-                                    <?php
+                            <?php if (!empty($students) || !empty($remarks)): ?>
+                                <?php
+                                // Loop through all students who attended
+                                foreach ($students as $student_id => $attendances):
                                     $first_time_in = null;
                                     $latest_time_in_without_out = null;
                                     $latest_time_out = null;
@@ -315,12 +375,26 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
 
                                     $displayed_time_out = $latest_time_in_without_out ? '' : ($latest_time_out ? date('h:i A', strtotime($latest_time_out)) : 'N/A');
                                     $status = $latest_time_in_without_out ? '<span style="color:green;">Timed-in</span>' : '<span style="color:red;">Timed-out</span>';
+
+                                    // Determine if the student is marked as Absent or Late
+                                    $remark_type = isset($remarks[$student_id]) ? $remarks[$student_id] : null;
                                     ?>
                                     <tr>
-                                        <td class="image">
+                                        <td class="image" style="position:relative;">
                                             <img style="border-radius: 50%;"
                                                 src="../uploads/student/<?php echo !empty($attendance['student_image']) ? $attendance['student_image'] : 'user.png'; ?>"
                                                 alt="Student Image">
+
+                                            <!-- Absent Icon -->
+                                            <?php if ($remark_type === 'Absent'): ?>
+                                                <span class="tooltip-icon absent" title="Absent"
+                                                    onclick="openRemarkModal(<?php echo $student_id; ?>, 'Absent')">X</span>
+                                            <?php elseif ($remark_type === 'Late'): ?>
+                                                <span class="tooltip-icon late" title="Late"
+                                                    onclick="openRemarkModal(<?php echo $student_id; ?>, 'Late')">?</span>
+                                            <?php endif; ?>
+
+
                                         </td>
                                         <td class="name">
                                             <?php echo $attendances[0]['student_firstname'] . ' ' . $attendances[0]['student_middle'] . '.' . ' ' . $attendances[0]['student_lastname']; ?>
@@ -335,12 +409,45 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
                                         <td class="status"><?php echo $status; ?></td>
                                     </tr>
                                 <?php endforeach; ?>
+
+                                <!-- Handle Absent students who have no attendance records -->
+                                <?php foreach ($remarks as $student_id => $remark_type): ?>
+                                    <?php if ($remark_type === 'Absent' && !isset($students[$student_id])): ?>
+                                        <tr>
+                                            <td class="image" style="position:relative;">
+                                                <img style="border-radius: 50%;" src="../uploads/student/user.png"
+                                                    alt="Student Image">
+                                                <span class="tooltip-icon absent" title="Absent"
+                                                    onclick="openRemarkModal(<?php echo $student_id; ?>, 'Absent')">X</span>
+                                            </td>
+                                            <td class="name">
+                                                <?php
+                                                // Fetch the student's name from the database for absent students
+                                                $student_query = "SELECT student_firstname, student_middle, student_lastname FROM student WHERE student_id = ?";
+                                                $stmt = $database->prepare($student_query);
+                                                $stmt->bind_param("i", $student_id);
+                                                $stmt->execute();
+                                                $student_result = $stmt->get_result();
+                                                if ($student_row = $student_result->fetch_assoc()) {
+                                                    echo $student_row['student_firstname'] . ' ' . $student_row['student_middle'] . '.' . ' ' . $student_row['student_lastname'];
+                                                }
+                                                $stmt->close();
+                                                ?>
+                                            </td>
+                                            <td class="timein">N/A</td>
+                                            <td class="timeout">N/A</td>
+                                            <td class="duration">N/A</td>
+                                            <td class="status"><span style="color:red;">Absent</span></td>
+                                        </tr>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="6">No matching student found for this day.</td>
+                                    <td colspan="6">No attendance for this day.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
+
                     </table>
 
                     <div class="paginationDay">
@@ -358,6 +465,45 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
             </div>
         </div>
     </section>
+
+    <!-- Remark Modal -->
+    <div id="remarkModal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/notice-095d40.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2 id="remarkTypeTitle" data-remark-type="">Remark</h2>
+            <p id="remarkText">Loading remark...</p>
+            <button class="proceed-btn" onclick="closeModal('remarkModal')">Close</button>
+        </div>
+    </div>
+
+
+    <script>
+        function openRemarkModal(studentId, remarkType) {
+            const titleElement = document.getElementById('remarkTypeTitle');
+            titleElement.innerText = remarkType;
+            titleElement.setAttribute('data-remark-type', remarkType); // Set data attribute for CSS styling
+
+            document.getElementById('remarkText').innerText = 'Loading remark...';
+
+            // AJAX to fetch remark from the server
+            fetch(`fetch_remark.php?student_id=${studentId}&remark_type=${remarkType}`)
+                .then(response => response.text())
+                .then(remark => {
+                    document.getElementById('remarkText').innerText = remark || 'No remark available';
+                })
+                .catch(() => {
+                    document.getElementById('remarkText').innerText = 'Error loading remark';
+                });
+
+            // Display the modal
+            document.getElementById('remarkModal').style.display = 'block';
+        }
+
+    </script>
     <!-- Logout Confirmation Modal -->
     <div id="logoutModal" class="modal">
         <div class="modal-content">
