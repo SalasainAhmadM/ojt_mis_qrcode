@@ -22,6 +22,8 @@ if ($stmt = $database->prepare($query)) {
   ];
   $stmt->close();
 }
+
+$qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.php" : "qr-code.php";
 // Fetch company_id associated with the student
 $query = "
     SELECT student.student_id, student.student_firstname, student.student_lastname, company.company_id 
@@ -288,12 +290,12 @@ if ($search_date) {
         </ul>
       </li>
       <li>
-        <a href="qr-code.php">
+        <a href="<?php echo $qr_url; ?>">
           <i class="fa-solid fa-qrcode"></i>
           <span class="link_name">QR Scanner</span>
         </a>
         <ul class="sub-menu blank">
-          <li><a class="link_name" href="qr-code.php">QR Scanner</a></li>
+          <li><a class="link_name" href="<?php echo $qr_url; ?>">QR Scanner</a></li>
         </ul>
       </li>
       <li>
@@ -371,15 +373,14 @@ if ($search_date) {
             </div>
           </div>
           <div class="filter-group">
-            <form method="GET" action="journal.php">
+            <form method="GET" action="journal.php" class="search-form">
               <div class="search-bar-container">
                 <input type="date" class="search-bar" id="searchDate" name="search"
-                  value="<?= htmlspecialchars($search_date); ?>">
-                <button type="submit" class="search-bar-icon">
-                  <i class="fa fa-search"></i>
-                </button>
+                  value="<?= htmlspecialchars($search_date); ?>" onchange="this.form.submit()">
               </div>
             </form>
+
+
             <script>
               document.addEventListener('DOMContentLoaded', function () {
                 const searchDateInput = document.getElementById('searchDate');
@@ -510,12 +511,10 @@ if ($search_date) {
         display: flex;
         align-items: center;
         margin-bottom: 10px;
-        /* Adds space between items */
       }
 
       .journal-item input[type="checkbox"] {
         margin-right: 10px;
-        /* Adds space between checkbox and label */
       }
 
       .search-input-journal {

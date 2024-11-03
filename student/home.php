@@ -220,6 +220,14 @@ $formatted_email = substr_replace($extracted_email_part, '-', 4, 0);
           <?php endforeach; ?>
         </select>
       </div>
+      <div class="form-group">
+        <label for="ojt_type">OJT Type</label>
+        <select id="ojt_type" name="ojt_type" required>
+          <option value="" disabled selected>Select OJT Type</option>
+          <option value="Field-Based">Field-Based</option>
+          <option value="Project-Based">Project-Based</option>
+        </select>
+      </div>
       <!-- <div class="form-group">
         <label for="company">OJT Company</label>
         <select id="company" name="company" required>

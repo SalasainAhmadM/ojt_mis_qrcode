@@ -29,7 +29,6 @@ if ($stmt = $database->prepare($query)) {
     }
     $stmt->close(); // Close the statement
 }
-
 function formatDuration($hours)
 {
     $totalMinutes = $hours * 60;
@@ -47,6 +46,20 @@ function formatDuration($hours)
 
 // Set the selected day (or default to today)
 $selected_day = isset($_GET['day']) ? $_GET['day'] : date('Y-m-d');
+
+// Check if the selected day is a holiday
+$holiday_name = '';
+$holiday_query = "SELECT holiday_name FROM holiday WHERE holiday_date = ?";
+$holiday_stmt = $database->prepare($holiday_query);
+$holiday_stmt->bind_param("s", $selected_day);
+$holiday_stmt->execute();
+$holiday_result = $holiday_stmt->get_result();
+
+if ($holiday_result->num_rows > 0) {
+    $holiday_row = $holiday_result->fetch_assoc();
+    $holiday_name = $holiday_row['holiday_name'];
+}
+$holiday_stmt->close();
 
 // Calculate previous and next day for pagination
 $previous_day = date('Y-m-d', strtotime($selected_day . ' -1 day'));
@@ -69,51 +82,6 @@ while ($row = $result->fetch_assoc()) {
     $students[$row['student_id']][] = $row;
 }
 $stmt->close();
-// $adviser_id = $_SESSION['user_id'];
-
-// Get the selected day (or default to today)
-
-// // Handle search query
-// $search = isset($_GET['search']) ? '%' . $_GET['search'] . '%' : null;
-
-// // Query to fetch students and attendance based on search or day
-// $students_query = "
-//     SELECT s.student_id, s.student_firstname, s.student_middle, s.student_lastname, 
-//            s.student_image, a.time_in, a.time_out, a.ojt_hours
-//     FROM student s
-//     LEFT JOIN attendance a ON s.student_id = a.student_id 
-//     WHERE s.company = ? AND DATE(a.time_in) = ?
-// ";
-
-// If a search is provided, add the search condition
-// if ($search) {
-//     $students_query .= " AND (s.student_firstname LIKE ? OR s.student_lastname LIKE ?)";
-//     $query_params = [$adviser_id, $selected_day, $search, $search];
-// } else {
-//     $query_params = [$adviser_id, $selected_day];
-// }
-
-// $students_query .= " ORDER BY s.student_lastname, a.time_in ASC";
-
-// if ($stmt = $database->prepare($students_query)) {
-//     $stmt->bind_param(str_repeat("s", count($query_params)), ...$query_params);
-//     $stmt->execute();
-//     $result = $stmt->get_result();
-
-//     $students = [];
-//     while ($row = $result->fetch_assoc()) {
-//         $students[$row['student_id']][] = $row;
-//     }
-//     $stmt->close();
-// }
-
-// Function to format hours into "X hrs Y mins"
-
-
-// Calculate previous and next day for pagination
-// $previous_day = date('Y-m-d', strtotime($selected_day . ' -1 day'));
-// $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
-
 
 ?>
 <!DOCTYPE html>
@@ -266,10 +234,18 @@ $stmt->close();
             </div>
             <div class="main-box">
                 <div class="whole-box">
-                    <h2>Attendance - <span
-                            style="color: #095d40"><?php echo date('F d, Y', strtotime($selected_day)); ?></span>
+                    <h2>
+                        Attendance -
+                        <?php if ($holiday_name): ?>
+                            <span style="color: darkred;">
+                                <?php echo htmlspecialchars($holiday_name) . ' (' . date('F d, Y', strtotime($selected_day)) . ')'; ?>
+                            </span>
+                        <?php else: ?>
+                            <span style="color: #095d40;">
+                                <?php echo date('F d, Y', strtotime($selected_day)); ?>
+                            </span>
+                        <?php endif; ?>
                     </h2>
-
                     <div class="filter-group">
                         <!-- Search Bar Form -->
                         <form method="GET" action="">

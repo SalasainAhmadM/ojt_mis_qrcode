@@ -20,6 +20,7 @@ $contact = $_POST['contact_number'];
 $section = $_POST['course_section'];
 $batch_year = $_POST['batch_year'];
 $department = $_POST['department'];
+$ojt_type = $_POST['ojt_type'];
 $company = $_POST['company'];
 $adviser = $_POST['adviser_id'];
 $address = $_POST['address'];
@@ -59,11 +60,11 @@ if ($student_image) {
 }
 
 // Prepare the update query
-$query = "UPDATE student SET wmsu_id = ?, contact_number = ?, course_section = ?, batch_year = ?, department = ?, company = ?, adviser = ?, student_address = ?, student_image = ? WHERE student_id = ?";
+$query = "UPDATE student SET wmsu_id = ?, contact_number = ?, course_section = ?, batch_year = ?, department = ?, ojt_type = ?,  company = ?, adviser = ?, student_address = ?, student_image = ? WHERE student_id = ?";
 
 // Prepare and execute the statement
 if ($stmt = $database->prepare($query)) {
-    $stmt->bind_param("sssssssssi", $wmsu_id, $contact, $section, $batch_year, $department, $company, $adviser, $address, $student_image, $student_id);
+    $stmt->bind_param("ssssssssssi", $wmsu_id, $contact, $section, $batch_year, $department, $ojt_type, $company, $adviser, $address, $student_image, $student_id);
 
     // Execute the query
     if ($stmt->execute()) {

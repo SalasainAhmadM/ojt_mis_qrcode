@@ -94,7 +94,7 @@ if ($course_sections_result->num_rows > 0) {
         $course_sections[] = $row;
     }
 }
-
+$qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.php" : "qr-code.php";
 ?>
 
 <!DOCTYPE html>
@@ -157,12 +157,12 @@ if ($course_sections_result->num_rows > 0) {
                 </ul>
             </li>
             <li>
-                <a href="qr-code.php">
+                <a href="<?php echo $qr_url; ?>">
                     <i class="fa-solid fa-qrcode"></i>
                     <span class="link_name">QR Scanner</span>
                 </a>
                 <ul class="sub-menu blank">
-                    <li><a class="link_name" href="qr-code.php">QR Scanner</a></li>
+                    <li><a class="link_name" href="<?php echo $qr_url; ?>">QR Scanner</a></li>
                 </ul>
             </li>
             <li>

@@ -140,22 +140,15 @@ if ($stmt = $database->prepare($query)) {
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            /* Aligns items to the top */
             flex-wrap: wrap;
-            /* Enables wrapping of the boxes */
             gap: 20px;
-            /* Optional: Adds some space between the boxes */
             overflow-y: auto;
-            /* Enables vertical scrolling */
             height: 100%;
-            /* Full height */
         }
 
         .main-box {
             height: 550px;
-            /* Adjust height based on your layout */
             overflow-y: auto;
-            /* Enables vertical scrolling when content overflows */
         }
 
         .button-container {

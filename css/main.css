@@ -1354,7 +1354,7 @@ td.maxlength , td.section , td.wmsu_id , td.contact , td.adviser{
   }
 
   .search-bar {
-    /* width: 100%; */
+    width: 100%;
     padding: 5px 25px 5px 10px;
     border: 1px solid #ccc;
     border-radius: 5px;

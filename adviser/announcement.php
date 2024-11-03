@@ -374,21 +374,7 @@ $current_page = $pagination_data['current_page'];
                 <button class="proceed-btn" onclick="closeModal('announcementUpdateSuccessModal')">Close</button>
             </div>
         </div>
-        <!-- Success Modal for Announcement Deletion -->
-        <div id="announcementDeleteSuccessModal" class="modal">
-            <div class="modal-content">
-                <!-- Lottie Animation -->
-                <div style="display: flex; justify-content: center; align-items: center;">
-                    <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
-                        style="width: 150px; height: 150px;" loop autoplay>
-                    </lottie-player>
-                </div>
-                <h2>Announcement Deleted Successfully!</h2>
-                <p>Your Announcement has been deleted, <span
-                        style="color: #095d40; font-size: 20px"><?php echo $_SESSION['full_name']; ?>!</span></p>
-                <button class="proceed-btn" onclick="closeModal('announcementDeleteSuccessModal')">Close</button>
-            </div>
-        </div>
+
 
         <script>
             function showModal(modalId) {
@@ -530,18 +516,61 @@ $current_page = $pagination_data['current_page'];
 
         // Delete Announcement Entry Confirmation
         const deleteButtons = document.querySelectorAll('.delete-btn');
+        let announcementIdToDelete = null;
 
         deleteButtons.forEach(button => {
             button.addEventListener('click', () => {
-                const announcementId = button.getAttribute('data-id');
-
-                if (confirm('Are you sure you want to delete this announcement entry?')) {
-                    window.location.href = `delete_announcement.php?id=${announcementId}`;
-                }
+                announcementIdToDelete = button.getAttribute('data-id');
+                openDeleteModal(); // Open the custom modal instead of using a default alert
             });
         });
 
+        function openDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'block';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+        function confirmDeleteAction() {
+            if (announcementIdToDelete) {
+                window.location.href = `delete_announcement.php?id=${announcementIdToDelete}`;
+            }
+        }
+
     </script>
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <!-- Lottie Animation -->
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/alert-095d40.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+            </div>
+            <h2 style="color: #000">Are you sure you want to delete?</h2>
+            <div style="display: flex; justify-content: space-around; margin-top: 10px; margin-bottom: 20px">
+                <button class="confirm-btn" onclick="confirmDeleteAction()">Confirm</button>
+                <button class="cancel-btn" onclick="closeDeleteModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal for Announcement Deletion -->
+    <div id="announcementDeleteSuccessModal" class="modal">
+        <div class="modal-content">
+            <!-- Lottie Animation -->
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2>Announcement Deleted Successfully!</h2>
+            <p>Your Announcement has been deleted, <span
+                    style="color: #095d40; font-size: 20px"><?php echo $_SESSION['full_name']; ?>!</span></p>
+            <button class="proceed-btn" onclick="closeModal('announcementDeleteSuccessModal')">Close</button>
+        </div>
+    </div>
     <script src="./js/scripts.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>

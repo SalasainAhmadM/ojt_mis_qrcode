@@ -10,12 +10,13 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student') {
 
 // Fetch student, company, and address details from the database
 $student_id = $_SESSION['user_id'];
-$query = "SELECT student.*, company.company_name, company.company_address, company.company_email, company.company_image, company.company_number, 
+$query = "SELECT student.*, student.ojt_type, company.company_name, company.company_address, company.company_email, company.company_image, company.company_number, 
                  address.address_barangay, address.address_street
           FROM student 
           LEFT JOIN company ON student.company = company.company_id
           LEFT JOIN address ON company.company_address = address.address_id
           WHERE student.student_id = ?";
+
 if ($stmt = $database->prepare($query)) {
   $stmt->bind_param("i", $student_id); // Bind parameters
   $stmt->execute(); // Execute the query
@@ -36,11 +37,15 @@ if ($stmt = $database->prepare($query)) {
       'company_image' => 'default.png',
       'company_number' => 'N/A',
       'address_barangay' => 'Unknown Barangay',
-      'address_street' => 'Unknown Street'
+      'address_street' => 'Unknown Street',
+      'ojt_type' => 'Field-Based'
     ];
   }
   $stmt->close(); // Close the statement
 }
+
+// Set the URL for QR Scanner based on ojt_type
+$qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.php" : "qr-code.php";
 
 // Fetch student ID from session
 $student_id = $_SESSION['user_id'];
@@ -50,12 +55,12 @@ $filter_date = isset($_GET['filter_date']) ? $_GET['filter_date'] : null;
 
 // Prepare the SQL query based on the filter
 $attendance_query = "
-    SELECT DATE_FORMAT(time_in, '%b %d, %Y') AS attendance_date, 
-           TIME_FORMAT(time_in, '%h:%i %p') AS time_in, 
-           TIME_FORMAT(time_out, '%h:%i %p') AS time_out, 
-           IFNULL(ojt_hours, 0) AS total_hours
-    FROM attendance
-    WHERE student_id = ?
+SELECT DATE_FORMAT(time_in, '%b %d, %Y') AS attendance_date,
+TIME_FORMAT(time_in, '%h:%i %p') AS time_in,
+TIME_FORMAT(time_out, '%h:%i %p') AS time_out,
+IFNULL(ojt_hours, 0) AS total_hours
+FROM attendance
+WHERE student_id = ?
 ";
 
 if ($filter_date) {
@@ -100,9 +105,9 @@ function formatOjtHours($decimalHours)
 }
 
 // Fetch announcements
-$announcement_query = "SELECT announcement_name, announcement_date, announcement_description 
-                       FROM adviser_announcement 
-                       ORDER BY announcement_date DESC";
+$announcement_query = "SELECT announcement_name, announcement_date, announcement_description
+FROM adviser_announcement
+ORDER BY announcement_date DESC";
 $announcement_result = $database->query($announcement_query);
 
 $announcements = [];
@@ -131,10 +136,10 @@ if ($stmt = $database->prepare($holiday_query)) {
 
 // Fetch company_id associated with the student
 $query = "
-    SELECT student.student_id, student.student_firstname, student.student_lastname, company.company_id 
-    FROM student 
-    JOIN company ON student.company = company.company_id 
-    WHERE student.student_id = ?";
+SELECT student.student_id, student.student_firstname, student.student_lastname, company.company_id
+FROM student
+JOIN company ON student.company = company.company_id
+WHERE student.student_id = ?";
 
 if ($stmt = $database->prepare($query)) {
   $stmt->bind_param("i", $student_id);
@@ -228,12 +233,12 @@ $login_message = $holiday_message ?: $suspended_message;
         </ul>
       </li>
       <li>
-        <a href="qr-code.php">
+        <a href="<?php echo $qr_url; ?>">
           <i class="fa-solid fa-qrcode"></i>
           <span class="link_name">QR Scanner</span>
         </a>
         <ul class="sub-menu blank">
-          <li><a class="link_name" href="qr-code.php">QR Scanner</a></li>
+          <li><a class="link_name" href="<?php echo $qr_url; ?>">QR Scanner</a></li>
         </ul>
       </li>
       <li>
