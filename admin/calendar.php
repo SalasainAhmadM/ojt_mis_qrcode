@@ -409,19 +409,58 @@ if ($stmt = $database->prepare($query)) {
 
 
     <!-- Modal for past dates -->
+    <style>
+        #pastDateModal {
+            /* display: flex; */
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content-dateerror {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .cancel-btn {
+            background-color: #8B0000;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .cancel-btn:hover {
+            background-color: #a30000;
+        }
+    </style>
+
     <div id="pastDateModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content-dateerror">
             <!-- Lottie Animation for Error -->
-            <div style="display: flex; justify-content: center; align-items: center;">
+            <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">
                 <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
                     style="width: 150px; height: 150px;" loop autoplay>
                 </lottie-player>
             </div>
-            <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+            <h3 style="color: #8B0000; margin-bottom: 20px;">Past Dates Can't be Modified</h3>
+            <div style="display: flex; justify-content: center;">
                 <button class="cancel-btn" onclick="closePastDateModal()">Close</button>
             </div>
         </div>
     </div>
+
     <!-- Schedule Success Modal -->
     <div id="scheduleSuccessModal" class="modal">
         <div class="modal-content">

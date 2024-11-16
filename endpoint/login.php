@@ -1,7 +1,72 @@
 <?php
 session_start();
+include('../phpqrcode/qrlib.php');
 require '../conn/connection.php';
 
+// Set the default timezone to Asia/Manila
+date_default_timezone_set('Asia/Manila');
+
+$currentDate = date('Y-m-d');
+$currentDayOfWeek = date('N');
+
+$isHoliday = false;
+$holidayQuery = "SELECT * FROM holiday WHERE holiday_date = ?";
+
+if ($stmt = $database->prepare($holidayQuery)) {
+    $stmt->bind_param("s", $currentDate);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $isHoliday = true;
+    }
+    $stmt->close();
+}
+
+if ($currentDayOfWeek >= 1 && $currentDayOfWeek <= 5 && !$isHoliday) { // Only execute on weekdays and non-holidays
+    // Query to find companies without a schedule for the current date
+    $checkScheduleQuery = "
+        SELECT c.company_id 
+        FROM company c 
+        LEFT JOIN schedule s ON c.company_id = s.company_id AND s.date = ?
+        WHERE s.schedule_id IS NULL
+    ";
+
+    if ($stmt = $database->prepare($checkScheduleQuery)) {
+        $stmt->bind_param("s", $currentDate);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        // Prepare to insert default schedules
+        $insertScheduleQuery = "
+            INSERT INTO schedule (company_id, date, time_in, time_out, generated_qr_code, day_type) 
+            VALUES (?, ?, '08:00:00', '16:00:00', ?, 'Regular')
+        ";
+
+        if ($insertStmt = $database->prepare($insertScheduleQuery)) {
+            while ($row = $result->fetch_assoc()) {
+                $companyId = $row['company_id'];
+
+                // Generate QR code data and file
+                $qrData = "$companyId - $currentDate";
+                $qrCodeDir = "../uploads/company/qrcodes/";
+
+                if (!is_dir($qrCodeDir)) {
+                    mkdir($qrCodeDir, 0755, true);
+                }
+
+                $fileName = $qrCodeDir . "qr-schedule-" . $companyId . "-" . $currentDate . ".png";
+                QRcode::png($qrData, $fileName, QR_ECLEVEL_L, 10);
+
+                // Bind parameters and insert schedule
+                $insertStmt->bind_param("iss", $companyId, $currentDate, $fileName);
+                $insertStmt->execute();
+            }
+            $insertStmt->close();
+        }
+        $stmt->close();
+    }
+}
 // Get email and password from POST request
 $email = $_POST['email'];
 $password = $_POST['password'];

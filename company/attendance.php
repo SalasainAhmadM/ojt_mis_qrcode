@@ -316,7 +316,7 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
 
 
                     <div class="filter-group">
-                        <!-- Search Bar Form -->
+                        <!-- Search Student Form -->
                         <form method="GET" action="">
                             <input type="hidden" name="day"
                                 value="<?php echo htmlspecialchars($selected_day, ENT_QUOTES); ?>">
@@ -329,6 +329,14 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
                             </div>
                         </form>
 
+                        <!-- Date Picker Form for Date Navigation -->
+                        <form method="GET" action="" class="date-picker-form">
+                            <div class="search-bar-container">
+                                <input type="date" class="search-bar" id="searchDate" name="day"
+                                    value="<?php echo htmlspecialchars($selected_day); ?>"
+                                    onchange="this.form.submit()">
+                            </div>
+                        </form>
                         <!-- Reset Button Form -->
                         <form method="GET" action="">
                             <input type="hidden" name="day"
@@ -337,7 +345,9 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
                                 <i class="fa fa-times-circle"></i>
                             </button>
                         </form>
+
                     </div>
+
 
                     <table>
                         <thead>

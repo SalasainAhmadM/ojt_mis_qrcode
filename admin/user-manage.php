@@ -156,7 +156,7 @@ if ($stmt = $database->prepare($query)) {
             flex-wrap: wrap;
             justify-content: center;
             gap: 20px;
-            /* Add some spacing between the buttons */
+
         }
 
         .button-box {

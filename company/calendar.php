@@ -297,16 +297,16 @@ if ($stmt = $database->prepare($query)) {
     </div>
 
 
-    <!-- Modal for past dates -->
     <div id="pastDateModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content-dateerror">
             <!-- Lottie Animation for Error -->
-            <div style="display: flex; justify-content: center; align-items: center;">
+            <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">
                 <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
                     style="width: 150px; height: 150px;" loop autoplay>
                 </lottie-player>
             </div>
-            <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+            <h3 style="color: #8B0000; margin-bottom: 20px;">Past Dates Can't be Modified</h3>
+            <div style="display: flex; justify-content: center;">
                 <button class="cancel-btn" onclick="closePastDateModal()">Close</button>
             </div>
         </div>

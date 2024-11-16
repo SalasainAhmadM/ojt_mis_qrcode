@@ -38,12 +38,14 @@ if ($stmt = $database->prepare($query)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adviser - Intern Profile</title>
+    <title>Adviser - Intern Reports</title>
     <link rel="icon" href="../../img/ccs.png" type="image/icon type">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/mobile.css">
+    <!-- <link rel="stylesheet" href="../css/index.css">
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../css/mobile.css"> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 </head>

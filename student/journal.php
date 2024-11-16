@@ -553,14 +553,13 @@ if ($search_date) {
       const selectedJournals = new Set(); // Track selected journals
       let selectedWeeks = new Set(); // Track weeks with selected journals
 
-      // Open the modal and fetch journals
       document.getElementById('openJournalModalBtn').addEventListener('click', function () {
         fetch(`get_journals.php?student_id=<?php echo $student_id; ?>`)
           .then(response => response.json())
           .then(data => {
             allJournals = data;
-            const weeks = Object.keys(allJournals);
-            populateWeekDropdown(weeks); // Populate dropdown with week options
+            const weeks = Object.keys(allJournals); // Use "Week N" labels from PHP
+            populateWeekDropdown(weeks); // Populate dropdown with "Week N"
             renderJournalList(allJournals[weeks[weeks.length - 1]]); // Render the latest week's journals by default
             document.getElementById('weekDropdown').value = weeks[weeks.length - 1]; // Select the latest week in dropdown
             document.getElementById('journalModal').style.display = 'block';
@@ -568,34 +567,32 @@ if ($search_date) {
           .catch(error => console.error('Error fetching journals:', error));
       });
 
-      // Populate the week dropdown, with selected weeks at the top
+      // Populate the week dropdown
       function populateWeekDropdown(weeks) {
         const dropdown = document.getElementById('weekDropdown');
         dropdown.innerHTML = ''; // Clear existing options
 
-        // Sort weeks: selected weeks at the top
         const sortedWeeks = Array.from(selectedWeeks).concat(weeks.filter(week => !selectedWeeks.has(week)));
 
         sortedWeeks.forEach(week => {
           const option = document.createElement('option');
           option.value = week;
-          option.textContent = week;
+          option.textContent = week; // Display "Week N"
           dropdown.appendChild(option);
         });
 
-        // Handle week selection
         dropdown.addEventListener('change', function () {
           const selectedWeek = this.value;
           renderJournalList(allJournals[selectedWeek] || []);
         });
       }
 
-      // Render the journal list with checkboxes and track selected journals by week
+      // Render the journal list with checkboxes
       function renderJournalList(journals) {
         const journalList = document.getElementById('journalList');
         journalList.innerHTML = ''; // Clear existing list
 
-        if (journals.length === 0) {
+        if (!journals || journals.length === 0) {
           const noJournalsMessage = document.createElement('li');
           noJournalsMessage.textContent = "No journals found!";
           noJournalsMessage.classList.add('no-journals-message');
@@ -615,18 +612,15 @@ if ($search_date) {
           checkbox.addEventListener('change', function () {
             if (checkbox.checked) {
               selectedJournals.add(journal.journal_id);
-              // Add the week to selectedWeeks
-              const weekLabel = getCurrentWeekLabel(journal.journal_date);
-              selectedWeeks.add(weekLabel);
+              selectedWeeks.add(getCurrentWeekLabel(journal.journal_date));
             } else {
               selectedJournals.delete(journal.journal_id);
-              // Remove week from selectedWeeks if no journals remain selected
               const weekLabel = getCurrentWeekLabel(journal.journal_date);
               if (![...selectedJournals].some(id => allJournals[weekLabel]?.find(j => j.journal_id === id))) {
                 selectedWeeks.delete(weekLabel);
               }
             }
-            populateWeekDropdown(Object.keys(allJournals)); // Re-populate dropdown to keep order
+            populateWeekDropdown(Object.keys(allJournals)); // Update dropdown order
           });
 
           const label = document.createElement('label');
@@ -638,7 +632,7 @@ if ($search_date) {
         });
       }
 
-      // Utility function to get the week label based on the date
+      // Utility function to find the "Week N" label of a given date
       function getCurrentWeekLabel(date) {
         for (const weekLabel in allJournals) {
           if (allJournals[weekLabel].some(j => j.journal_date === date)) {

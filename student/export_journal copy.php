@@ -128,10 +128,7 @@ while ($row = $result->fetch_assoc()) {
         }
     }
 
-    // Add a page break if it's not the last journal
-    if ($currentJournal < $journalCount) {
-        $section->addPageBreak();
-    }
+    $section->addPageBreak();
 }
 
 $fileName = 'journal_' . strtolower($student['student_lastname']) . '_' . $student['wmsu_id'] . '.docx';

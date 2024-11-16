@@ -60,9 +60,9 @@ $current_page = $pagination_data['current_page'];
     <title>Adviser - Company</title>
     <link rel="icon" href="../img/ccs.png" type="image/icon type">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="./css/index.css">
-    <link rel="stylesheet" href="./css/mobile.css">
-    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/mobile.css">
+    <!-- <link rel="stylesheet" href="./css/style.css"> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 </head>
@@ -224,7 +224,7 @@ $current_page = $pagination_data['current_page'];
                                 <th class="image">Profile</th>
                                 <th>Company Name</th>
                                 <th>Representative</th>
-                                <th>Email</th>
+                                <th class="email">Email</th>
                                 <th>Contact Number</th>
                                 <th>Address</th>
                                 <th class="action">Action</th>
@@ -242,18 +242,17 @@ $current_page = $pagination_data['current_page'];
                                         <td><?php echo $company['company_name']; ?></td>
                                         <td><?php echo $company['company_rep_firstname'] . ' ' . $company['company_rep_middle'] . '.' . ' ' . $company['company_rep_lastname']; ?>
                                         </td>
-                                        <td><?php echo $company['company_email']; ?></td>
+                                        <td class="email"><?php echo $company['company_email']; ?></td>
                                         <td><?php echo $company['company_number']; ?></td>
                                         <td><?php echo $company['company_address']; ?></td>
                                         <!-- Display the full address -->
                                         <td class="action">
-
-                                            <button class="action-icon delete-btn"
-                                                onclick="openDeleteModal(<?php echo $company['company_id']; ?>)">
+                                            <a href="./company/company-intern.php?company_id=<?php echo $company['company_id']; ?>"
+                                                class="action-icon delete-btn">
                                                 <i class='fa-solid fa-users'></i>
-                                            </button>
-
+                                            </a>
                                         </td>
+
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
