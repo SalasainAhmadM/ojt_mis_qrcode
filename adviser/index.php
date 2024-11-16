@@ -7,6 +7,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'adviser') {
   header("Location: ../index.php"); // Redirect to login page if not logged in
   exit();
 }
+date_default_timezone_set('Asia/Manila');
+$current_day = date('l');
+$show_journal_check = ($current_day === 'Friday' || $current_day === 'Saturday');
 
 // Fetch adviser details from the database
 $adviser_id = $_SESSION['user_id'];
@@ -29,6 +32,60 @@ if ($stmt = $database->prepare($query)) {
   }
   $stmt->close(); // Close the statement
 }
+function formatDuration($hours)
+{
+  $totalMinutes = $hours * 60;
+  $hrs = floor($totalMinutes / 60);
+  $mins = $totalMinutes % 60;
+
+  $formatted = '';
+  if ($hrs > 0)
+    $formatted .= $hrs . ' hr' . ($hrs > 1 ? 's' : '') . ' ';
+  if ($mins > 0)
+    $formatted .= $mins . ' min' . ($mins > 1 ? 's' : '');
+
+  return trim($formatted) ?: '0 mins';
+}
+
+// Set the selected day (or default to today)
+$selected_day = isset($_GET['day']) ? $_GET['day'] : date('Y-m-d');
+
+// Check if the selected day is a holiday
+$holiday_name = '';
+$holiday_query = "SELECT holiday_name FROM holiday WHERE holiday_date = ?";
+$holiday_stmt = $database->prepare($holiday_query);
+$holiday_stmt->bind_param("s", $selected_day);
+$holiday_stmt->execute();
+$holiday_result = $holiday_stmt->get_result();
+
+if ($holiday_result->num_rows > 0) {
+  $holiday_row = $holiday_result->fetch_assoc();
+  $holiday_name = $holiday_row['holiday_name'];
+}
+$holiday_stmt->close();
+
+// Calculate previous and next day for pagination
+$previous_day = date('Y-m-d', strtotime($selected_day . ' -1 day'));
+$next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
+
+// Fetch students and their attendance records for the logged-in adviser
+$query = "
+    SELECT s.student_id, s.student_image, s.student_firstname, s.student_middle, s.student_lastname,
+           a.time_in, a.time_out, a.ojt_hours
+    FROM student s
+    LEFT JOIN attendance a ON s.student_id = a.student_id AND DATE(a.time_in) = ?
+    WHERE s.adviser = ?";
+$stmt = $database->prepare($query);
+$stmt->bind_param("si", $selected_day, $adviser_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$students = [];
+while ($row = $result->fetch_assoc()) {
+  $students[$row['student_id']][] = $row;
+}
+$stmt->close();
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -104,7 +161,7 @@ if ($stmt = $database->prepare($query)) {
         <ul class="sub-menu">
           <li><a class="link_name" href="company.php">Manage Company</a></li>
           <li><a href="./company/company-intern.php">Company Interns</a></li>
-          <li><a href="./company/company-feedback.php">Company List</a></li>
+          <!-- <li><a href="./company/company-feedback.php">Company List</a></li> -->
           <li><a href="./company/company-intern-feedback.php">Intern Feedback</a></li>
         </ul>
       </li>
@@ -296,6 +353,7 @@ if ($stmt = $database->prepare($query)) {
               <tr>
                 <th class="image">Profile</th>
                 <th class="name">Intern Name</th>
+                <th class="">Course Section</th>
                 <th class="timein">Time-in</th>
                 <th class="timeout">Time-out</th>
                 <th class="duration">Duration</th>
@@ -355,7 +413,6 @@ if ($stmt = $database->prepare($query)) {
           </table>
 
 
-          </table>
         </div>
       </div>
     </div>
@@ -371,9 +428,15 @@ if ($stmt = $database->prepare($query)) {
       </div>
       <h2>Login Successful!</h2>
       <p>Welcome, <span style="color: #095d40; font-size: 20px"><?php echo $_SESSION['full_name']; ?>!</span></p>
+      <?php if ($show_journal_check): ?>
+        <p style="color: #d9534f; font-size: 16px; font-weight: bold;">Weekly Journal Check</p>
+        <button class="proceed-btn" style="margin-right: 10px;"
+          onclick="location.href='./intern/intern-reports.php'">Check Journals</button>
+      <?php endif; ?>
       <button class="proceed-btn" onclick="closeModal('loginSuccessModal')">Proceed</button>
     </div>
   </div>
+
   <!-- Logout Confirmation Modal -->
   <div id="logoutModal" class="modal">
     <div class="modal-content">

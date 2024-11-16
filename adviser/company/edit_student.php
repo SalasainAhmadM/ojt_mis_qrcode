@@ -2,6 +2,7 @@
 session_start();
 require '../../conn/connection.php';
 
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $student_id = $_POST['student_id'];
     $student_firstname = $_POST['student_firstname'];
@@ -11,10 +12,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $student_number = $_POST['contact_number'];
     $department = $_POST['student_department'];
     $student_course_section = $_POST['course_section_id'];
-    $student_company = $_POST['company'];
+    $student_department = $_POST['department'];
     $student_batch_year = $_POST['batch_year'];
     $student_address = $_POST['student_address'];
 
+    $company_id = $_POST['company_id'];
     function generateFileName($student_lastname, $student_id)
     {
         return strtolower($student_lastname) . '_' . $student_id . '.' . pathinfo($_FILES['student_image']['name'], PATHINFO_EXTENSION);
@@ -44,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Update the student's details
     $sql = "UPDATE student 
         SET student_firstname = ?, student_middle = ?, student_lastname = ?, student_image = ?, 
-            student_email = ?, contact_number = ?, course_section = ?, company = ?, batch_year = ?, 
+            student_email = ?, contact_number = ?, course_section = ?, department = ?, batch_year = ?, 
             department = ?, student_address = ? 
         WHERE student_id = ?";
 
@@ -58,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $student_email,
         $student_number,
         $student_course_section,
-        $student_company,
+        $student_department,
         $student_batch_year,
         $department,
         $student_address,
@@ -67,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if ($stmt->execute()) {
         $_SESSION['edit_student_success'] = "Student information updated successfully.";
-        header('Location: ../interns.php');
+        header("Location: ./company-intern.php?company_id=$company_id");
         exit;
     } else {
         echo 'Error: ' . $stmt->error;

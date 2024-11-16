@@ -511,7 +511,7 @@ hr {
     background-color: rgba(0, 0, 0, 0.5);
     
   } */
-  #pastDateModal {
+  #pastDateModal , #noFeedbackModal {
     /* display: flex; */
     justify-content: center;
     align-items: center;
@@ -943,7 +943,29 @@ hr {
     .filter-btn:hover {
     background-color: #074f34;
   }
+  .back-btn {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    margin-right: 16px;
+    background-color: #095d40;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
 
+.back-btn i {
+    margin-right: 4px;
+}
+
+.back-btn:hover {
+    background-color: #074f34;
+}
   .dropdown {
     padding: 5px;
     border: 1px solid #ccc;
@@ -2047,4 +2069,51 @@ textarea#approvalReason {
   padding: 10px;
   margin: 15px 0;
   color: #333;
+}
+
+/* filter */
+
+.company-dropdown {
+  width: 100%;
+  padding: 5px 25px 5px 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  font-size: 14px;
+  box-sizing: border-box;
+  appearance: none;
+  /* background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"%3E%3Cpath fill="gray" d="M5.25 7.75l4.5 4.5 4.5-4.5H5.25z"/%3E%3C/svg%3E'); */
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+}
+
+.company-dropdown:hover {
+  border-color: #095d40;
+}
+
+.company-dropdown:focus {
+  outline: none;
+}
+
+.course-section-dropdown {
+  width: 100%;
+  padding: 5px 25px 5px 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  font-size: 14px;
+  box-sizing: border-box;
+  appearance: none;
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+}
+
+.course-section-dropdown:hover {
+  border-color: #095d40;
+}
+
+.course-section-dropdown:focus {
+  outline: none;
 }

@@ -173,9 +173,16 @@ $current_page = $pagination_data['current_page'];
 // Fetch journals for each student based on the day
 function getJournalsForDay($database, $student_id, $day)
 {
-    $query = "SELECT journal_id, journal_date, journal_name FROM student_journal WHERE student_id = ? AND DAYNAME(journal_date) = ?";
+    $query = "SELECT journal_id, journal_date, journal_name, adviser_viewed 
+              FROM student_journal 
+              WHERE student_id = ? AND DAYNAME(journal_date) = ? 
+              AND journal_date BETWEEN ? AND ?";
+
+    $currentMonday = (new DateTime())->modify('last Monday')->format('Y-m-d');
+    $currentFriday = (new DateTime($currentMonday))->modify('+4 days')->format('Y-m-d');
+
     if ($stmt = $database->prepare($query)) {
-        $stmt->bind_param("is", $student_id, $day);
+        $stmt->bind_param("isss", $student_id, $day, $currentMonday, $currentFriday);
         $stmt->execute();
         $result = $stmt->get_result();
         $journals = $result->fetch_all(MYSQLI_ASSOC);
@@ -184,34 +191,8 @@ function getJournalsForDay($database, $student_id, $day)
     }
     return [];
 }
-function getJournalsForStudent($database, $student_id, $start_date, $end_date)
-{
-    $query = "SELECT journal_id, journal_name, journal_date FROM student_journal WHERE student_id = ? AND journal_date BETWEEN ? AND ?";
-    if ($stmt = $database->prepare($query)) {
-        $stmt->bind_param("iss", $student_id, $start_date, $end_date);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $journals = $result->fetch_all(MYSQLI_ASSOC);
-        $stmt->close();
-        return $journals;
-    }
-    return [];
-}
 
-
-date_default_timezone_set('Asia/Manila');
-
-// Get the current date and find the start (Monday) and end (Friday) of the week
-$currentDate = new DateTime();
-$startOfWeek = clone $currentDate;
-$startOfWeek->modify('last Monday');
-if ($currentDate->format('N') != 1) {
-    $startOfWeek->modify('+0 day'); // Ensure it's always the current week's Monday
-}
-$endOfWeek = clone $startOfWeek;
-$endOfWeek->modify('+4 days');
-
-// Function to check if a given date is a holiday
+// Function to fetch holidays for a given date
 function isHoliday($database, $date)
 {
     $query = "SELECT * FROM holiday WHERE holiday_date = ?";
@@ -221,27 +202,29 @@ function isHoliday($database, $date)
         $result = $stmt->get_result();
         $holiday = $result->fetch_assoc();
         $stmt->close();
-        return $holiday; // Returns the holiday data if found
+        return $holiday;
     }
     return null;
 }
-$currentDate = new DateTime();
-$startOfWeek = clone $currentDate;
-$startOfWeek->modify('last Monday');
 
+// Get the current week's Monday and Friday
+date_default_timezone_set('Asia/Manila');
+$currentDate = new DateTime();
+$currentMonday = (new DateTime())->modify('last Monday');
+$currentFriday = clone $currentMonday;
+$currentFriday->modify('+4 days');
+
+// If today is Monday, ensure the week starts from today
 if ($currentDate->format('N') == 1) {
-    // If today is Monday, ensure it starts from today
-    $startOfWeek->modify('+0 day');
-} else {
-    // Otherwise, adjust to the past Monday
-    $startOfWeek->modify('+0 day');
+    $currentMonday = new DateTime(); // Start the week from today
 }
 
-// Create an array of dates for each day of the week (Mon-Fri)
+// Create an array of dates for the current week (Monday to Friday)
 $daysOfWeek = [];
+$weekIterator = clone $currentMonday;
 for ($i = 0; $i < 5; $i++) {
-    $daysOfWeek[] = $startOfWeek->format('Y-m-d');
-    $startOfWeek->modify('+1 day');
+    $daysOfWeek[] = $weekIterator->format('Y-m-d');
+    $weekIterator->modify('+1 day');
 }
 
 ?>
@@ -268,6 +251,14 @@ for ($i = 0; $i < 5; $i++) {
         align-items: center;
     }
 
+    .checked {
+        font-size: 18px;
+        color: #4caf50;
+        cursor: pointer;
+        margin-right: 5px;
+        border-radius: 50%;
+    }
+
     .notify {
         font-size: 18px;
         color: #ff9800;
@@ -285,7 +276,6 @@ for ($i = 0; $i < 5; $i++) {
     /* Green UI for the checked icon */
     .notify.checked {
         color: #4caf50;
-        /* Green color */
     }
 </style>
 
@@ -345,7 +335,7 @@ for ($i = 0; $i < 5; $i++) {
                 <ul class="sub-menu">
                     <li><a class="link_name" href="../company.php">Manage Company</a></li>
                     <li><a href="../company/company-intern.php">Company Interns</a></li>
-                    <li><a href="../company/company-feedback.php">Company List</a></li>
+                    <!--<li><a href="../company/company-feedback.php">Company List</a></li> -->
                     <li><a href="../company/company-intern-feedback.php">Intern Feedback</a></li>
                 </ul>
             </li>
@@ -459,7 +449,7 @@ for ($i = 0; $i < 5; $i++) {
                                 <?php foreach ($students as $student): ?>
                                     <?php
                                     $hasJournalForWeek = false;
-                                    $allJournalIds = []; // Array to hold all journal IDs for the student
+                                    $allJournalIds = []; // Store journal IDs for each student
                             
                                     foreach ($daysOfWeek as $current_date) {
                                         $day = date('l', strtotime($current_date)); // Get day name (e.g., 'Monday')
@@ -494,7 +484,8 @@ for ($i = 0; $i < 5; $i++) {
                                                     <?php if ($holiday): ?>
                                                         <span style="color: #8B0000"><?php echo $holiday['holiday_name']; ?></span>
                                                     <?php elseif (!empty($journals)): ?>
-                                                        <i class="fa-solid fa-question-circle notify"
+                                                        <?php $iconClass = $journals[0]['adviser_viewed'] ? 'fa-solid fa-circle-check checked' : 'fa-solid fa-question-circle notify'; ?>
+                                                        <i class="<?php echo $iconClass; ?>"
                                                             onclick="toggleNotify(this, '<?php echo $day; ?>', '<?php echo $journals[0]['journal_id']; ?>')"></i>
                                                         <span class="journal-date">
                                                             <?php echo date('M d, Y', strtotime($journals[0]['journal_date'])); ?>
@@ -527,7 +518,6 @@ for ($i = 0; $i < 5; $i++) {
                             <?php endif; ?>
                         </tbody>
 
-
                     </table>
 
                     <!-- Display pagination links -->
@@ -549,59 +539,46 @@ for ($i = 0; $i < 5; $i++) {
 
             <form action="edit_journal.php" method="POST" enctype="multipart/form-data">
                 <input type="hidden" id="journalIdDisplay" name="journalIdDisplay" disabled>
-                <input type="hidden" id="studentIdDisplay" name="studentIdDisplay" disabled value="">
                 <input type="hidden" id="journalId" name="journalId">
-                <input type="hidden" id="studentId" name="studentId" value="">
 
                 <div class="horizontal-group">
                     <div class="input-group">
                         <label for="editJournalTitle">Title</label>
-                        <input class="title" type="text" id="editJournalTitle" name="editJournalTitle" required>
+                        <input type="text" id="editJournalTitle" name="editJournalTitle" readonly required>
                     </div>
-
                     <div class="input-group">
                         <label for="editJournalDate">Date</label>
-                        <input class="date" type="date" id="editJournalDate" name="editJournalDate" readonly>
+                        <input type="date" id="editJournalDate" name="editJournalDate" readonly required>
                     </div>
                 </div>
 
                 <label for="editJournalDescription">Description</label>
-                <textarea id="editJournalDescription" name="editJournalDescription" required></textarea>
+                <textarea id="editJournalDescription" name="editJournalDescription" readonly required></textarea>
 
                 <div class="image-upload-row">
                     <div class="journal-img-container">
                         <label for="imageEdit1">
-                            <img id="imageEditPreview1" src="../../img/default.png" alt="journal Preview 1"
-                                class="journal-preview-img square-img" />
+                            <img id="imageEditPreview1" src="../../img/default.png" alt="Preview 1"
+                                class="journal-preview-img square-img">
                         </label>
-                        <input type="file" id="imageEdit1" name="imageEdit1" accept="image/*"
-                            onchange="previewEditImage(1)" style="display: none;">
-                        <p class="journal-img-label">Click to upload image 1</p>
                     </div>
-
                     <div class="journal-img-container">
                         <label for="imageEdit2">
-                            <img id="imageEditPreview2" src="../../img/default.png" alt="journal Preview 2"
-                                class="journal-preview-img square-img" />
+                            <img id="imageEditPreview2" src="../../img/default.png" alt="Preview 2"
+                                class="journal-preview-img square-img">
                         </label>
-                        <input type="file" id="imageEdit2" name="imageEdit2" accept="image/*"
-                            onchange="previewEditImage(2)" style="display: none;">
-                        <p class="journal-img-label">Click to upload image 2</p>
                     </div>
-
                     <div class="journal-img-container">
                         <label for="imageEdit3">
-                            <img id="imageEditPreview3" src="../../img/default.png" alt="journal Preview 3"
-                                class="journal-preview-img square-img" />
+                            <img id="imageEditPreview3" src="../../img/default.png" alt="Preview 3"
+                                class="journal-preview-img square-img">
                         </label>
-                        <input type="file" id="imageEdit3" name="imageEdit3" accept="image/*"
-                            onchange="previewEditImage(3)" style="display: none;">
-                        <p class="journal-img-label">Click to upload image 3</p>
                     </div>
                 </div>
             </form>
         </div>
     </div>
+
 
     <div id="journalModal" class="modal" style="display:none;">
         <div class="modal-content">
@@ -697,29 +674,79 @@ for ($i = 0; $i < 5; $i++) {
 
     <script>
 
-        function toggleNotify(icon, day) {
-            // Change the icon to a checked icon when clicked and show the modal
+        function toggleNotify(icon, day, journalId) {
             if (icon.classList.contains('fa-question-circle')) {
                 icon.classList.remove('fa-question-circle');
-                icon.classList.add('fa-regular', 'fa-circle-check');
-                icon.classList.add('checked'); // Apply green UI
+                icon.classList.add('fa-regular', 'fa-circle-check', 'checked');
 
-                showEditModal(day); // Call the function to show the edit modal
+                // Notify the backend and then show the modal
+                fetch('adviser_viewed.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ journal_id: journalId })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showEditModal(day, journalId); // Pass the journal ID here
+                        } else {
+                            alert("Failed to update journal status.");
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            } else {
+                // Show the modal directly
+                showEditModal(day, journalId); // Pass the journal ID directly
             }
         }
 
-        function showEditModal(day) {
+
+
+        function showEditModal(day, journalId) {
             // Open the modal
             const modal = document.getElementById('editModal');
             modal.style.display = "block";
 
-            // Set the journal date and other details for the modal
-            document.getElementById('editJournalDate').value = day; // Set the day as the journal date
+            // Populate date and journal ID fields
+            document.getElementById('editJournalDate').value = day; // Set the date from the table
+            document.getElementById('journalId').value = journalId; // Set the hidden journal ID
+            document.getElementById('journalIdDisplay').value = journalId; // Display the journal ID
+
+            // Fetch full journal details from the server
+            fetch('fetch_journal.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ journal_id: journalId })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const journal = data.journal;
+
+                        // Populate journal details
+                        document.getElementById('editJournalTitle').value = journal.journal_name || '';
+                        document.getElementById('editJournalDescription').value = journal.journal_description || '';
+                        document.getElementById('editJournalDate').value = journal.journal_date || '';
+
+                        // Populate journal images
+                        const image1 = document.getElementById('imageEditPreview1');
+                        const image2 = document.getElementById('imageEditPreview2');
+                        const image3 = document.getElementById('imageEditPreview3');
+
+                        image1.src = journal.journal_image1 ? `../${journal.journal_image1}` : '../../img/default.png';
+                        image2.src = journal.journal_image2 ? `../${journal.journal_image2}` : '../../img/default.png';
+                        image3.src = journal.journal_image3 ? `../${journal.journal_image3}` : '../../img/default.png';
+                    } else {
+                        alert(data.message || 'Failed to fetch journal details.');
+                    }
+                })
+                .catch(error => console.error('Error fetching journal:', error));
         }
+
 
         document.getElementById('closeEditModal').onclick = function () {
             document.getElementById('editModal').style.display = "none";
-        }
+        };
 
         function showPastDateModal() {
             document.getElementById('pastDateModal').style.display = 'block';

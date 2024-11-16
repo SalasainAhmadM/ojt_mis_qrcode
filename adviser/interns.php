@@ -29,10 +29,11 @@ if ($stmt = $database->prepare($query)) {
     }
     $stmt->close(); // Close the statement
 }
-// Fetch all course_sections for the dropdown
-$query = "SELECT * FROM course_sections";
+// Fetch all course_sections for the dropdown that are under the specific adviser
+$query = "SELECT * FROM course_sections WHERE adviser_id = ?";
 $course_sections = [];
 if ($stmt = $database->prepare($query)) {
+    $stmt->bind_param("i", $adviser_id); // Bind the adviser ID parameter
     $stmt->execute();
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
@@ -40,6 +41,7 @@ if ($stmt = $database->prepare($query)) {
     }
     $stmt->close();
 }
+
 // Fetch all departments for the dropdown
 $query = "SELECT * FROM departments";
 $departments = [];
@@ -277,7 +279,7 @@ $current_page = $pagination_data['current_page'];
                 <ul class="sub-menu">
                     <li><a class="link_name" href="company.php">Manage Company</a></li>
                     <li><a href="./company/company-intern.php">Company Interns</a></li>
-                    <li><a href="./company/company-feedback.php">Company List</a></li>
+                    <!-- <li><a href="./company/company-feedback.php">Company List</a></li> -->
                     <li><a href="./company/company-intern-feedback.php">Intern Feedback</a></li>
                 </ul>
             </li>
@@ -353,7 +355,17 @@ $current_page = $pagination_data['current_page'];
                         <!-- Course_section Filter Form -->
 
 
-
+                        <!-- Course Section Filter Form -->
+                        <form method="GET" action="">
+                            <select class="course-section-dropdown" name="course_section" id="course_section"
+                                onchange="this.form.submit()">
+                                <option value="">All Sections</option><?php foreach ($course_sections as $section): ?>
+                                    <option value="<?php echo htmlspecialchars($section['id'], ENT_QUOTES); ?>" <?php echo $selected_course_section == $section['id'] ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($section['course_section_name'], ENT_QUOTES); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </form>
                         <!-- Search Bar Form -->
                         <form method="GET" action="">
                             <input type="hidden" name="course_section"
@@ -381,10 +393,11 @@ $current_page = $pagination_data['current_page'];
                                 <th class="name">Full Name</th>
                                 <th class="wmsu_id">WMSU ID</th>
                                 <th class="email">Email</th>
+                                <th class="section">Section</th>
                                 <!-- <th>Contact Number</th> -->
                                 <th class="company">Company</th>
-                                <!-- <th>Section</th>
-                                <th>Department</th>
+
+                                <!--<th>Department</th>
                                 <th>Batch Year</th>
                                 <th>Address</th> -->
                                 <th class="action">Action</th>
@@ -413,8 +426,8 @@ $current_page = $pagination_data['current_page'];
                                                     Yet</span>
                                             <?php endif; ?>
                                         </td>
-                                        <!-- <td><?php echo $student['course_section_name']; ?></td>
-                                        <td><?php echo $student['department_name']; ?></td>
+                                        <td class="section"><?php echo $student['course_section_name']; ?></td>
+                                        <!--<td><?php echo $student['department_name']; ?></td>
                                         <td><?php echo $student['batch_year']; ?></td>
                                         <td><?php echo $student['full_address']; ?></td> -->
                                         <td class="action">
@@ -494,6 +507,19 @@ $current_page = $pagination_data['current_page'];
                         <label for="editStudentEmail">Email</label>
                         <input type="email" id="editStudentEmail" name="student_email" required>
                     </div>
+                    <div class="input-group" style="width: 33%;">
+                        <label for="editStudentSection">Section</label>
+                        <select type="text" id="editStudentSection" name="course_section_id" class="input-field"
+                            onchange="fetchAdviser()" required>
+                            <option value="">Select Section</option>
+                            <?php foreach ($course_sections as $course_section): ?>
+                                <option value="<?php echo htmlspecialchars($course_section['id'], ENT_QUOTES); ?>" <?php if ($course_section['id'] == $student['course_section'])
+                                        echo 'selected'; ?>>
+                                    <?php echo htmlspecialchars($course_section['course_section_name'], ENT_QUOTES); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                     <!-- <div class="input-group" style="width: 33%;">
                         <label for="editStudentContact">Contact Number</label>
                         <input type="text" id="editStudentContact" name="contact_number" required maxlength="13"
@@ -515,9 +541,9 @@ $current_page = $pagination_data['current_page'];
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                    </div>
+                    </div> -->
 
-                    <div class="input-group" style="width: 33%;">
+                    <!-- <div class="input-group" style="width: 33%;">
                         <label for="editStudentAdviser">Adviser</label>
                         <input type="hidden" id="editAdviserId" name="adviser_id">
                         <input type="text" id="editStudentAdviser" readonly>

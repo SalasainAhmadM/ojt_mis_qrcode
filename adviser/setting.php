@@ -113,7 +113,7 @@ if ($departments_result->num_rows > 0) {
                 <ul class="sub-menu">
                     <li><a class="link_name" href="company.php">Manage Company</a></li>
                     <li><a href="./company/company-intern.php">Company Interns</a></li>
-                    <li><a href="./company/company-feedback.php">Company List</a></li>
+                    <!--   <li><a href="./company/company-feedback.php">Company List</a></li> -->
                     <li><a href="./company/company-intern-feedback.php">Intern Feedback</a></li>
                 </ul>
             </li>
