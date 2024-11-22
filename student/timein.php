@@ -14,32 +14,64 @@ $data = json_decode(file_get_contents('php://input'), true);
 $qrData = $data['qrData'] ?? null;
 
 if ($qrData) {
-    // Fetch student details based on the QR code (wmsu_id)
+    // Validate QR code format "{company_id} - {date}"
+    $qrParts = explode(" - ", $qrData);
+    if (count($qrParts) !== 2) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid QR code format.'
+        ]);
+        exit;
+    }
+
+    $companyId = trim($qrParts[0]);
+    $scannedDate = trim($qrParts[1]);
+
+    // Validate the date format (YYYY-MM-DD)
+    if (!preg_match("/^\d{4}-\d{2}-\d{2}$/", $scannedDate)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid date format in QR code.'
+        ]);
+        exit;
+    }
+
+    // Fetch student details based on the QR code (company_id should match in your implementation)
     $query = "
-    SELECT 
-          s.*, 
-          d.department_name AS department, 
-          c.company_name AS company, 
-          a.adviser_firstname, 
-          a.adviser_middle,
-          a.adviser_lastname,
-          cs.course_section_name AS course_section
-    FROM student s
-    LEFT JOIN departments d ON s.department = d.department_id
-    LEFT JOIN company c ON s.company = c.company_id
-    LEFT JOIN adviser a ON s.adviser = a.adviser_id
-    LEFT JOIN course_sections cs ON s.course_section = cs.id
-    WHERE s.wmsu_id = ?";
+SELECT 
+      s.*, 
+      d.department_name AS department, 
+      c.company_name AS company, 
+      a.adviser_firstname, 
+      a.adviser_middle,
+      a.adviser_lastname,
+      cs.course_section_name AS course_section
+FROM student s
+LEFT JOIN departments d ON s.department = d.department_id
+LEFT JOIN company c ON s.company = c.company_id
+LEFT JOIN adviser a ON s.adviser = a.adviser_id
+LEFT JOIN course_sections cs ON s.course_section = cs.id
+WHERE s.company = ?";
 
     if ($stmt = $database->prepare($query)) {
-        $stmt->bind_param("s", $qrData);
+        $stmt->bind_param("i", $companyId); // Bind company ID from the QR code
         $stmt->execute();
         $result = $stmt->get_result();
 
         if ($result->num_rows > 0) {
             $student = $result->fetch_assoc();
 
-            // Check if the student already has a time-in record today
+            // Proceed with the rest of the logic
+            // Verify if the student's company matches the company ID from the QR code
+            if ((int) $student['company'] !== (int) $companyId) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'The scanned QR code does not match the student\'s assigned company.'
+                ]);
+                exit;
+            }
+
+            // Proceed with time-in/time-out logic
             $student_id = $student['student_id'];
             $date = date('Y-m-d');
             $checkQuery = "SELECT * FROM attendance WHERE student_id = ? AND DATE(time_in) = ? AND time_out IS NULL";
@@ -60,9 +92,9 @@ if ($qrData) {
                         if ($updateStmt->execute()) {
                             // Fetch the updated time-out timestamp and OJT hours
                             $timeOutQuery = "
-                            SELECT time_in, time_out, TIMESTAMPDIFF(MINUTE, time_in, time_out) AS total_minutes 
-                            FROM attendance 
-                            WHERE attendance_id = ?";
+                           SELECT time_in, time_out, TIMESTAMPDIFF(MINUTE, time_in, time_out) AS total_minutes 
+                           FROM attendance 
+                           WHERE attendance_id = ?";
                             if ($timeOutStmt = $database->prepare($timeOutQuery)) {
                                 $timeOutStmt->bind_param("i", $attendance_id);
                                 $timeOutStmt->execute();
@@ -82,9 +114,9 @@ if ($qrData) {
 
                                     // Fetch total OJT hours for the student
                                     $totalHoursQuery = "
-                                    SELECT SUM(TIMESTAMPDIFF(MINUTE, time_in, time_out)) AS total_ojt_minutes 
-                                    FROM attendance 
-                                    WHERE student_id = ? AND time_out IS NOT NULL";
+                                   SELECT SUM(TIMESTAMPDIFF(MINUTE, time_in, time_out)) AS total_ojt_minutes 
+                                   FROM attendance 
+                                   WHERE student_id = ? AND time_out IS NOT NULL";
                                     if ($totalHoursStmt = $database->prepare($totalHoursQuery)) {
                                         $totalHoursStmt->bind_param("i", $student_id);
                                         $totalHoursStmt->execute();
@@ -191,11 +223,16 @@ if ($qrData) {
                 'message' => 'No student found for the scanned QR code.'
             ]);
         }
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'No student found for the scanned QR code.'
+        ]);
     }
 } else {
     echo json_encode([
         'success' => false,
-        'message' => 'Invalid QR code.'
+        'message' => 'Database query error.'
     ]);
 }
 ?>

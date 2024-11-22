@@ -409,7 +409,7 @@ if ($holiday_stmt = $database->prepare($holiday_query)) {
             const today = new Date().toISOString().split('T')[0];
 
             if (scannedDate !== today) {
-                alert('Invalid QR Code! This QR code is not for today.');
+                displayErrorModal('Invalid QR Code! This QR code is not for today.');
                 return;
             }
 
@@ -427,8 +427,7 @@ if ($holiday_stmt = $database->prepare($holiday_query)) {
                             updateTimeInDetails(data);
                             document.querySelector("#qrsuccessTimeinModal span").innerText = data.student_name;
                             document.querySelector("#qrsuccessTimeinModal h3").innerText = data.time_in;
-                            // Show Time-in modal
-                            openModal('qrsuccessTimeinModal');
+                            openModal('qrsuccessTimeinModal'); // Show Time-in modal
                         } else if (data.event_type === 'Time-out') {
                             // Time-out logic
                             updateInternDetails(data);
@@ -436,19 +435,34 @@ if ($holiday_stmt = $database->prepare($holiday_query)) {
                             document.querySelector("#qrsuccessTimeoutModal span").innerText = data.student_name;
                             document.querySelector("#qrsuccessTimeoutModal h3").innerText = data.time_out;
                             document.querySelector("#ojt-hours").innerText = data.ojt_hours;
-                            // Show Time-out modal
-                            openModal('qrsuccessTimeoutModal');
+                            openModal('qrsuccessTimeoutModal'); // Show Time-out modal
                         }
                     } else {
-                        alert(data.message);
+                        // Display error for invalid QR codes
+                        displayErrorModal(data.message);
                     }
                 })
                 .catch(error => {
                     console.error("Error processing QR code:", error);
+                    displayErrorModal('An error occurred while processing the QR code. Please try again.');
                 });
         }
 
+        function displayErrorModal(message) {
+            document.querySelector("#qrErrorModal p").innerText = message;
+            openModal("qrErrorModal");
+        }
     </script>
+
+    <!-- QR Scan Error Modal -->
+    <div id="qrErrorModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>QR Scan Error</h2>
+            <p style="color: red; font-size: 16px;"></p>
+            <button class="proceed-btn" onclick="closeModal('qrErrorModal')">Close</button>
+        </div>
+    </div>
+
 
     <!-- QR Scan Time-in Modal -->
     <div id="qrsuccessTimeinModal" class="modal" style="display: none;">
