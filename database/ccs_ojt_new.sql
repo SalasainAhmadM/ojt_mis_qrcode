@@ -144,7 +144,8 @@ CREATE TABLE `attendance_remarks` (
   `student_id` int(11) NOT NULL,
   `schedule_id` int(11) NOT NULL,
   `remark_type` enum('Late','Absent') NOT NULL,
-  `remark` varchar(255) DEFAULT NULL
+  `remark` varchar(255) DEFAULT NULL,
+  `proof_image` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 -- --------------------------------------------------------

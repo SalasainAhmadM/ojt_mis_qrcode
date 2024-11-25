@@ -738,7 +738,7 @@ hr {
   }
 
   /*  */
-  .proceed-btn {
+  .proceed-btn , .proof-btn , .approve-btn{
     background-color: #074f34;
     color: white;
     padding: 12px 24px;
@@ -749,8 +749,18 @@ hr {
     margin-top: 20px;
     transition: background-color 0.3s ease;
   }
-  
-  .proceed-btn:hover {
+  .closer-btn{
+    background-color: #A31C1C;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+  }
+  .proceed-btn:hover , .proof-btn:hover , .approve-btn:hover {
     background-color: #05613e;
   }
   /* Logout Modal */
@@ -777,7 +787,7 @@ hr {
     background-color: #073e2b;
   }
   
-  .cancel-btn:hover {
+  .cancel-btn:hover , .closer-btn {
     background-color: #8B0000;
   }
 

@@ -598,7 +598,7 @@ if ($absent_stmt = $database->prepare($absent_query)) {
                     const today = new Date().toISOString().split('T')[0];
 
                     if (scannedDate !== today) {
-                        alert('Invalid QR Code! This QR code is not for today.');
+                        displayErrorModal('Invalid QR Code! This QR code is not for today.');
                         return;
                     }
 
@@ -616,8 +616,7 @@ if ($absent_stmt = $database->prepare($absent_query)) {
                                     updateTimeInDetails(data);
                                     document.querySelector("#qrsuccessTimeinModal span").innerText = data.student_name;
                                     document.querySelector("#qrsuccessTimeinModal h3").innerText = data.time_in;
-                                    // Show Time-in modal
-                                    openModal('qrsuccessTimeinModal');
+                                    openModal('qrsuccessTimeinModal'); // Show Time-in modal
                                 } else if (data.event_type === 'Time-out') {
                                     // Time-out logic
                                     updateInternDetails(data);
@@ -625,16 +624,22 @@ if ($absent_stmt = $database->prepare($absent_query)) {
                                     document.querySelector("#qrsuccessTimeoutModal span").innerText = data.student_name;
                                     document.querySelector("#qrsuccessTimeoutModal h3").innerText = data.time_out;
                                     document.querySelector("#ojt-hours").innerText = data.ojt_hours;
-                                    // Show Time-out modal
-                                    openModal('qrsuccessTimeoutModal');
+                                    openModal('qrsuccessTimeoutModal'); // Show Time-out modal
                                 }
                             } else {
-                                alert(data.message);
+                                // Display error for invalid QR codes
+                                displayErrorModal(data.message);
                             }
                         })
                         .catch(error => {
                             console.error("Error processing QR code:", error);
+                            displayErrorModal('An error occurred while processing the QR code. Please try again.');
                         });
+                }
+
+                function displayErrorModal(message) {
+                    document.querySelector("#qrErrorModal p").innerText = message;
+                    openModal("qrErrorModal");
                 }
 
             </script>

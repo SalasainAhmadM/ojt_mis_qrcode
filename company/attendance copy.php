@@ -71,32 +71,24 @@ if ($schedule_day_type === 'Suspended') {
 // Handle search query
 $search = isset($_GET['search']) ? '%' . $_GET['search'] . '%' : null;
 
-// Pagination logic
-$students_per_page = 5; // Number of students per page
-$current_page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
-$offset = ($current_page - 1) * $students_per_page;
-
-// Fetch all students, regardless of attendance
+// Query to fetch students and attendance based on search or day
 $students_query = "
-    SELECT s.student_id, s.student_firstname, s.student_middle, s.student_lastname, s.student_image, 
-           a.time_in, a.time_out, a.ojt_hours
+    SELECT s.student_id, s.student_firstname, s.student_middle, s.student_lastname, 
+           s.student_image, a.time_in, a.time_out, a.ojt_hours
     FROM student s
-    LEFT JOIN attendance a ON s.student_id = a.student_id AND DATE(a.time_in) = ?
-    WHERE s.company = ?
+    LEFT JOIN attendance a ON s.student_id = a.student_id 
+    WHERE s.company = ? AND DATE(a.time_in) = ?
 ";
 
-// Add search condition if applicable
+// If a search is provided, add the search condition
 if ($search) {
     $students_query .= " AND (s.student_firstname LIKE ? OR s.student_lastname LIKE ?)";
-    $query_params = [$selected_day, $company_id, $search, $search];
+    $query_params = [$company_id, $selected_day, $search, $search];
 } else {
-    $query_params = [$selected_day, $company_id];
+    $query_params = [$company_id, $selected_day];
 }
 
-// Add LIMIT for pagination
-$students_query .= " ORDER BY s.student_lastname, a.time_in ASC LIMIT ? OFFSET ?";
-$query_params[] = $students_per_page;
-$query_params[] = $offset;
+$students_query .= " ORDER BY s.student_lastname, a.time_in ASC";
 
 if ($stmt = $database->prepare($students_query)) {
     $stmt->bind_param(str_repeat("s", count($query_params)), ...$query_params);
@@ -109,45 +101,6 @@ if ($stmt = $database->prepare($students_query)) {
     }
     $stmt->close();
 }
-
-// Get the total number of students for pagination
-$total_students_query = "
-    SELECT COUNT(*) AS total
-    FROM student s
-    WHERE s.company = ?
-";
-
-// Add search condition if applicable
-if ($search) {
-    $total_students_query .= " AND (s.student_firstname LIKE ? OR s.student_lastname LIKE ?)";
-    $total_query_params = [$company_id, $search, $search];
-} else {
-    $total_query_params = [$company_id];
-}
-
-if ($stmt = $database->prepare($total_students_query)) {
-    $stmt->bind_param(str_repeat("s", count($total_query_params)), ...$total_query_params);
-    $stmt->execute();
-    $stmt->bind_result($total_students);
-    $stmt->fetch();
-    $stmt->close();
-}
-
-$total_pages = ceil($total_students / $students_per_page);
-
-// Function to render pagination links
-function renderPaginationLinks($total_pages, $current_page)
-{
-    // Get current query parameters
-    $query_params = $_GET;
-    for ($i = 1; $i <= $total_pages; $i++) {
-        $query_params['page'] = $i;
-        $url = '?' . http_build_query($query_params); // Generate query string
-        $active_class = $i == $current_page ? 'class="active"' : '';
-        echo '<a ' . $active_class . ' href="' . $url . '">' . $i . '</a>';
-    }
-}
-
 
 // Function to format hours into "X hrs Y mins"
 function formatDuration($hours)
@@ -180,8 +133,9 @@ if ($stmt = $database->prepare($remarks_query)) {
     }
     $stmt->close();
 }
-
-
+// Calculate previous and next day for pagination
+$previous_day = date('Y-m-d', strtotime($selected_day . ' -1 day'));
+$next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -214,31 +168,6 @@ if ($stmt = $database->prepare($remarks_query)) {
         .modal-content {
             max-height: 80%;
             overflow-y: auto;
-        }
-
-        .proof-modal-content {
-            width: 400px;
-            max-width: 90%;
-            text-align: center;
-        }
-
-        .proof-image {
-            width: 100%;
-            height: auto;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
         }
     </style>
 </head>
@@ -433,37 +362,31 @@ if ($stmt = $database->prepare($remarks_query)) {
                         </thead>
                         <tbody>
                             <?php if (!empty($students) || !empty($remarks)): ?>
-                                <?php foreach ($students as $student_id => $attendances): ?>
-                                    <?php
+                                <?php
+                                // Loop through all students who attended
+                                foreach ($students as $student_id => $attendances):
                                     $first_time_in = null;
                                     $latest_time_in_without_out = null;
                                     $latest_time_out = null;
                                     $total_hours_today = 0;
 
                                     foreach ($attendances as $attendance) {
-                                        // Capture the earliest time_in for the day
                                         if (!$first_time_in || strtotime($attendance['time_in']) < strtotime($first_time_in)) {
                                             $first_time_in = $attendance['time_in'];
                                         }
-                                        // Track the most recent time_in without a time_out
                                         if ($attendance['time_in'] && !$attendance['time_out']) {
                                             $latest_time_in_without_out = $attendance['time_in'];
                                         }
-                                        // Track the latest time_out for the day
                                         if ($attendance['time_out'] && (!$latest_time_out || strtotime($attendance['time_out']) > strtotime($latest_time_out))) {
                                             $latest_time_out = $attendance['time_out'];
                                         }
-                                        // Sum up total hours for the day
                                         $total_hours_today += $attendance['ojt_hours'] ?? 0;
                                     }
 
-                                    // Determine the displayed time_out value
                                     $displayed_time_out = $latest_time_in_without_out ? '' : ($latest_time_out ? date('h:i A', strtotime($latest_time_out)) : 'N/A');
-
-                                    // Determine the status
                                     $status = $latest_time_in_without_out ? '<span style="color:green;">Timed-in</span>' : '<span style="color:red;">Timed-out</span>';
 
-                                    // Check for remarks like "Absent" or "Late"
+                                    // Determine if the student is marked as Absent or Late
                                     $remark_type = isset($remarks[$student_id]) ? $remarks[$student_id] : null;
                                     ?>
                                     <tr>
@@ -471,7 +394,8 @@ if ($stmt = $database->prepare($remarks_query)) {
                                             <img style="border-radius: 50%;"
                                                 src="../uploads/student/<?php echo !empty($attendance['student_image']) ? $attendance['student_image'] : 'user.png'; ?>"
                                                 alt="Student Image">
-                                            <!-- Absent or Late Icon -->
+
+                                            <!-- Absent Icon -->
                                             <?php if ($remark_type === 'Absent'): ?>
                                                 <span class="tooltip-icon absent" title="Absent"
                                                     onclick="openRemarkModal(<?php echo $student_id; ?>, 'Absent')">X</span>
@@ -479,6 +403,8 @@ if ($stmt = $database->prepare($remarks_query)) {
                                                 <span class="tooltip-icon late" title="Late"
                                                     onclick="openRemarkModal(<?php echo $student_id; ?>, 'Late')">?</span>
                                             <?php endif; ?>
+
+
                                         </td>
                                         <td class="name">
                                             <?php echo $attendances[0]['student_firstname'] . ' ' . $attendances[0]['student_middle'] . '.' . ' ' . $attendances[0]['student_lastname']; ?>
@@ -493,7 +419,6 @@ if ($stmt = $database->prepare($remarks_query)) {
                                         <td class="status"><?php echo $status; ?></td>
                                     </tr>
                                 <?php endforeach; ?>
-
 
                                 <!-- Handle Absent students who have no attendance records -->
                                 <?php foreach ($remarks as $student_id => $remark_type): ?>
@@ -532,26 +457,24 @@ if ($stmt = $database->prepare($remarks_query)) {
                                 </tr>
                             <?php endif; ?>
                         </tbody>
+
                     </table>
-                    <div class="pagination">
-                        <?php
-                        renderPaginationLinks($total_pages, $current_page);
-                        ?>
+
+                    <div class="paginationDay">
+                        <a href="?day=<?php echo $previous_day; ?>" class="prev">Previous Day</a>
+                        <a href="?day=<?php echo date('Y-m-d'); ?>"
+                            class="<?php echo ($selected_day == date('Y-m-d')) ? 'active' : ''; ?>">Today</a>
+                        <?php if ($selected_day != date('Y-m-d')): ?>
+                            <a href="?day=<?php echo $next_day; ?>" class="next">Next Day</a>
+                        <?php endif; ?>
                     </div>
+
+
+                    </table>
                 </div>
             </div>
         </div>
     </section>
-    <style>
-        #remarkText {
-            text-align: center;
-            font-size: 1.2em;
-            font-weight: 500;
-            color: #555;
-            margin-top: 10px;
-        }
-    </style>
-
 
     <!-- Remark Modal -->
     <div id="remarkModal" class="modal">
@@ -561,119 +484,36 @@ if ($stmt = $database->prepare($remarks_query)) {
                     style="width: 150px; height: 150px;" loop autoplay>
                 </lottie-player>
             </div>
-
             <h2 id="remarkTypeTitle" data-remark-type="">Remark</h2>
-
-            <p>Reason:</p>
             <p id="remarkText">Loading remark...</p>
-
-            <button class="proof-btn" style="display: none;" onclick="handleProofClick()">
-                <i class="fa-solid fa-image"></i>
-            </button>
-            <button class="approve-btn" id="approveBtn" style="display: none;" onclick="openApprovalModal()">
-                <i class="fa-solid fa-check"></i>
-            </button>
-            <button class="closer-btn" onclick="closeModal('remarkModal')">Close</button>
+            <button class="proceed-btn" onclick="closeModal('remarkModal')">Close</button>
         </div>
     </div>
 
-    <!-- Proof Modal -->
-    <div id="proofModal" class="modal" style="display: none;">
-        <div class="modal-content proof-modal-content">
-            <!-- Close Button -->
-            <span class="close-btn" onclick="closeModal('proofModal')">&times;</span>
 
-            <!-- Image -->
-            <img src="../uploads/student/remark/proof.png" alt="Proof Image" class="proof-image">
-
-            <button class="approve-btn" onclick="showApproveButton()">
-                Confirm Proof
-            </button>
-        </div>
-    </div>
-
-    <!-- Approval Confirmation Modal -->
-    <div id="approvalModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div style="display: flex; justify-content: center; align-items: center;">
-                <lottie-player src="../animation/notice-095d40.json" background="transparent" speed="1"
-                    style="width: 150px; height: 150px;" loop autoplay>
-                </lottie-player>
-            </div>
-            <h2>Confirm Approval</h2>
-            <p>Are you sure you want to approve this?</p>
-            <button class="approve-btn" onclick="confirmApproval()">
-                Confirm
-            </button>
-            <button class="closer-btn" onclick="closeModal('approvalModal')">Cancel</button>
-        </div>
-    </div>
     <script>
         function openRemarkModal(studentId, remarkType) {
             const titleElement = document.getElementById('remarkTypeTitle');
-            const remarkTextElement = document.getElementById('remarkText');
-            const proofButton = document.querySelector('.proof-btn');
-            const approveButton = document.getElementById('approveBtn');
-
             titleElement.innerText = remarkType;
-            titleElement.setAttribute('data-remark-type', remarkType);
+            titleElement.setAttribute('data-remark-type', remarkType); // Set data attribute for CSS styling
 
-            remarkTextElement.innerText = 'Loading remark...';
+            document.getElementById('remarkText').innerText = 'Loading remark...';
 
-            // Set button visibility based on the remark type
-            if (remarkType === 'Absent') {
-                proofButton.style.display = 'inline-block'; // Show proof button
-                approveButton.style.display = 'none'; // Approve button hidden until proof confirmed
-            } else if (remarkType === 'Late') {
-                proofButton.style.display = 'none'; // No proof button for "Late"
-                approveButton.style.display = 'inline-block'; // Approve button visible immediately
-            } else {
-                proofButton.style.display = 'none';
-                approveButton.style.display = 'none';
-            }
-
-            // Fetch the remark text dynamically
+            // AJAX to fetch remark from the server
             fetch(`fetch_remark.php?student_id=${studentId}&remark_type=${remarkType}`)
                 .then(response => response.text())
                 .then(remark => {
-                    remarkTextElement.innerText = remark || 'No remark available';
+                    document.getElementById('remarkText').innerText = remark || 'No remark available';
                 })
                 .catch(() => {
-                    remarkTextElement.innerText = 'Error loading remark';
+                    document.getElementById('remarkText').innerText = 'Error loading remark';
                 });
 
-            // Display the remark modal
+            // Display the modal
             document.getElementById('remarkModal').style.display = 'block';
         }
 
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        function handleProofClick() {
-            const proofModal = document.getElementById('proofModal');
-            proofModal.style.display = 'block';
-        }
-
-        function showApproveButton() {
-            closeModal('proofModal');
-            const approveButton = document.getElementById('approveBtn');
-            approveButton.style.display = 'inline-block'; // Show approve button after proof is confirmed.
-        }
-
-        function openApprovalModal() {
-            document.getElementById('approvalModal').style.display = 'block';
-        }
-
-        function confirmApproval() {
-            alert("Approval Confirmed!");
-            closeModal('approvalModal');
-            closeModal('remarkModal'); // Close the remark modal after approval.
-        }
-
     </script>
-
     <!-- Logout Confirmation Modal -->
     <div id="logoutModal" class="modal">
         <div class="modal-content">

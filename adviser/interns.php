@@ -352,7 +352,6 @@ $current_page = $pagination_data['current_page'];
                     </div>
 
                     <div class="filter-group">
-                        <!-- Course_section Filter Form -->
 
 
                         <!-- Course Section Filter Form -->
@@ -393,9 +392,10 @@ $current_page = $pagination_data['current_page'];
                                 <th class="name">Full Name</th>
                                 <th class="wmsu_id">WMSU ID</th>
                                 <th class="email">Email</th>
+                                <th class="company">Company</th>
                                 <th class="section">Section</th>
                                 <!-- <th>Contact Number</th> -->
-                                <th class="company">Company</th>
+
 
                                 <!--<th>Department</th>
                                 <th>Batch Year</th>
