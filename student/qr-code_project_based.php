@@ -234,15 +234,18 @@ if ($holiday_stmt = $database->prepare($holiday_query)) {
                 </ul>
             </li>
 
-            <li>
-                <a href="dtr.php">
-                    <i class="fa-solid fa-clipboard-question"></i>
-                    <span class="link_name">Remarks</span>
-                </a>
-                <ul class="sub-menu blank">
-                    <li><a class="link_name" href="dtr.php">Remarks</a></li>
-                </ul>
-            </li>
+            <?php if ($student['ojt_type'] !== 'Project-Based'): ?>
+                <li>
+                    <a href="dtr.php">
+                        <i class="fa-solid fa-clipboard-question"></i>
+                        <span class="link_name">Remarks</span>
+                    </a>
+                    <ul class="sub-menu blank">
+                        <li><a class="link_name" href="dtr.php">Remarks</a></li>
+                    </ul>
+                </li>
+            <?php endif; ?>
+
 
             <li>
                 <a href="setting.php">

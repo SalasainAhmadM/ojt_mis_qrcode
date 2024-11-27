@@ -78,18 +78,23 @@ if ($stmt = $database->prepare($students_query)) {
 // Function to format hours into "X hrs Y mins"
 function formatDuration($hours)
 {
-  $totalMinutes = $hours * 60; // Convert hours to minutes
-  $hrs = floor($totalMinutes / 60); // Extract the hours
-  $mins = $totalMinutes % 60; // Extract the remaining minutes
+  // Convert hours to total minutes
+  $totalMinutes = round($hours * 60); // Use round to ensure accurate minute representation
+  $hrs = floor($totalMinutes / 60);  // Extract hours
+  $mins = $totalMinutes % 60;        // Extract remaining minutes
 
+  // Format output
   $formatted = '';
-  if ($hrs > 0)
+  if ($hrs > 0) {
     $formatted .= $hrs . ' hr' . ($hrs > 1 ? 's' : '') . ' ';
-  if ($mins > 0)
+  }
+  if ($mins > 0) {
     $formatted .= $mins . ' min' . ($mins > 1 ? 's' : '');
+  }
 
-  return trim($formatted) ?: '0 mins'; // Default to '0 mins' if both are zero
+  return trim($formatted) ?: '0 mins';
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -332,8 +337,14 @@ function formatDuration($hours)
                   // Determine the Time-out display: if there's a latest Time-in without Time-out, display it as empty in Time-out
                   $displayed_time_out = $latest_time_in_without_out ? '' : ($latest_time_out ? date('h:i A', strtotime($latest_time_out)) : 'N/A');
 
-                  // Determine the status: "Timed-in" if there is a Time-in without Time-out; otherwise, "Timed-out"
-                  $status = $latest_time_in_without_out ? '<span style="color:green;">Timed-in</span>' : '<span style="color:red;">Timed-out</span>';
+                  // Determine the status
+                  if (!$first_time_in && !$latest_time_out) {
+                    // If both Time-in and Time-out are N/A, set status to "No Record Yet"
+                    $status = '<span style="color:gray;">No Record Yet</span>';
+                  } else {
+                    // Otherwise, set status based on the presence of Time-in without Time-out
+                    $status = $latest_time_in_without_out ? '<span style="color:green;">Timed-in</span>' : '<span style="color:red;">Timed-out</span>';
+                  }
                   ?>
 
                   <tr>

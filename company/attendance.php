@@ -152,20 +152,25 @@ function renderPaginationLinks($total_pages, $current_page)
 // Function to format hours into "X hrs Y mins"
 function formatDuration($hours)
 {
-    $totalMinutes = $hours * 60;
-    $hrs = floor($totalMinutes / 60);
-    $mins = $totalMinutes % 60;
+    // Convert hours to total minutes
+    $totalMinutes = round($hours * 60); // Use round to ensure accurate minute representation
+    $hrs = floor($totalMinutes / 60);  // Extract hours
+    $mins = $totalMinutes % 60;        // Extract remaining minutes
 
+    // Format output
     $formatted = '';
-    if ($hrs > 0)
+    if ($hrs > 0) {
         $formatted .= $hrs . ' hr' . ($hrs > 1 ? 's' : '') . ' ';
-    if ($mins > 0)
+    }
+    if ($mins > 0) {
         $formatted .= $mins . ' min' . ($mins > 1 ? 's' : '');
+    }
 
     return trim($formatted) ?: '0 mins';
 }
+
 $remarks_query = "
-    SELECT student_id, remark_type 
+    SELECT remark_id, student_id, remark_type 
     FROM attendance_remarks 
     WHERE schedule_id = (SELECT schedule_id FROM schedule WHERE company_id = ? AND date = ?)
 ";
@@ -176,7 +181,11 @@ if ($stmt = $database->prepare($remarks_query)) {
     $result = $stmt->get_result();
 
     while ($row = $result->fetch_assoc()) {
-        $remarks[$row['student_id']] = $row['remark_type'];
+        // Store the remark details indexed by student_id
+        $remarks[$row['student_id']] = [
+            'remark_id' => $row['remark_id'],
+            'remark_type' => $row['remark_type']
+        ];
     }
     $stmt->close();
 }
@@ -441,47 +450,58 @@ if ($stmt = $database->prepare($remarks_query)) {
                                     $total_hours_today = 0;
 
                                     foreach ($attendances as $attendance) {
-                                        // Capture the earliest time_in for the day
                                         if (!$first_time_in || strtotime($attendance['time_in']) < strtotime($first_time_in)) {
                                             $first_time_in = $attendance['time_in'];
                                         }
-                                        // Track the most recent time_in without a time_out
                                         if ($attendance['time_in'] && !$attendance['time_out']) {
                                             $latest_time_in_without_out = $attendance['time_in'];
                                         }
-                                        // Track the latest time_out for the day
                                         if ($attendance['time_out'] && (!$latest_time_out || strtotime($attendance['time_out']) > strtotime($latest_time_out))) {
                                             $latest_time_out = $attendance['time_out'];
                                         }
-                                        // Sum up total hours for the day
                                         $total_hours_today += $attendance['ojt_hours'] ?? 0;
                                     }
 
-                                    // Determine the displayed time_out value
                                     $displayed_time_out = $latest_time_in_without_out ? '' : ($latest_time_out ? date('h:i A', strtotime($latest_time_out)) : 'N/A');
 
-                                    // Determine the status
-                                    $status = $latest_time_in_without_out ? '<span style="color:green;">Timed-in</span>' : '<span style="color:red;">Timed-out</span>';
+                                    // Default status logic
+                                    if (!$first_time_in && !$latest_time_out) {
+                                        $status = '<span style="color:gray;">No Record Yet</span>';
+                                    } else {
+                                        $status = $latest_time_in_without_out ? '<span style="color:green;">Timed-in</span>' : '<span style="color:red;">Timed-out</span>';
+                                    }
 
-                                    // Check for remarks like "Absent" or "Late"
-                                    $remark_type = isset($remarks[$student_id]) ? $remarks[$student_id] : null;
+                                    // Check for remarks and override status
+                                    $remark = isset($remarks[$student_id]) ? $remarks[$student_id] : null;
+                                    if ($remark) {
+                                        $remark_id = $remark['remark_id'];
+                                        $remark_type = $remark['remark_type'];
+
+                                        if ($remark_type === 'Absent') {
+                                            $status = '<span style="color:#8B0000;">Absent</span>';
+                                        }
+                                    }
                                     ?>
                                     <tr>
                                         <td class="image" style="position:relative;">
                                             <img style="border-radius: 50%;"
-                                                src="../uploads/student/<?php echo !empty($attendance['student_image']) ? $attendance['student_image'] : 'user.png'; ?>"
+                                                src="../uploads/student/<?php echo !empty($attendance['student_image']) ? htmlspecialchars($attendance['student_image'], ENT_QUOTES) : 'user.png'; ?>"
                                                 alt="Student Image">
-                                            <!-- Absent or Late Icon -->
-                                            <?php if ($remark_type === 'Absent'): ?>
+                                            <?php if ($remark && $remark_type === 'Absent'): ?>
                                                 <span class="tooltip-icon absent" title="Absent"
-                                                    onclick="openRemarkModal(<?php echo $student_id; ?>, 'Absent')">X</span>
-                                            <?php elseif ($remark_type === 'Late'): ?>
+                                                    onclick="openRemarkModal(<?php echo $student_id; ?>, '<?php echo $remark_type; ?>', <?php echo $remark_id; ?>)">
+                                                    X
+                                                </span>
+                                            <?php elseif ($remark && $remark_type === 'Late'): ?>
                                                 <span class="tooltip-icon late" title="Late"
-                                                    onclick="openRemarkModal(<?php echo $student_id; ?>, 'Late')">?</span>
+                                                    onclick="openRemarkModal(<?php echo $student_id; ?>, 'Late', <?php echo $remark_id; ?>)">
+                                                    ?
+                                                </span>
                                             <?php endif; ?>
                                         </td>
+
                                         <td class="name">
-                                            <?php echo $attendances[0]['student_firstname'] . ' ' . $attendances[0]['student_middle'] . '.' . ' ' . $attendances[0]['student_lastname']; ?>
+                                            <?php echo htmlspecialchars($attendances[0]['student_firstname'] . ' ' . $attendances[0]['student_middle'] . '.' . ' ' . $attendances[0]['student_lastname'], ENT_QUOTES); ?>
                                         </td>
                                         <td class="timein">
                                             <?php echo $first_time_in ? date('h:i A', strtotime($first_time_in)) : 'N/A'; ?>
@@ -495,8 +515,11 @@ if ($stmt = $database->prepare($remarks_query)) {
                                 <?php endforeach; ?>
 
 
+
+
+
                                 <!-- Handle Absent students who have no attendance records -->
-                                <?php foreach ($remarks as $student_id => $remark_type): ?>
+                                <!-- <?php foreach ($remarks as $student_id => $remark_type): ?>
                                     <?php if ($remark_type === 'Absent' && !isset($students[$student_id])): ?>
                                         <tr>
                                             <td class="image" style="position:relative;">
@@ -525,7 +548,7 @@ if ($stmt = $database->prepare($remarks_query)) {
                                             <td class="status"><span style="color:red;">Absent</span></td>
                                         </tr>
                                     <?php endif; ?>
-                                <?php endforeach; ?>
+                                <?php endforeach; ?> -->
                             <?php else: ?>
                                 <tr>
                                     <td colspan="6">No attendance for this day.</td>
@@ -587,7 +610,7 @@ if ($stmt = $database->prepare($remarks_query)) {
             <img src="../uploads/student/remark/proof.png" alt="Proof Image" class="proof-image">
 
             <button class="approve-btn" onclick="openApprovalModal()">
-                Confirm Proof
+                Approve?
             </button>
         </div>
     </div>
@@ -609,42 +632,46 @@ if ($stmt = $database->prepare($remarks_query)) {
         </div>
     </div>
     <script>
-        function openRemarkModal(studentId, remarkType) {
+        function openRemarkModal(studentId, remarkType, remarkId) {
             const titleElement = document.getElementById('remarkTypeTitle');
             const remarkTextElement = document.getElementById('remarkText');
             const proofButton = document.querySelector('.proof-btn');
             const approveButton = document.getElementById('approveBtn');
 
-            titleElement.innerText = remarkType;
+            // Set the modal title and data attributes
+            titleElement.innerText = `${remarkType}`;
             titleElement.setAttribute('data-remark-type', remarkType);
+            titleElement.setAttribute('data-remark-id', remarkId); // Save remark ID for later use
 
+            // Reset the remark text
             remarkTextElement.innerText = 'Loading remark...';
 
-            // Set button visibility based on the remark type
+            // Adjust button visibility based on the remark type
             if (remarkType === 'Absent') {
                 proofButton.style.display = 'inline-block'; // Show proof button
-                approveButton.style.display = 'none'; // Approve button hidden until proof confirmed
+                approveButton.style.display = 'none'; // Hide approve button initially
             } else if (remarkType === 'Late') {
-                proofButton.style.display = 'none'; // No proof button for "Late"
-                approveButton.style.display = 'inline-block'; // Approve button visible immediately
+                proofButton.style.display = 'none'; // Hide proof button for "Late"
+                approveButton.style.display = 'inline-block'; // Show approve button immediately
             } else {
                 proofButton.style.display = 'none';
                 approveButton.style.display = 'none';
             }
 
-            // Fetch the remark text dynamically
-            fetch(`fetch_remark.php?student_id=${studentId}&remark_type=${remarkType}`)
+            // Fetch the remark text dynamically from the server
+            fetch(`fetch_remark.php?student_id=${studentId}&remark_type=${remarkType}&remark_id=${remarkId}`)
                 .then(response => response.text())
                 .then(remark => {
-                    remarkTextElement.innerText = remark || 'No remark available';
+                    remarkTextElement.innerText = remark || 'No remark available.';
                 })
                 .catch(() => {
-                    remarkTextElement.innerText = 'Error loading remark';
+                    remarkTextElement.innerText = 'Error loading remark.';
                 });
 
             // Display the remark modal
             document.getElementById('remarkModal').style.display = 'block';
         }
+
 
 
         function closeModal(modalId) {
@@ -667,12 +694,52 @@ if ($stmt = $database->prepare($remarks_query)) {
         }
 
         function confirmApproval() {
-            alert("Approval Confirmed!");
-            closeModal('approvalModal');
-            closeModal('remarkModal'); // Close the remark modal after approval.
+            const remarkId = document.getElementById('remarkTypeTitle').getAttribute('data-remark-id');
+
+            if (!remarkId) {
+                alert("Invalid remark ID.");
+                return;
+            }
+
+            // Send the request to approve the remark
+            fetch('approve_remark.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `remark_id=${encodeURIComponent(remarkId)}`
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Server Response:', data); // Log the server response
+                    if (data.success) {
+                        // Show the success modal
+                        document.getElementById('remarkApprovalSuccessModal').style.display = 'block';
+                    } else {
+                        alert(`Error: ${data.message}`);
+                    }
+                    closeModal('approvalModal');
+                    closeModal('remarkModal');
+                })
+                .catch(error => {
+                    console.error('Fetch Error:', error);
+                    alert('Error while approving remark.');
+                });
         }
 
     </script>
+
+    <!-- Remark Approval Success Modal -->
+    <div id="remarkApprovalSuccessModal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2>Remark Approved!</h2>
+            <p>The remark has been successfully approved.</p>
+            <button class="proceed-btn" onclick="closeModal('remarkApprovalSuccessModal')">Proceed</button>
+        </div>
+    </div>
 
     <!-- Logout Confirmation Modal -->
     <div id="logoutModal" class="modal">

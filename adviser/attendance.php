@@ -41,7 +41,7 @@ $selected_course_section = isset($_GET['course_section']) ? $_GET['course_sectio
 $search_query = isset($_GET['search']) ? '%' . $_GET['search'] . '%' : '';
 
 // Function to get paginated and searched students
-function getStudents($database, $selected_course_section, $search_query, $adviser_id, $limit = 5)
+function getStudents($database, $selected_course_section, $search_query, $adviser_id, $limit = 5, $selected_day)
 {
     $page = isset($_GET['page']) && is_numeric($_GET['page']) ? intval($_GET['page']) : 1;
     $offset = ($page - 1) * $limit;
@@ -56,7 +56,10 @@ function getStudents($database, $selected_course_section, $search_query, $advise
            departments.department_name,
            attendance_earliest.time_in AS first_time_in,
            attendance_latest.time_out AS last_time_out,
-           IFNULL(attendance_latest.ojt_hours, 0) AS ojt_hours
+           IFNULL(SUM(attendance.ojt_hours), 0) AS total_ojt_hours,
+           attendance_remarks.remark_type AS attendance_remark,
+           attendance_remarks.remark AS attendance_remark_description,
+           attendance_remarks.status AS attendance_remark_status
     FROM student
     LEFT JOIN adviser ON student.adviser = adviser.adviser_id
     LEFT JOIN address ON student.student_address = address.address_id
@@ -64,21 +67,26 @@ function getStudents($database, $selected_course_section, $search_query, $advise
     LEFT JOIN company ON student.company = company.company_id
     LEFT JOIN course_sections ON student.course_section = course_sections.id
     LEFT JOIN departments ON student.department = departments.department_id
-    -- Earliest time_in of the day
+    -- Earliest time_in of the selected day
     LEFT JOIN (
         SELECT student_id, MIN(time_in) AS time_in 
         FROM attendance 
-        WHERE DATE(time_in) = CURDATE()
+        WHERE DATE(time_in) = ?
         GROUP BY student_id
     ) AS attendance_earliest ON student.student_id = attendance_earliest.student_id
-    -- Latest time_out of the day
+    -- Latest time_out of the selected day
     LEFT JOIN (
-        SELECT student_id, MAX(time_out) AS time_out, 
-               (TIMESTAMPDIFF(SECOND, MIN(time_in), MAX(time_out)) / 3600) AS ojt_hours
+        SELECT student_id, MAX(time_out) AS time_out
         FROM attendance 
-        WHERE DATE(time_in) = CURDATE()
+        WHERE DATE(time_in) = ?
         GROUP BY student_id
     ) AS attendance_latest ON student.student_id = attendance_latest.student_id
+    -- Attendance records for the selected day
+    LEFT JOIN attendance ON student.student_id = attendance.student_id 
+                          AND DATE(attendance.time_in) = ?
+    -- Join with attendance_remarks to fetch remarks
+    LEFT JOIN attendance_remarks ON student.student_id = attendance_remarks.student_id 
+                                  AND attendance_remarks.schedule_id = ?
     WHERE student.adviser = ?";
 
     if (!empty($selected_course_section)) {
@@ -91,58 +99,60 @@ function getStudents($database, $selected_course_section, $search_query, $advise
         $students_query .= " AND (student_firstname LIKE ? OR student_middle LIKE ? OR student_lastname LIKE ?)";
     }
 
-    $students_query .= " ORDER BY student.student_id LIMIT ? OFFSET ?";
+    $students_query .= " GROUP BY student.student_id ORDER BY student.student_id LIMIT ? OFFSET ?";
 
     // Total students count
-    if ($stmt = $database->prepare($total_students_query)) {
-        $params = [$adviser_id];
-        if (!empty($selected_course_section))
-            $params[] = $selected_course_section;
-        if (!empty($search_query))
-            $params = array_merge($params, [$search_query, $search_query, $search_query]);
-        $stmt->bind_param(str_repeat('s', count($params)), ...$params);
+    $params = [$adviser_id];
+    if (!empty($selected_course_section))
+        $params[] = $selected_course_section;
+    if (!empty($search_query))
+        $params = array_merge($params, [$search_query, $search_query, $search_query]);
 
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $total_students = $result->fetch_assoc()['total'];
-        $stmt->close();
-    }
+    $stmt = $database->prepare($total_students_query);
+    $stmt->bind_param(str_repeat('s', count($params)), ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $total_students = $result->fetch_assoc()['total'];
+    $stmt->close();
 
     $total_pages = ceil($total_students / $limit);
 
     $students = [];
     if ($stmt = $database->prepare($students_query)) {
-        $params = [$adviser_id];
+        $params = [$selected_day, $selected_day, $selected_day, $selected_day, $adviser_id];
         if (!empty($selected_course_section))
             $params[] = $selected_course_section;
         if (!empty($search_query))
             $params = array_merge($params, [$search_query, $search_query, $search_query]);
         $params = array_merge($params, [$limit, $offset]);
-        $stmt->bind_param(str_repeat('s', count($params)), ...$params);
 
+        $stmt->bind_param(str_repeat('s', count($params)), ...$params);
         $stmt->execute();
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) {
-            // Format time_in and time_out
             $row['first_time_in'] = $row['first_time_in'] ? date("g:i a", strtotime($row['first_time_in'])) : 'N/A';
             $row['last_time_out'] = $row['last_time_out'] ? date("g:i a", strtotime($row['last_time_out'])) : 'N/A';
 
-            // Format OJT hours
-            if ($row['ojt_hours'] > 0) {
-                $hours = floor($row['ojt_hours']);
-                $minutes = round(($row['ojt_hours'] - $hours) * 60);
-                $row['ojt_hours'] = ($hours > 0 ? $hours . 'hr' : '') . ($minutes > 0 ? ' ' . $minutes . 'min' : '');
+            // Convert total_ojt_hours to "1hr 1min" format
+            if ($row['total_ojt_hours'] > 0) {
+                $hours = floor($row['total_ojt_hours']);
+                $minutes = round(($row['total_ojt_hours'] - $hours) * 60);
+                $row['total_ojt_hours'] = ($hours > 0 ? $hours . ' hr' . ($hours > 1 ? 's' : '') : '') .
+                    ($hours > 0 && $minutes > 0 ? ' ' : '') .
+                    ($minutes > 0 ? $minutes . ' min' . ($minutes > 1 ? 's' : '') : '');
             } else {
-                $row['ojt_hours'] = 'N/A';
+                $row['total_ojt_hours'] = 'N/A';
             }
 
-            // Determine attendance status
-            if (is_null($row['last_time_out'])) {
-                $row['status'] = '<span style="color: #095d40;">Timed-in</span>';
-            } elseif (!is_null($row['last_time_out']) && $row['ojt_hours'] > 0) {
-                $row['status'] = '<span style="color: red;">Timed-out</span>';
-            } else {
+            // Determine attendance status based on remarks or default logic
+            if ($row['attendance_remark'] === 'Late') {
+                $row['status'] = '<span style="color: yellow;">Late Timed-in</span>';
+            } elseif ($row['attendance_remark'] === 'Absent') {
                 $row['status'] = '<span style="color: #8B0000;">Absent</span>';
+            } else {
+                $row['status'] = is_null($row['last_time_out']) ? '<span style="color: #095d40;">Timed-in</span>' :
+                    (!is_null($row['last_time_out']) && $row['total_ojt_hours'] !== 'N/A' ? '<span style="color: red;">Timed-out</span>' :
+                        '<span style="color: #8B0000;">Absent</span>');
             }
 
             $students[] = $row;
@@ -158,35 +168,44 @@ function getStudents($database, $selected_course_section, $search_query, $advise
 }
 
 
-// Function to render pagination links with course_section and search persistence
-function renderPaginationLinks($total_pages, $current_page, $selected_course_section, $search_query)
+
+
+function renderPaginationLinks($total_pages, $current_page, $selected_course_section, $search_query, $selected_day)
 {
-    $search_query_encoded = htmlspecialchars($_GET['search'] ?? '', ENT_QUOTES);
-    $course_section_query_encoded = htmlspecialchars($_GET['course_section'] ?? '', ENT_QUOTES);
+    // Remove unnecessary '%' from search_query before encoding
+    $clean_search_query = trim($search_query, '%');
+    $search_query_encoded = htmlspecialchars($clean_search_query, ENT_QUOTES);
+    $course_section_query_encoded = htmlspecialchars($selected_course_section ?? '', ENT_QUOTES);
+    $day_encoded = htmlspecialchars($selected_day ?? '', ENT_QUOTES);
 
     // Display Previous button
     if ($current_page > 1) {
-        echo '<a href="?page=' . ($current_page - 1) . '&course_section=' . $course_section_query_encoded . '&search=' . $search_query_encoded . '" class="prev">Previous</a>';
+        echo '<a href="?page=' . ($current_page - 1) . '&course_section=' . $course_section_query_encoded . '&search=' . $search_query_encoded . '&day=' . $day_encoded . '" class="prev">Previous</a>';
     }
 
     // Display page numbers (only show 5 page links)
     for ($i = max(1, $current_page - 2); $i <= min($total_pages, $current_page + 2); $i++) {
         $active = $i == $current_page ? 'active' : '';
-        echo '<a href="?page=' . $i . '&course_section=' . $course_section_query_encoded . '&search=' . $search_query_encoded . '" class="' . $active . '">' . $i . '</a>';
+        echo '<a href="?page=' . $i . '&course_section=' . $course_section_query_encoded . '&search=' . $search_query_encoded . '&day=' . $day_encoded . '" class="' . $active . '">' . $i . '</a>';
     }
 
     // Display Next button
     if ($current_page < $total_pages) {
-        echo '<a href="?page=' . ($current_page + 1) . '&course_section=' . $course_section_query_encoded . '&search=' . $search_query_encoded . '" class="next">Next</a>';
+        echo '<a href="?page=' . ($current_page + 1) . '&course_section=' . $course_section_query_encoded . '&search=' . $search_query_encoded . '&day=' . $day_encoded . '" class="next">Next</a>';
     }
 }
+
+
+// Set the default selected day to today if not specified
+$selected_day = isset($_GET['day']) ? $_GET['day'] : date('Y-m-d');
+
+// Format the selected date for display in the header
+$display_date = date('F d, Y', strtotime($selected_day));
 // Fetch students with pagination, course_section, and search functionality
-$pagination_data = getStudents($database, $selected_course_section, $search_query, $adviser_id);
+$pagination_data = getStudents($database, $selected_course_section, $search_query, $adviser_id, 5, $selected_day);
 $students = $pagination_data['students'];
 $total_pages = $pagination_data['total_pages'];
 $current_page = $pagination_data['current_page'];
-
-
 
 ?>
 
@@ -341,29 +360,64 @@ $current_page = $pagination_data['current_page'];
             </div>
             <div class="main-box">
                 <div class="whole-box">
-                    <h2>Attendance -
-                        <span style="color: #095d40"> Dec 12, 2024</span>
+                    <?php
+                    function fetchHolidays($database)
+                    {
+                        $holidays = [];
+                        $query = "SELECT holiday_date, holiday_name FROM holiday";
+                        if ($result = $database->query($query)) {
+                            while ($row = $result->fetch_assoc()) {
+                                $holidays[$row['holiday_date']] = $row['holiday_name'];
+                            }
+                            $result->close();
+                        }
+                        return $holidays;
+                    }
 
+                    function isHoliday($date, $holidays)
+                    {
+                        return isset($holidays[$date]) ? $holidays[$date] : null;
+                    }
+
+                    $holidays = fetchHolidays($database);
+
+                    $holiday_name = isHoliday($selected_day, $holidays);
+
+                    ?>
+
+                    <h2>Attendance -
+                        <?php if ($holiday_name): ?>
+                            <span style="color: #8B0000"><?php echo htmlspecialchars($holiday_name, ENT_QUOTES); ?>
+                                (<?php echo htmlspecialchars($display_date, ENT_QUOTES); ?>)</span>
+                        <?php else: ?>
+                            <span style="color: #095d40"><?php echo htmlspecialchars($display_date, ENT_QUOTES); ?></span>
+                        <?php endif; ?>
                     </h2>
 
 
-                    <div class="filter-group">
 
+                    <div class="filter-group">
                         <!-- Course Section Filter Form -->
                         <form method="GET" action="">
+                            <input type="hidden" name="day"
+                                value="<?php echo htmlspecialchars($selected_day, ENT_QUOTES); ?>">
                             <select class="course-section-dropdown" name="course_section" id="course_section"
                                 onchange="this.form.submit()">
-                                <option value="">All Sections</option><?php foreach ($course_sections as $section): ?>
+                                <option value="">All Sections</option>
+                                <?php foreach ($course_sections as $section): ?>
                                     <option value="<?php echo htmlspecialchars($section['id'], ENT_QUOTES); ?>" <?php echo $selected_course_section == $section['id'] ? 'selected' : ''; ?>>
                                         <?php echo htmlspecialchars($section['course_section_name'], ENT_QUOTES); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
                         </form>
+
                         <!-- Search Bar Form -->
                         <form method="GET" action="">
                             <input type="hidden" name="course_section"
                                 value="<?php echo htmlspecialchars($selected_course_section, ENT_QUOTES); ?>">
+                            <input type="hidden" name="day"
+                                value="<?php echo htmlspecialchars($selected_day, ENT_QUOTES); ?>">
                             <div class="search-bar-container">
                                 <input type="text" class="search-bar" name="search" placeholder="Search Student"
                                     value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
@@ -372,11 +426,12 @@ $current_page = $pagination_data['current_page'];
                                 </button>
                             </div>
                         </form>
+
                         <!-- Date Picker Form for Date Navigation -->
                         <form method="GET" action="" class="date-picker-form">
                             <div class="search-bar-container">
                                 <input type="date" class="search-bar" id="searchDate" name="day"
-                                    value="<?php echo htmlspecialchars($selected_day); ?>"
+                                    value="<?php echo htmlspecialchars($selected_day, ENT_QUOTES); ?>"
                                     onchange="this.form.submit()">
                             </div>
                         </form>
@@ -406,7 +461,7 @@ $current_page = $pagination_data['current_page'];
                                     <tr>
                                         <td class="image">
                                             <img style="border-radius: 50%;"
-                                                src="../uploads/student/<?php echo !empty($student['student_image']) ? $student['student_image'] : 'user.png'; ?>"
+                                                src="../uploads/student/<?php echo !empty($student['student_image']) ? htmlspecialchars($student['student_image']) : 'user.png'; ?>"
                                                 alt="Student Image">
                                         </td>
                                         <td class="name">
@@ -416,9 +471,24 @@ $current_page = $pagination_data['current_page'];
                                         </td>
                                         <td class="timein"><?php echo htmlspecialchars($student['first_time_in']); ?></td>
                                         <td class="timeout"><?php echo htmlspecialchars($student['last_time_out']); ?></td>
-                                        <td class="duration"><?php echo htmlspecialchars($student['ojt_hours']); ?></td>
+                                        <td class="duration"><?php echo htmlspecialchars($student['total_ojt_hours']); ?></td>
                                         <td class="status">
-                                            <?php echo $student['status']; ?>
+                                            <?php
+                                            if (!empty($student['attendance_remark'])) {
+                                                if ($student['attendance_remark'] === 'Late') {
+                                                    echo '<span style="color: yellow;">Late Timed-in</span>';
+                                                } elseif ($student['attendance_remark'] === 'Absent') {
+                                                    echo '<span style="color: #8B0000;">Absent</span>';
+                                                }
+                                            } elseif ($student['first_time_in'] === 'N/A' && $student['last_time_out'] === 'N/A') {
+                                                echo '<span style="color:gray;">No Record Yet</span>';
+                                            } elseif ($student['last_time_out'] === 'N/A') {
+                                                echo '<span style="color: #095d40;">Timed-in</span>';
+                                            } else {
+                                                echo $student['status'];
+                                            }
+                                            ?>
+
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -435,7 +505,8 @@ $current_page = $pagination_data['current_page'];
 
                     <!-- Display pagination links -->
                     <div class="pagination">
-                        <?php renderPaginationLinks($total_pages, $current_page, $selected_course_section, $search_query); ?>
+                        <?php renderPaginationLinks($total_pages, $current_page, $selected_course_section, $search_query, $selected_day);
+                        ?>
                     </div>
                 </div>
             </div>

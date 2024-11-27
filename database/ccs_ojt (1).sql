@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 16, 2024 at 01:36 PM
+-- Generation Time: Nov 27, 2024 at 01:27 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -31,18 +31,16 @@ CREATE TABLE `address` (
   `address_id` int(11) NOT NULL,
   `address_barangay` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-CREATE TABLE `street` (
-  `street_id` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `address`
 --
 
-INSERT INTO `address` (`address_id`, `address_barangay`, `address_street`) VALUES
-(1, 'Kasanyangan', 'Hanapi Drive'),
-(2, 'Baliwasan', 'Normal Road');
+INSERT INTO `address` (`address_id`, `address_barangay`) VALUES
+(1, 'Kasanyangan'),
+(4, 'Talon Talon'),
+(5, 'Baliwasan'),
+(6, 'Mampang');
 
 -- --------------------------------------------------------
 
@@ -133,8 +131,19 @@ CREATE TABLE `attendance` (
   `schedule_id` int(11) NOT NULL,
   `time_in` timestamp NOT NULL DEFAULT current_timestamp(),
   `time_out` timestamp NULL DEFAULT NULL,
-  `ojt_hours` decimal(10,2) GENERATED ALWAYS AS (timestampdiff(SECOND,`time_in`,`time_out`) / 3600) STORED
+  `ojt_hours` decimal(10,5) GENERATED ALWAYS AS (timestampdiff(SECOND,`time_in`,`time_out`) / 3600) STORED,
+  `row_number` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `attendance`
+--
+
+INSERT INTO `attendance` (`attendance_id`, `student_id`, `schedule_id`, `time_in`, `time_out`, `row_number`) VALUES
+(24, 4, 43, '2024-11-25 04:10:15', NULL, 1),
+(27, 8, 43, '2024-11-25 04:10:15', '2024-11-25 05:16:15', 1),
+(28, 8, 43, '2024-11-25 06:10:15', '2024-11-25 06:15:15', 2),
+(29, 1, 43, '2024-11-25 04:10:15', NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -148,8 +157,18 @@ CREATE TABLE `attendance_remarks` (
   `schedule_id` int(11) NOT NULL,
   `remark_type` enum('Late','Absent') NOT NULL,
   `remark` varchar(255) DEFAULT NULL,
-  `proof_image` varchar(255) DEFAULT NULL
+  `proof_image` varchar(255) DEFAULT NULL,
+  `status` enum('Pending','Approved') NOT NULL DEFAULT 'Pending'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `attendance_remarks`
+--
+
+INSERT INTO `attendance_remarks` (`remark_id`, `student_id`, `schedule_id`, `remark_type`, `remark`, `proof_image`, `status`) VALUES
+(30, 4, 43, 'Late', 'traffic', NULL, 'Pending'),
+(31, 1, 24, 'Absent', 'Sick', 'proof.png', 'Pending'),
+(32, 1, 43, 'Late', 'traffic sm', NULL, 'Pending');
 
 -- --------------------------------------------------------
 
@@ -176,13 +195,14 @@ CREATE TABLE `company` (
 --
 
 INSERT INTO `company` (`company_id`, `company_image`, `company_name`, `company_rep_firstname`, `company_rep_middle`, `company_rep_lastname`, `company_email`, `company_password`, `company_address`, `company_number`, `verification_code`) VALUES
-(1, 'ccs.png', 'College of Computing Studies', 'Monkey', 'D', 'Garp', 'ccs.ojtmanagementsystem@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', 'Kasanyangan, Hanapi Drive', '+63920783229', ''),
-(2, 'ccs.png', 'College of Asian Studies', 'Direk', 'D', 'Loren', 'ccs@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', 'Kasanyangan, Hanapi Drive', '+63920783229', ''),
+(1, 'ccs.png', 'College of Computing Studies', 'Monkey', 'D', 'Garp', 'ccs.ojtmanagementsystem@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', 'Di makita street', '+63920783229', ''),
+(2, 'ccs.png', 'College of Asian Studies', 'Direk', 'D', 'Loren', 'ccs@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', 'Kasanyangan', '+63920783229', ''),
 (3, 'ccs.png', 'College of Computing Studies', 'Monkey', 'D', 'Garp', 'ccs.ojtmanagementsystem@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', 'Kasanyangan, Hanapi Drive', '+63920783229', ''),
-(4, 'ccs.png', 'College of Asian Studies', 'Direk', 'D', 'Loren', 'ccs@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', 'Kasanyangan, Hanapi Drive', '+63920783229', ''),
-(5, 'ccs.png', 'College of Computing Studies', 'Monkey', 'D', 'Garp', 'ccs.ojtmanagementsystem@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', 'Kasanyangan, Hanapi Drive', '+63920783229', ''),
-(6, 'ccs.png', 'College of Asian Studies', 'Direk', 'D', 'Loren', 'ccs@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', 'Kasanyangan, Hanapi Drive', '+63920783229', ''),
-(7, 'csm.png', 'College of Science and Mathematics', 'Hanamichi', 'D', 'Sakuragi', 'kaizoku902604@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', 'Kasanyangan, Hanapi Drive', '+63920783229', '');
+(4, 'ccs.png', 'College of Asian Studies', 'Direk', 'D', 'Loren', 'ccs123@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', 'Kasanyangan, Hanapi Drive', '+63920783229', ''),
+(5, 'ccs.png', 'College of Computing Studies', 'Monkey', 'D', 'Garp', 'ccs20@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', 'Kasanyangan, Hanapi Drive', '+63920783229', ''),
+(6, 'ccs.png', 'College of Asian Studies', 'Direk', 'D', 'Loren', 'ccs8@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', 'Baliwasan', '+63920783229', ''),
+(7, 'csm.png', 'College of Science and Mathematics', 'Hanamichi', 'D', 'Sakuragi', 'kaizoku902604@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', 'Mampang', '+63920783229', ''),
+(8, 'companyGov Lim Avenue.jpg', 'Gov Lim Avenue', 'Monkey', 'D', 'Garp', 'govlim@gmail.com', '$2y$10$2djMrrkkrMhC68z6BstsG.rL3NlBQ0j9J0DTd5kswwbzqELTdj7S.', 'Talon Talon', '+63920783229', '');
 
 -- --------------------------------------------------------
 
@@ -249,7 +269,9 @@ CREATE TABLE `feedback` (
 --
 
 INSERT INTO `feedback` (`feedback_id`, `student_id`, `question_1`, `question_2`, `question_3`, `question_4`, `question_5`, `feedback_date`) VALUES
-(1, 4, 100, 80, 40, 100, 60, '2024-10-29 16:34:41');
+(1, 4, 100, 80, 40, 100, 60, '2024-10-29 16:34:41'),
+(2, 1, 20, 20, 20, 20, 60, '2024-11-26 02:48:36'),
+(3, 5, 80, 100, 80, 100, 80, '2024-11-26 03:11:45');
 
 -- --------------------------------------------------------
 
@@ -292,6 +314,7 @@ CREATE TABLE `messages` (
 --
 
 INSERT INTO `messages` (`message_id`, `sender_id`, `receiver_id`, `message`, `timestamp`, `sender_type`, `is_read`) VALUES
+(4, 7, 7, 'Hi', '2024-11-27 09:50:02', 'adviser', 0),
 (2, 7, 6, 'yow', '2024-11-05 06:17:59', 'company', 0);
 
 -- --------------------------------------------------------
@@ -351,7 +374,62 @@ INSERT INTO `schedule` (`schedule_id`, `company_id`, `date`, `time_in`, `time_ou
 (26, 2, '2024-11-15', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-2-2024-11-15.png', 'Regular'),
 (27, 3, '2024-11-15', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-3-2024-11-15.png', 'Regular'),
 (28, 4, '2024-11-15', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-4-2024-11-15.png', 'Regular'),
-(29, 6, '2024-11-15', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-6-2024-11-15.png', 'Regular');
+(29, 6, '2024-11-15', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-6-2024-11-15.png', 'Regular'),
+(30, 1, '2024-11-20', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-1-2024-11-20.png', 'Regular'),
+(31, 2, '2024-11-20', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-2-2024-11-20.png', 'Regular'),
+(32, 3, '2024-11-20', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-3-2024-11-20.png', 'Regular'),
+(33, 4, '2024-11-20', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-4-2024-11-20.png', 'Regular'),
+(34, 5, '2024-11-20', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-5-2024-11-20.png', 'Regular'),
+(35, 6, '2024-11-20', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-6-2024-11-20.png', 'Regular'),
+(36, 7, '2024-11-20', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-7-2024-11-20.png', 'Regular'),
+(37, 1, '2024-11-22', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-1-2024-11-22.png', 'Regular'),
+(38, 2, '2024-11-22', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-2-2024-11-22.png', 'Regular'),
+(39, 3, '2024-11-22', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-3-2024-11-22.png', 'Regular'),
+(40, 4, '2024-11-22', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-4-2024-11-22.png', 'Regular'),
+(41, 5, '2024-11-22', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-5-2024-11-22.png', 'Regular'),
+(42, 6, '2024-11-22', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-6-2024-11-22.png', 'Regular'),
+(43, 7, '2024-11-25', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-7-2024-11-22.png', 'Regular'),
+(44, 1, '2024-11-25', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-1-2024-11-25.png', 'Regular'),
+(45, 2, '2024-11-25', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-2-2024-11-25.png', 'Regular'),
+(46, 3, '2024-11-25', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-3-2024-11-25.png', 'Regular'),
+(47, 4, '2024-11-25', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-4-2024-11-25.png', 'Regular'),
+(48, 5, '2024-11-25', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-5-2024-11-25.png', 'Regular'),
+(49, 6, '2024-11-25', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-6-2024-11-25.png', 'Regular'),
+(51, 1, '2024-11-26', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-1-2024-11-26.png', 'Regular'),
+(52, 2, '2024-11-26', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-2-2024-11-26.png', 'Regular'),
+(53, 3, '2024-11-26', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-3-2024-11-26.png', 'Regular'),
+(54, 4, '2024-11-26', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-4-2024-11-26.png', 'Regular'),
+(55, 5, '2024-11-26', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-5-2024-11-26.png', 'Regular'),
+(56, 6, '2024-11-26', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-6-2024-11-26.png', 'Regular'),
+(57, 7, '2024-11-26', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-7-2024-11-26.png', 'Regular'),
+(58, 8, '2024-11-26', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-8-2024-11-26.png', 'Regular'),
+(59, 1, '2024-11-27', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-1-2024-11-27.png', 'Regular'),
+(60, 2, '2024-11-27', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-2-2024-11-27.png', 'Regular'),
+(61, 3, '2024-11-27', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-3-2024-11-27.png', 'Regular'),
+(62, 4, '2024-11-27', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-4-2024-11-27.png', 'Regular'),
+(63, 5, '2024-11-27', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-5-2024-11-27.png', 'Regular'),
+(64, 6, '2024-11-27', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-6-2024-11-27.png', 'Regular'),
+(65, 7, '2024-11-27', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-7-2024-11-27.png', 'Regular'),
+(66, 8, '2024-11-27', '08:00:00', '16:00:00', '../uploads/company/qrcodes/qr-schedule-8-2024-11-27.png', 'Regular');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `street`
+--
+
+CREATE TABLE `street` (
+  `street_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `street`
+--
+
+INSERT INTO `street` (`street_id`, `name`) VALUES
+(3, 'Duston Drive'),
+(4, 'Loop');
 
 -- --------------------------------------------------------
 
@@ -375,26 +453,26 @@ CREATE TABLE `student` (
   `company` varchar(255) NOT NULL,
   `adviser` varchar(255) NOT NULL,
   `student_address` varchar(255) NOT NULL,
-  `street` varchar(255) NOT NULL,
   `generated_qr_code` varchar(255) NOT NULL,
   `verification_code` varchar(255) NOT NULL,
-  `ojt_type` enum('Project-Based','Field-Based') NOT NULL
+  `ojt_type` enum('Project-Based','Field-Based') NOT NULL,
+  `street` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `student`
 --
 
-INSERT INTO `student` (`student_id`, `wmsu_id`, `student_image`, `student_firstname`, `student_middle`, `student_lastname`, `student_email`, `student_password`, `contact_number`, `course_section`, `batch_year`, `department`, `company`, `adviser`, `student_address`, `generated_qr_code`, `verification_code`, `ojt_type`) VALUES
-(1, '2024-206910', '', 'Maloi', 'K', 'Ricalde', 'maloi@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', '', '4', '', '2', '7', '7', '', '', '', 'Field-Based'),
-(3, '2024-206912', '', 'Shiro', 'D', 'Hige', 'shiro@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', '', '4', '', '1', '7', '', '', '../../uploads/qrcodes/qr-code-Hige-2024-206912.png', '', 'Field-Based'),
-(4, 'nima-loi352', 'luffy_nima-loi352.png', 'Monkey', 'D', 'Luffy', 'binimaloi352@gmail.com', '$2y$10$drwEozKAgmONe05KqUwe2eX9UvaF8Y3qS.XH/a9RKXKVzWyxok7KO', '', '4', '', '1', '5', '7', '', '', '', 'Project-Based'),
-(5, 'nima-loi352', 'luffy_nima-loi352.png', 'Monkey', 'D', 'Garp', 'garp@gmail.com', '$2y$10$drwEozKAgmONe05KqUwe2eX9UvaF8Y3qS.XH/a9RKXKVzWyxok7KO', '+63', '1', '2025-2026', '1', '7', '1', '1', '', '', 'Field-Based'),
-(6, 'nima-loi352', 'luffy_nima-loi352.png', 'Monkey', 'D', 'Dragon', 'dragon@gmail.com', '$2y$10$drwEozKAgmONe05KqUwe2eX9UvaF8Y3qS.XH/a9RKXKVzWyxok7KO', '+63', '4', '2025-2026', '1', '7', '1', '1', '', '', 'Field-Based'),
-(8, 'nima-loi352', 'luffy_nima-loi352.png', 'Vinsmoke', 'D', 'Sanji', 'sanji@gmail.com', '$2y$10$drwEozKAgmONe05KqUwe2eX9UvaF8Y3qS.XH/a9RKXKVzWyxok7KO', '', '4', '', '', '7', '7', '', '', '', 'Field-Based'),
-(10, 'nima-loi352', 'luffy_nima-loi352.png', 'Trafalgar', 'D', 'Water Law', 'law@gmail.com', '$2y$10$drwEozKAgmONe05KqUwe2eX9UvaF8Y3qS.XH/a9RKXKVzWyxok7KO', '+63', '4', '2025-2026', '1', '7', '7', '1', '', '', 'Field-Based'),
-(12, 'nima-loi352', 'luffy_nima-loi352.png', 'Trafalgar', 'D', 'Water Law', 'law@gmail.com', '$2y$10$drwEozKAgmONe05KqUwe2eX9UvaF8Y3qS.XH/a9RKXKVzWyxok7KO', '+63', '4', '2025-2026', '1', '7', '7', '1', '', '', 'Field-Based'),
-(13, 'nima-loi352', 'luffy_nima-loi352.png', 'Trafalgar', 'D', 'Water Law', 'law@gmail.com', '$2y$10$drwEozKAgmONe05KqUwe2eX9UvaF8Y3qS.XH/a9RKXKVzWyxok7KO', '+63', '4', '2025-2026', '1', '7', '7', '1', '', '', 'Field-Based');
+INSERT INTO `student` (`student_id`, `wmsu_id`, `student_image`, `student_firstname`, `student_middle`, `student_lastname`, `student_email`, `student_password`, `contact_number`, `course_section`, `batch_year`, `department`, `company`, `adviser`, `student_address`, `generated_qr_code`, `verification_code`, `ojt_type`, `street`) VALUES
+(1, 'loi@-gmail.', 'ricalde_loi@-gmail..png', 'Maloi', 'K', 'Ricalde', 'maloi@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', '+63', '4', '2023-2024', '1', '', '7', '4', '', '', 'Project-Based', '4'),
+(3, '2024-206912', '', 'Shiro', 'D', 'Hige', 'shiro@gmail.com', '$2y$10$j6qBb5wKj8Of0iRWerAUWe6SS8aEsJZM/YMGlF/xHMflG/P6qcvoa', '', '4', '', '1', '7', '', '', '../../uploads/qrcodes/qr-code-Hige-2024-206912.png', '', 'Field-Based', NULL),
+(4, 'nima-loi352', 'luffy_nima-loi352.png', 'Monkey', 'D', 'Luffy', 'binimaloi352@gmail.com', '$2y$10$drwEozKAgmONe05KqUwe2eX9UvaF8Y3qS.XH/a9RKXKVzWyxok7KO', '', '5', '', '', '1', '7', '', '', '', 'Project-Based', NULL),
+(5, 'nima-loi352', 'luffy_nima-loi352.png', 'Monkey', 'D', 'Garp', 'garp@gmail.com', '$2y$10$drwEozKAgmONe05KqUwe2eX9UvaF8Y3qS.XH/a9RKXKVzWyxok7KO', '+63', '1', '2025-2026', '1', '7', '1', '1', '', '', 'Field-Based', NULL),
+(6, 'nima-loi352', 'luffy_nima-loi352.png', 'Monkey', 'D', 'Dragon', 'dragon@gmail.com', '$2y$10$drwEozKAgmONe05KqUwe2eX9UvaF8Y3qS.XH/a9RKXKVzWyxok7KO', '+63', '4', '2025-2026', '1', '7', '1', '1', '', '', 'Field-Based', NULL),
+(8, 'nima-loi352', 'luffy_nima-loi352.png', 'Vinsmoke', 'D', 'Sanji', 'sanji@gmail.com', '$2y$10$drwEozKAgmONe05KqUwe2eX9UvaF8Y3qS.XH/a9RKXKVzWyxok7KO', '', '4', '', '', '7', '7', '', '', '', 'Field-Based', NULL),
+(10, 'nima-loi352', 'luffy_nima-loi352.png', 'Trafalgar', 'D', 'Water Law', 'law@gmail.com', '$2y$10$drwEozKAgmONe05KqUwe2eX9UvaF8Y3qS.XH/a9RKXKVzWyxok7KO', '+63', '4', '2025-2026', '1', '7', '7', '1', '', '', 'Field-Based', NULL),
+(12, 'nima-loi352', 'luffy_nima-loi352.png', 'Trafalgar', 'D', 'Water Law', 'law@gmail.com', '$2y$10$drwEozKAgmONe05KqUwe2eX9UvaF8Y3qS.XH/a9RKXKVzWyxok7KO', '+63', '4', '2025-2026', '1', '7', '7', '1', '', '', 'Field-Based', NULL),
+(13, 'nima-loi352', 'luffy_nima-loi352.png', 'Trafalgar', 'D', 'Water Law', 'law@gmail.com', '$2y$10$drwEozKAgmONe05KqUwe2eX9UvaF8Y3qS.XH/a9RKXKVzWyxok7KO', '+63', '4', '2025-2026', '1', '7', '7', '1', '', '', 'Field-Based', NULL);
 
 -- --------------------------------------------------------
 
@@ -426,7 +504,8 @@ INSERT INTO `student_journal` (`journal_id`, `student_id`, `journal_name`, `jour
 (5, 4, 'Thunder Tempo', '2024-11-13', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', '445', '', '', '', 0),
 (6, 4, 'Green Arrow', '2024-11-14', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', '445', '', '', '', 0),
 (24, 4, 'Honesty Impact', '2024-11-15', 'condimentum venenatis molestie? Massa ipsum dis lectus adipiscing nulla dapibus aliquam. Neque aliquet mollis faucibus torquent, nisl at. Fermentum ipsum cubilia urna sit penatibus ut commodo nibh.  Hendrerit tortor justo facilisi adipiscing erat ac maximus. Morbi efficitur gravida felis mauris mauris maximus? In quam parturient, adipiscing luctus sollicitudin vitae interdum sapien. Senectus bibendum metus lobortis donec quisque vulputate at. Est maximus eleifend sagittis phasellus conubia eget pretium dui fringilla. Facilisis lacus finibus eu ligula sapien viverra scelerisque. Id nunc scelerisque mollis nec tempor vitae tristique.  Tempor dapibus ligula ullamcorper lectus eros blandit lectus aenean. Proin hac quis elit mus arcu egestas accumsan ac. Montes felis ante potenti metus, venenatis arcu. Sodales pretium efficitur suscipit viverra hendrerit lobortis, class eget non. Rutrum mollis nascetur nam libero volutpat malesuada. Primis adipiscing augue parturient aliquet gravida. Ultricies ornare auctor parturient conubia at. Risus praesent porta natoque consectetur venenatis posuere. Cras lacus enim magna potenti proin integer sit. Adipiscing mauris finibus auctor accumsan amet sollicitudin aliquam risus. ', '52', '../uploads/student/journals/67224bda2819b_one_piece_minimalist_poster___message_by_minimallyonepiece_d5t8sqp-fullview.jpg', '', '', 1),
-(32, 3, 'Gear 3rd', '2024-11-11', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', '445', '', '', '', 1);
+(32, 3, 'Gear 3rd', '2024-11-11', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', '445', '', '', '', 1),
+(33, 1, 'ascasc', '2024-11-27', '123', '', NULL, NULL, NULL, 1);
 
 --
 -- Indexes for dumped tables
@@ -534,6 +613,12 @@ ALTER TABLE `schedule`
   ADD KEY `schedule_ibfk_1` (`company_id`);
 
 --
+-- Indexes for table `street`
+--
+ALTER TABLE `street`
+  ADD PRIMARY KEY (`street_id`);
+
+--
 -- Indexes for table `student`
 --
 ALTER TABLE `student`
@@ -554,7 +639,7 @@ ALTER TABLE `student_journal`
 -- AUTO_INCREMENT for table `address`
 --
 ALTER TABLE `address`
-  MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `admin`
@@ -578,19 +663,19 @@ ALTER TABLE `adviser_announcement`
 -- AUTO_INCREMENT for table `attendance`
 --
 ALTER TABLE `attendance`
-  MODIFY `attendance_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `attendance_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `attendance_remarks`
 --
 ALTER TABLE `attendance_remarks`
-  MODIFY `remark_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `remark_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT for table `company`
 --
 ALTER TABLE `company`
-  MODIFY `company_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `company_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `course_sections`
@@ -608,7 +693,7 @@ ALTER TABLE `departments`
 -- AUTO_INCREMENT for table `feedback`
 --
 ALTER TABLE `feedback`
-  MODIFY `feedback_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `feedback_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `holiday`
@@ -620,7 +705,7 @@ ALTER TABLE `holiday`
 -- AUTO_INCREMENT for table `messages`
 --
 ALTER TABLE `messages`
-  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `required_hours`
@@ -632,7 +717,13 @@ ALTER TABLE `required_hours`
 -- AUTO_INCREMENT for table `schedule`
 --
 ALTER TABLE `schedule`
-  MODIFY `schedule_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `schedule_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
+
+--
+-- AUTO_INCREMENT for table `street`
+--
+ALTER TABLE `street`
+  MODIFY `street_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `student`
@@ -644,7 +735,7 @@ ALTER TABLE `student`
 -- AUTO_INCREMENT for table `student_journal`
 --
 ALTER TABLE `student_journal`
-  MODIFY `journal_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `journal_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- Constraints for dumped tables
