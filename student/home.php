@@ -74,12 +74,22 @@ if ($course_sections_result->num_rows > 0) {
   }
 }
 // address
-$address_query = "SELECT address_id, address_barangay, address_street FROM address";
+$address_query = "SELECT address_id, address_barangay FROM address";
 $address_result = $database->query($address_query);
 $address = [];
 if ($address_result->num_rows > 0) {
   while ($row = $address_result->fetch_assoc()) {
     $address[] = $row;
+  }
+}
+
+// street
+$street_query = "SELECT street_id, name FROM street";
+$street_result = $database->query($street_query);
+$street = [];
+if ($street_result->num_rows > 0) {
+  while ($row = $street_result->fetch_assoc()) {
+    $street[] = $row;
   }
 }
 
@@ -250,12 +260,22 @@ $formatted_email = substr_replace($extracted_email_part, '-', 4, 0);
           <option value="" disabled selected>Select Address</option>
           <?php foreach ($address as $address_item): ?>
             <option value="<?php echo htmlspecialchars($address_item['address_id']); ?>">
-              <?php echo htmlspecialchars($address_item['address_barangay']) . ', ' . htmlspecialchars($address_item['address_street']); ?>
+              <?php echo htmlspecialchars($address_item['address_barangay']); ?>
             </option>
           <?php endforeach; ?>
         </select>
       </div>
-
+      <div class="form-group">
+        <label for="street">Street</label>
+        <select name="street" id="street">
+          <option value="" disabled selected>Select Street</option>
+          <?php foreach ($street as $street_item): ?>
+            <option value="<?php echo htmlspecialchars($street_item['street_id']); ?>">
+              <?php echo htmlspecialchars($street_item['name']); ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
       <div class="form-group">
         <label for="student-image">Student Image</label>
         <input type="file" id="student-image" name="student_image" accept="image/*">

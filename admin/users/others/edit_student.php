@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $student_company = $_POST['company'];
     $student_batch_year = $_POST['batch_year'];
     $student_address = $_POST['student_address'];
+    $student_street = $_POST['student_street'];
 
     function generateFileName($student_lastname, $student_id)
     {
@@ -60,12 +61,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $sql = "UPDATE student 
             SET student_firstname = ?, student_middle = ?, student_lastname = ?, student_image = ?, student_email = ?, 
                 contact_number = ?, course_section = ?, company = ?, batch_year = ?, department = ?, adviser = ?, 
-                student_address = ? 
+                student_address = ? , street = ? 
             WHERE student_id = ?";
 
     $stmt = $database->prepare($sql);
     $stmt->bind_param(
-        'ssssssssssssi',
+        'sssssssssssssi',
         $student_firstname,
         $student_middle,
         $student_lastname,
@@ -78,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $department,
         $student_adviser,
         $student_address,
+        $student_street,
         $student_id
     );
 

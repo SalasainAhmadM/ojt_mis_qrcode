@@ -321,7 +321,7 @@ $current_page = $pagination_data['current_page'];
                             <option value="">Select Address</option>
                             <?php foreach ($addresses as $address): ?>
                                 <option>
-                                    <?php echo htmlspecialchars($address['address_barangay'] . ', ' . $address['address_street'], ENT_QUOTES); ?>
+                                    <?php echo htmlspecialchars($address['address_barangay'], ENT_QUOTES); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -418,11 +418,10 @@ $current_page = $pagination_data['current_page'];
                         <select type="text" id="editCompanyAddress" name="company_address" required>
                             <option value="">Select Address</option>
                             <?php foreach ($addresses as $address): ?>
-                                <option
-                                    value="<?php echo htmlspecialchars($address['address_barangay'] . ', ' . $address['address_street'], ENT_QUOTES); ?>"
-                                    <?php if ($company['company_address'] == $address['address_barangay'] . ', ' . $address['address_street'])
+                                <option value="<?php echo htmlspecialchars($address['address_barangay'], ENT_QUOTES); ?>"
+                                    <?php if ($company['company_address'] == $address['address_barangay'] . ', ')
                                         echo 'selected'; ?>>
-                                    <?php echo htmlspecialchars($address['address_barangay'] . ', ' . $address['address_street'], ENT_QUOTES); ?>
+                                    <?php echo htmlspecialchars($address['address_barangay'], ENT_QUOTES); ?>
                                 </option>
 
                             <?php endforeach; ?>

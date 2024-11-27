@@ -586,7 +586,7 @@ if ($stmt = $database->prepare($remarks_query)) {
             <!-- Image -->
             <img src="../uploads/student/remark/proof.png" alt="Proof Image" class="proof-image">
 
-            <button class="approve-btn" onclick="showApproveButton()">
+            <button class="approve-btn" onclick="openApprovalModal()">
                 Confirm Proof
             </button>
         </div>

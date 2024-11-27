@@ -11,7 +11,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'company') {
 // Fetch company details along with full address from the database
 $company_id = $_SESSION['user_id'];
 $query = "
-    SELECT company.*, CONCAT(address.address_barangay, ', ', address.address_street) AS full_address
+    SELECT company.*, CONCAT(address.address_barangay) AS full_address
     FROM company
     LEFT JOIN address ON company.company_address = address.address_id
     WHERE company.company_id = ?
@@ -237,21 +237,30 @@ if ($result = $database->query($query)) {
                         }
                     }
                 </script>
-                <div class="form-group">
+                <!-- <div class="form-group">
                     <label for="address">Address</label>
                     <select id="address" name="address">
                         <option disabled>Select Barangay</option>
                         <?php foreach ($barangays as $barangay): ?>
                             <option
                                 value="<?php echo $barangay['address_barangay'] . ', ' . $barangay['address_street']; ?>"
-                                <?php if ($company['company_address'] == $barangay['address_barangay'] . ', ' . $barangay['address_street'])
+                                <?php if ($company['company_address'] == $barangay['address_barangay'])
                                     echo 'selected'; ?>>
                                 <?php echo $barangay['address_barangay'] . ', ' . $barangay['address_street']; ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
+                </div> -->
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <select id="address" name="address" required class="form-control">
+                        <option disabled>Select Barangay</option><?php foreach ($barangays as $barangay): ?>
+                            <option value="<?php echo $barangay['address_barangay']; ?>" <?php echo ($company['company_address'] == $barangay['address_barangay']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($barangay['address_barangay']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
-
 
             </div>
 

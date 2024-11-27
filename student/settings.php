@@ -22,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $company = $_POST['company'];
     $adviser = $_POST['adviser_id'];
     $address = $_POST['address'];
+    $street = $_POST['street'];
 
     $hashed_password = null;
     if (!empty($_POST['student_password']) && $_POST['student_password'] === $_POST['student_cpassword']) {
@@ -79,9 +80,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
               department = ?, 
               company = ?, 
               adviser = ?, 
-              student_address = ?";
+              student_address = ?,
+              street = ?";
 
-    $types = "ssssssssssss";
+    $types = "sssssssssssss";
     $params = [
         $student_firstname,
         $student_middle,
@@ -94,7 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $department,
         $company,
         $adviser,
-        $address
+        $address,
+        $street
     ];
 
     if ($hashed_password) {

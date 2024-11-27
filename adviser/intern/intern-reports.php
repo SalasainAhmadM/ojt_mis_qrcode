@@ -61,13 +61,14 @@ function getStudents($database, $selected_course_section, $search_query, $advise
     $students_query = "
     SELECT student.*, 
            CONCAT(adviser.adviser_firstname, ' ', adviser.adviser_middle, '. ', adviser.adviser_lastname) AS adviser_fullname,
-           CONCAT(address.address_barangay, ', ', address.address_street) AS full_address,
+           CONCAT(address.address_barangay, ', ', street.name) AS full_address,
            company.company_name,
            course_sections.course_section_name,
            departments.department_name
     FROM student 
     LEFT JOIN adviser ON student.adviser = adviser.adviser_id
     LEFT JOIN address ON student.student_address = address.address_id
+    LEFT JOIN street ON student.street = street.street_id
     LEFT JOIN company ON student.company = company.company_id
     LEFT JOIN course_sections ON student.course_section = course_sections.id
     LEFT JOIN departments ON student.department = departments.department_id

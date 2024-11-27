@@ -29,8 +29,11 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `address` (
   `address_id` int(11) NOT NULL,
-  `address_barangay` varchar(255) NOT NULL,
-  `address_street` varchar(255) NOT NULL
+  `address_barangay` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+CREATE TABLE `street` (
+  `street_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
@@ -372,6 +375,7 @@ CREATE TABLE `student` (
   `company` varchar(255) NOT NULL,
   `adviser` varchar(255) NOT NULL,
   `student_address` varchar(255) NOT NULL,
+  `street` varchar(255) NOT NULL,
   `generated_qr_code` varchar(255) NOT NULL,
   `verification_code` varchar(255) NOT NULL,
   `ojt_type` enum('Project-Based','Field-Based') NOT NULL

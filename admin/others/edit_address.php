@@ -2,15 +2,13 @@
 session_start();
 require '../../conn/connection.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['address_id'], $_POST['barangay_name'], $_POST['street_name'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['address_id'], $_POST['barangay_name'])) {
     $address_id = $_POST['address_id'];
     $barangay_name = trim($_POST['barangay_name']);
-    $street_name = trim($_POST['street_name']);
-
     // Check if the address already exists to avoid duplicates
-    $query = "SELECT * FROM address WHERE address_barangay = ? AND address_street = ? AND address_id != ?";
+    $query = "SELECT * FROM address WHERE address_barangay = ? AND address_id != ?";
     if ($stmt = $database->prepare($query)) {
-        $stmt->bind_param("ssi", $barangay_name, $street_name, $address_id);
+        $stmt->bind_param("si", $barangay_name, $address_id);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -24,9 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['address_id'], $_POST[
     }
 
     // Update the address
-    $query = "UPDATE address SET address_barangay = ?, address_street = ? WHERE address_id = ?";
+    $query = "UPDATE address SET address_barangay = ? WHERE address_id = ?";
     if ($stmt = $database->prepare($query)) {
-        $stmt->bind_param("ssi", $barangay_name, $street_name, $address_id);
+        $stmt->bind_param("si", $barangay_name, $address_id);
         if ($stmt->execute()) {
             $_SESSION['address_edit_success'] = "Address updated successfully!";
         } else {

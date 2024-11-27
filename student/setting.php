@@ -14,11 +14,13 @@ $query = "
     SELECT student.*, 
            adviser.adviser_firstname, 
            adviser.adviser_middle, 
-           adviser.adviser_lastname, 
-           CONCAT(address.address_barangay, ', ', address.address_street) AS full_address
+           adviser.adviser_lastname,
+           address.address_barangay,
+           street.name
     FROM student
     LEFT JOIN adviser ON student.adviser = adviser.adviser_id
     LEFT JOIN address ON student.student_address = address.address_id
+    LEFT JOIN street ON student.street = street.street_id
     WHERE student.student_id = ?
 ";
 if ($stmt = $database->prepare($query)) {
@@ -47,6 +49,15 @@ $barangays = [];
 if ($result = $database->query($query)) {
     while ($row = $result->fetch_assoc()) {
         $barangays[] = $row;
+    }
+}
+
+// Fetch all barangays from the street table
+$query = "SELECT * FROM street";
+$streets = [];
+if ($result = $database->query($query)) {
+    while ($row = $result->fetch_assoc()) {
+        $streets[] = $row;
     }
 }
 
@@ -165,6 +176,17 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
                     <li><a class="link_name" href="<?php echo $qr_url; ?>">QR Scanner</a></li>
                 </ul>
             </li>
+
+            <li>
+                <a href="dtr.php">
+                    <i class="fa-solid fa-clipboard-question"></i>
+                    <span class="link_name">Remarks</span>
+                </a>
+                <ul class="sub-menu blank">
+                    <li><a class="link_name" href="dtr.php">Remarks</a></li>
+                </ul>
+            </li>
+
             <li>
                 <a href="setting.php" class="active">
                     <i class="fas fa-cog"></i>
@@ -206,11 +228,11 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
                     <label for="wmsu-id">Full Name</label>
                     <div class="name-inputs">
                         <input class="firstname" type="text" id="student-firstname" name="student_firstname"
-                            value="<?php echo $student['student_firstname']; ?>">
+                            value="<?php echo $student['student_firstname']; ?>" required>
                         <input class="middle" type="text" id="student-middle" name="student_middle"
                             value="<?php echo $student['student_middle']; ?>">
                         <input class="lastname" type="text" id="student-lastname" name="student_lastname"
-                            value="<?php echo $student['student_lastname']; ?>">
+                            value="<?php echo $student['student_lastname']; ?>" required>
                     </div>
                 </div>
                 <div class="form-group">
@@ -218,17 +240,17 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
                         value="<?php echo $student['student_id']; ?>">
                     <label for="wmsu-email">Wmsu Email</label>
                     <input type="text" id="student-email" name="student_email"
-                        value="<?php echo $student['student_email']; ?>">
+                        value="<?php echo $student['student_email']; ?>" required>
                 </div>
                 <div class="form-group">
                     <label for="wmsu-id">School ID</label>
-                    <input type="text" id="wmsu-id" name="wmsu_id" value="<?php echo $student['wmsu_id']; ?>">
+                    <input type="text" id="wmsu-id" name="wmsu_id" value="<?php echo $student['wmsu_id']; ?>" required>
                 </div>
                 <div class="form-group">
                     <label for="contact">Contact Number</label>
                     <input type="text" id="contact" name="contact_number"
                         value="<?php echo $student['contact_number']; ?>" required maxlength="13"
-                        oninput="limitInput(this)">
+                        oninput="limitInput(this)" required>
                 </div>
                 <script>
                     function limitInput(input) {
@@ -240,7 +262,7 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
 
                 <div class="form-group">
                     <label for="course_section">Section</label>
-                    <select id="course_section" name="course_section" onchange="fetchAdviser()">
+                    <select id="course_section" name="course_section" onchange="fetchAdviser()" required>
                         <option disabled selected>Select Section</option>
                         <?php foreach ($course_sections as $course_section): ?>
                             <option value="<?php echo $course_section['id']; ?>" <?php if ($student['course_section'] == $course_section['id'])
@@ -265,7 +287,7 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
             <div class="form-section">
                 <div class="form-group">
                     <label for="batch-year">Batch Year</label>
-                    <select id="batch-year" name="batch_year">
+                    <select id="batch-year" name="batch_year" required>
                         <option disabled>Select Batch Year</option>
                         <option value="2020-2021" <?php if ($student['batch_year'] == '2020-2021')
                             echo 'selected'; ?>>
@@ -289,7 +311,7 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
                 </div>
                 <div class="form-group">
                     <label for="department">Department</label>
-                    <select id="department" name="department">
+                    <select id="department" name="department" required>
                         <option disabled>Select Department</option>
                         <?php foreach ($departments as $department): ?>
                             <option value="<?php echo $department['department_id']; ?>" <?php if ($student['department'] == $department['department_id'])
@@ -311,19 +333,29 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
                     <input type="hidden" id="company_id" name="company" value="<?php echo $student['company']; ?>" />
                 </div>
 
-
                 <div class="form-group">
                     <label for="address">Address</label>
-                    <select id="address" name="address">
+                    <select id="address" name="address" required class="form-control">
                         <option disabled>Select Barangay</option>
                         <?php foreach ($barangays as $barangay): ?>
-                            <option value="<?php echo $barangay['address_id']; ?>" <?php if ($student['student_address'] == $barangay['address_id'])
-                                   echo 'selected'; ?>>
-                                <?php echo $barangay['address_barangay'] . ', ' . $barangay['address_street']; ?>
+                            <option value="<?php echo $barangay['address_id']; ?>" <?php echo ($student['student_address'] == $barangay['address_id']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($barangay['address_barangay']); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
+
+                <div class="form-group">
+                    <label for="street">Street</label>
+                    <select id="street" name="street" required class="form-control">
+                        <option disabled>Select Street</option><?php foreach ($streets as $street): ?>
+                            <option value="<?php echo $street['street_id']; ?>" <?php echo ($student['street'] == $street['street_id']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($street['name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
 
                 <div class="form-group">
                     <label for="student-image">Student Image</label>

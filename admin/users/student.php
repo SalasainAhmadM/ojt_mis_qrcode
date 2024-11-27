@@ -65,7 +65,17 @@ if ($stmt = $database->prepare($query)) {
     }
     $stmt->close();
 }
-
+// Fetch all address for the dropdown
+$query = "SELECT * FROM street ";
+$streets = [];
+if ($stmt = $database->prepare($query)) {
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $streets[] = $row;
+    }
+    $stmt->close();
+}
 // include './others/filter_student.php';
 // Capture the selected course_section and search query
 $selected_course_section = isset($_GET['course_section']) ? $_GET['course_section'] : '';
@@ -86,13 +96,14 @@ function getStudents($database, $selected_course_section, $search_query, $limit 
     $students_query = "
     SELECT student.*, 
            CONCAT(adviser.adviser_firstname, ' ', adviser.adviser_middle, '. ', adviser.adviser_lastname) AS adviser_fullname,
-           CONCAT(address.address_barangay, ', ', address.address_street) AS full_address,
+           CONCAT(address.address_barangay, ', ', street.name) AS full_address,
            company.company_name,
            course_sections.course_section_name,
            departments.department_name
     FROM student 
     LEFT JOIN adviser ON student.adviser = adviser.adviser_id
     LEFT JOIN address ON student.student_address = address.address_id
+    LEFT JOIN street ON student.street = street.street_id
     LEFT JOIN company ON student.company = company.company_id
     LEFT JOIN course_sections ON student.course_section = course_sections.id
     LEFT JOIN departments ON student.department = departments.department_id
@@ -565,17 +576,27 @@ $current_page = $pagination_data['current_page'];
                         </select>
                     </div>
                     <div class="input-group" style="width: 33%;">
-                        <label for="editStudentAddress">Address</label>
+                        <label for="editStudentAddress">Barangay</label>
                         <select type="text" id="editStudentAddress" name="student_address" class="input-field" required>
-                            <option value="">Select Address</option>
+                            <option value="">Select Barangay</option>
                             <?php foreach ($addresses as $address): ?>
                                 <option value="<?php echo htmlspecialchars($address['address_id'], ENT_QUOTES); ?>">
-                                    <?php echo htmlspecialchars($address['address_barangay'] . ', ' . $address['address_street'], ENT_QUOTES); ?>
+                                    <?php echo htmlspecialchars($address['address_barangay'], ENT_QUOTES); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-
+                    <div class="input-group" style="width: 33%;">
+                        <label for="editStudentStreet">Street</label>
+                        <select type="text" id="editStudentStreet" name="student_street" class="input-field" required>
+                            <option value="">Select Street</option>
+                            <?php foreach ($streets as $street): ?>
+                                <option value="<?php echo htmlspecialchars($street['street_id'], ENT_QUOTES); ?>">
+                                    <?php echo htmlspecialchars($street['name'], ENT_QUOTES); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
 
                 <button type="submit" class="modal-btn">Save Changes</button>
@@ -684,6 +705,8 @@ $current_page = $pagination_data['current_page'];
             document.getElementById('editStudentSection').value = student.course_section;
             document.getElementById('editStudentAdviser').value = student.adviser_fullname;
             document.getElementById('editStudentBatchYear').value = student.batch_year;
+            document.getElementById('editStudentAddress').value = student.student_address;
+            document.getElementById('editStudentStreet').value = student.street;
 
             // Check if student has an adviser
             if (student.adviser_id) {
@@ -705,9 +728,9 @@ $current_page = $pagination_data['current_page'];
             departmentDropdown.value = departmentOption ? departmentOption.value : '';
 
             // Set current address in the dropdown
-            const addressDropdown = document.getElementById('editStudentAddress');
-            const addressOption = Array.from(addressDropdown.options).find(option => option.text === student.full_address);
-            addressDropdown.value = addressOption ? addressOption.value : '';
+            // const addressDropdown = document.getElementById('editStudentAddress');
+            // const addressOption = Array.from(addressDropdown.options).find(option => option.text === student.full_address);
+            // addressDropdown.value = addressOption ? addressOption.value : '';
 
             // Show the edit modal
             editStudentModal.style.display = 'block';

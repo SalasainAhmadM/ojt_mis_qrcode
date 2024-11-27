@@ -11,10 +11,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student') {
 // Fetch student, company, and address details from the database
 $student_id = $_SESSION['user_id'];
 $query = "SELECT student.*, student.ojt_type, company.company_name, company.company_address, company.company_email, company.company_image, company.company_number, 
-                 address.address_barangay, address.address_street
+                 address.address_barangay
+                --  street.name
           FROM student 
           LEFT JOIN company ON student.company = company.company_id
           LEFT JOIN address ON company.company_address = address.address_id
+          -- LEFT JOIN street ON company.company_street = street.street_id
           WHERE student.student_id = ?";
 
 if ($stmt = $database->prepare($query)) {
@@ -241,6 +243,17 @@ $login_message = $holiday_message ?: $suspended_message;
           <li><a class="link_name" href="<?php echo $qr_url; ?>">QR Scanner</a></li>
         </ul>
       </li>
+
+      <li>
+        <a href="dtr.php">
+          <i class="fa-solid fa-clipboard-question"></i>
+          <span class="link_name">Remarks</span>
+        </a>
+        <ul class="sub-menu blank">
+          <li><a class="link_name" href="dtr.php">Remarks</a></li>
+        </ul>
+      </li>
+
       <li>
         <a href="setting.php">
           <i class="fas fa-cog"></i>

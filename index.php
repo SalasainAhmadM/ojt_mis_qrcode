@@ -16,7 +16,7 @@
       <!-- SignIn Form -->
       <div class="form-control signin-form">
         <form action="./endpoint/login.php" method="POST">
-          <h2>Signin</h2>
+          <h2>Sign in</h2>
           <input type="email" name="email" placeholder="Email" required />
           <div class="input-wrapper">
             <input type="password" id="signin-password" name="password" placeholder="Password" required />
@@ -27,7 +27,7 @@
           <div class="forgot-password-link">
             <a href="./endpoint/forgotpassword.php">Forgot Password?</a>
           </div>
-          <button type="submit">Signin</button>
+          <button type="submit">Sign in</button>
         </form>
       </div>
 
@@ -54,7 +54,7 @@
               <i style="margin-bottom: 15px;" class="fas fa-eye"></i>
             </span>
           </div>
-          <button type="submit" id="signup-button" disabled>Signup</button>
+          <button type="submit" id="signup-button" disabled>Sign up</button>
           <div class="password-strength" id="signup_password_strength"></div>
           <div class="password-strength" id="signup_instruction_text"></div>
         </form>
@@ -64,13 +64,13 @@
       <div class="intro-control signin-intro">
         <div class="intro-control__inner">
           <img src="./img/ccs.png">
-          <button style="font-weight: bold;" id="signup-btn">No account yet? Signup.</button>
+          <button style="font-weight: bold;" id="signup-btn">No account yet? Sign up.</button>
         </div>
       </div>
       <div class="intro-control signup-intro">
         <div class="intro-control__inner">
           <img src="./img/ccs.png">
-          <button style="font-weight: bold;" id="signin-btn">Already have an account? Signin.</button>
+          <button style="font-weight: bold;" id="signin-btn">Already have an account? Sign in.</button>
         </div>
       </div>
     </div>

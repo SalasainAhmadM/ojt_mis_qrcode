@@ -233,6 +233,17 @@ if ($holiday_stmt = $database->prepare($holiday_query)) {
                     <li><a class="link_name" href="qr-code_project_based.php">QR Scanner</a></li>
                 </ul>
             </li>
+
+            <li>
+                <a href="dtr.php">
+                    <i class="fa-solid fa-clipboard-question"></i>
+                    <span class="link_name">Remarks</span>
+                </a>
+                <ul class="sub-menu blank">
+                    <li><a class="link_name" href="dtr.php">Remarks</a></li>
+                </ul>
+            </li>
+
             <li>
                 <a href="setting.php">
                     <i class="fas fa-cog"></i>

@@ -95,7 +95,7 @@ function getStudents($database, $selected_course_section, $search_query, $compan
     $students_query = "
 SELECT student.*, 
        CONCAT(adviser.adviser_firstname, ' ', adviser.adviser_middle, '. ', adviser.adviser_lastname) AS adviser_fullname,
-       CONCAT(address.address_barangay, ', ', street.name) AS full_address,
+       CONCAT(address.address_barangay, ', ', address.address_street) AS full_address,
        company.company_name,
        course_sections.course_section_name,
        departments.department_name,
@@ -104,7 +104,6 @@ SELECT student.*,
 FROM student 
 LEFT JOIN adviser ON student.adviser = adviser.adviser_id
 LEFT JOIN address ON student.student_address = address.address_id
-LEFT JOIN street ON student.street = street.street_id
 LEFT JOIN company ON student.company = company.company_id
 LEFT JOIN course_sections ON student.course_section = course_sections.id
 LEFT JOIN departments ON student.department = departments.department_id
@@ -469,68 +468,42 @@ $current_page = $pagination_data['current_page'];
         </div>
 
     </section>
-    <style>
-        .checkbox-group {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 10px;
-            margin-bottom: 20px;
-            justify-content: center;
-        }
-
-        .evaluation-questions {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-
-        .checkbox-group label {
-            display: flex;
-            align-items: center;
-            font-size: 14px;
-        }
-
-        .checkbox-group input {
-            margin-right: 5px;
-        }
-
-        .modal-content-bigger {
-            padding: 20px;
-            background-color: white;
-            border-radius: 10px;
-            width: 40%;
-            margin: auto;
-        }
-    </style>
-
-
     <!-- Evaluation Modal -->
     <div id="evaluationModal" class="modal">
         <div class="modal-content-bigger">
             <h2 style="color: #000;">Student Performance Evaluation</h2>
-            <form id="evaluationForm" action="submit_evaluation.php" method="POST"
-                onsubmit="return validateEvaluationForm()">
+            <form id="evaluationForm" action="submit_evaluation.php" method="POST">
+
                 <input type="hidden" id="eval_student_id" name="student_id">
+
                 <div class="evaluation-questions">
                     <p>Evaluate <strong><span id="eval_student_name"></span></strong>'s performance:</p>
 
                     <!-- Question 1 -->
                     <label>1. Demonstrates initiative in completing tasks.</label>
                     <div class="checkbox-group">
-                        <label><input type="checkbox" name="question_1" value="Strongly Agree"> Strongly Agree</label>
+                        <label><input type="checkbox" name="question_1" value="Strongly Agree"> Strongly
+                            Agree</label>
                         <label><input type="checkbox" name="question_1" value="Agree"> Agree</label>
                         <label><input type="checkbox" name="question_1" value="Neutral"> Neutral</label>
                         <label><input type="checkbox" name="question_1" value="Disagree"> Disagree</label>
                         <label><input type="checkbox" name="question_1" value="Strongly Disagree"> Strongly
                             Disagree</label>
                     </div>
-
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="question_1" value="Strongly Agree"> Strongly
+                            Agree</label>
+                        <label><input type="checkbox" name="question_1" value="Agree"> Agree</label>
+                        <label><input type="checkbox" name="question_1" value="Neutral"> Neutral</label>
+                        <label><input type="checkbox" name="question_1" value="Disagree"> Disagree</label>
+                        <label><input type="checkbox" name="question_1" value="Strongly Disagree"> Strongly
+                            Disagree</label>
+                    </div>
                     <!-- Question 2 -->
                     <label>2. Works well with others in a team environment.</label>
                     <div class="checkbox-group">
-                        <label><input type="checkbox" name="question_2" value="Strongly Agree"> Strongly Agree</label>
+                        <label><input type="checkbox" name="question_2" value="Strongly Agree"> Strongly
+                            Agree</label>
                         <label><input type="checkbox" name="question_2" value="Agree"> Agree</label>
                         <label><input type="checkbox" name="question_2" value="Neutral"> Neutral</label>
                         <label><input type="checkbox" name="question_2" value="Disagree"> Disagree</label>
@@ -541,7 +514,8 @@ $current_page = $pagination_data['current_page'];
                     <!-- Question 3 -->
                     <label>3. Demonstrates responsibility and accountability.</label>
                     <div class="checkbox-group">
-                        <label><input type="checkbox" name="question_3" value="Strongly Agree"> Strongly Agree</label>
+                        <label><input type="checkbox" name="question_3" value="Strongly Agree"> Strongly
+                            Agree</label>
                         <label><input type="checkbox" name="question_3" value="Agree"> Agree</label>
                         <label><input type="checkbox" name="question_3" value="Neutral"> Neutral</label>
                         <label><input type="checkbox" name="question_3" value="Disagree"> Disagree</label>
@@ -552,7 +526,8 @@ $current_page = $pagination_data['current_page'];
                     <!-- Question 4 -->
                     <label>4. Effectively manages time to meet deadlines.</label>
                     <div class="checkbox-group">
-                        <label><input type="checkbox" name="question_4" value="Strongly Agree"> Strongly Agree</label>
+                        <label><input type="checkbox" name="question_4" value="Strongly Agree"> Strongly
+                            Agree</label>
                         <label><input type="checkbox" name="question_4" value="Agree"> Agree</label>
                         <label><input type="checkbox" name="question_4" value="Neutral"> Neutral</label>
                         <label><input type="checkbox" name="question_4" value="Disagree"> Disagree</label>
@@ -563,7 +538,8 @@ $current_page = $pagination_data['current_page'];
                     <!-- Question 5 -->
                     <label>5. Communicates effectively in both written and verbal forms.</label>
                     <div class="checkbox-group">
-                        <label><input type="checkbox" name="question_5" value="Strongly Agree"> Strongly Agree</label>
+                        <label><input type="checkbox" name="question_5" value="Strongly Agree"> Strongly
+                            Agree</label>
                         <label><input type="checkbox" name="question_5" value="Agree"> Agree</label>
                         <label><input type="checkbox" name="question_5" value="Neutral"> Neutral</label>
                         <label><input type="checkbox" name="question_5" value="Disagree"> Disagree</label>
@@ -579,37 +555,6 @@ $current_page = $pagination_data['current_page'];
             </form>
         </div>
     </div>
-
-    <script>
-        function validateEvaluationForm() {
-            const requiredQuestions = ["question_1", "question_5"];
-            for (const question of requiredQuestions) {
-                const checkboxes = document.querySelectorAll(`input[name="${question}"]:checked`);
-                if (checkboxes.length === 0) {
-                    openModal('feedbackSubmitErrorModal');
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            const form = document.getElementById("evaluationForm");
-
-            form.addEventListener("change", function (event) {
-                if (event.target.type === "checkbox") {
-                    const questionName = event.target.name;
-                    const checkboxes = document.querySelectorAll(`input[name="${questionName}"]`);
-
-                    checkboxes.forEach(checkbox => {
-                        if (checkbox !== event.target) {
-                            checkbox.checked = false;
-                        }
-                    });
-                }
-            });
-        });
-    </script>
     <!-- Feedback Success Modal -->
     <div id="feedbackSuccessModal" class="modal">
         <div class="modal-content">
@@ -720,13 +665,6 @@ $current_page = $pagination_data['current_page'];
                 <button type="button" class="update-btn" onclick="editFeedback()">Edit</button>
                 <button type="button" class="cancel-btn" onclick="closeModal('feedbackExistsModal')">Close</button>
             </div>
-        </div>
-    </div>
-    <!-- Error Modal -->
-    <div id="feedbackSubmitErrorModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('feedbackSubmitErrorModal')">&times;</span>
-            <p>Please ensure you answer all required questions.</p>
         </div>
     </div>
     <!-- Error Modal -->

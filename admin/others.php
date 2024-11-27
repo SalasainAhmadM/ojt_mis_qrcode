@@ -143,11 +143,14 @@ if ($stmt = $database->prepare($query)) {
             <div style="padding: 10px;" class="form-section-header">
                 <label style="color: #a6a6a6">Departments</label>
             </div>
-            <div style="padding: 10px;" class="form-section-header">
+            <div style="padding: 10px;" class="form-section-header-address">
                 <label style="color: #a6a6a6">Course and Section</label>
             </div>
-            <div style="padding: 10px;" class="form-section-header-address">
-                <label style="color: #a6a6a6">Address</label>
+            <div style="padding: 10px;" class="form-section-header">
+                <label style="color: #a6a6a6">Barangay</label>
+            </div>
+            <div style="padding: 10px;" class="form-section-header">
+                <label style="color: #a6a6a6">Street</label>
             </div>
         </form>
         <div class="form-container-others">
@@ -194,7 +197,7 @@ if ($stmt = $database->prepare($query)) {
             </div>
 
             <!-- Courses and Sections -->
-            <div class="form-section-others">
+            <div class="form-section-others-address">
                 <button class="btn-others" type="button" id="openAddCourseModal">Add Course and Section</button>
                 <table>
                     <thead>
@@ -250,20 +253,20 @@ if ($stmt = $database->prepare($query)) {
             </div>
 
             <!-- Address -->
-            <div class="form-section-others-address">
-                <button class="btn-others" type="button" id="openAddAddressModal">Add Address</button>
+            <div class="form-section-others">
+                <button class="btn-others" type="button" id="openAddAddressModal">Add Barangay</button>
                 <table>
                     <thead>
                         <tr>
                             <th style="width: 15%; text-align: center;">Barangay Name</th>
-                            <th style="width: 15%; text-align: center;">Street Name</th>
+                            <!-- <th style="width: 15%; text-align: center;">Street Name</th> -->
                             <th style="text-align: center;" class="action">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
                         // Fetch address
-                        $query = "SELECT * FROM address ORDER BY address_barangay, address_street ASC";
+                        $query = "SELECT * FROM address ORDER BY address_barangay ASC";
                         if ($stmt = $database->prepare($query)) {
                             $stmt->execute();
                             $result = $stmt->get_result();
@@ -272,13 +275,12 @@ if ($stmt = $database->prepare($query)) {
                                 while ($row = $result->fetch_assoc()) {
                                     echo "<tr>";
                                     echo "<td style='width: 15%; text-align: center;'>" . htmlspecialchars($row['address_barangay']) . "</td>";
-                                    echo "<td style='width: 15%; text-align: center;'>" . htmlspecialchars($row['address_street']) . "</td>";
+                                    // echo "<td style='width: 15%; text-align: center;'>" . htmlspecialchars($row['address_street']) . "</td>";
                                     echo '<td class="action" style="text-align: center;">
                         <button class="action-icon edit-btn" 
                             data-id="' . $row['address_id'] . '" 
                             data-barangay="' . htmlspecialchars($row['address_barangay']) . '" 
-                            data-street="' . htmlspecialchars($row['address_street']) . '" 
-                            onclick="openEditAddressModal(' . $row['address_id'] . ', \'' . htmlspecialchars($row['address_barangay']) . '\', \'' . htmlspecialchars($row['address_street']) . '\')">
+                            onclick="openEditAddressModal(' . $row['address_id'] . ', \'' . htmlspecialchars($row['address_barangay']) . '\')">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
                         <button class="action-icon delete-btn" 
@@ -291,6 +293,55 @@ if ($stmt = $database->prepare($query)) {
                                 }
                             } else {
                                 echo "<tr><td style='text-align: center;' colspan='3'>No address found.</td></tr>";
+                            }
+                            $stmt->close();
+                        }
+                        ?>
+                    </tbody>
+                </table>
+
+            </div>
+
+            <!-- Street -->
+            <div class="form-section-others">
+                <button class="btn-others" type="button" id="openAddStreetModal">Add Street</button>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%; text-align: center;">Street Name</th>
+                            <!-- <th style="width: 15%; text-align: center;">Street Name</th> -->
+                            <th style="text-align: center;" class="action">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        // Fetch street
+                        $query = "SELECT * FROM street ORDER BY name ASC";
+                        if ($stmt = $database->prepare($query)) {
+                            $stmt->execute();
+                            $result = $stmt->get_result();
+
+                            if ($result->num_rows > 0) {
+                                while ($row = $result->fetch_assoc()) {
+                                    echo "<tr>";
+                                    echo "<td style='width: 15%; text-align: center;'>" . htmlspecialchars($row['name']) . "</td>";
+                                    echo '<td class="action" style="text-align: center;">
+                        <button class="action-icon edit-btn" 
+                            data-id="' . $row['street_id'] . '" 
+                            data-street="' . htmlspecialchars($row['name']) . '" 
+                            onclick="openEditStreetModal(' . $row['street_id'] . ', \'' . htmlspecialchars($row['name']) . '\')">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button class="action-icon delete-btn" 
+                            data-id="' . $row['street_id'] . '" 
+                            onclick="deleteStreet(' . $row['street_id'] . ')">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>';
+                                    echo "</tr>";
+                                }
+                            } else {
+                                echo "<tr><td style='text-align: center;' colspan='3'>No street found.</td></tr>";
                             }
                             $stmt->close();
                         }
@@ -375,10 +426,25 @@ if ($stmt = $database->prepare($query)) {
                 <div class="input-group">
                     <label for="barangayName">Barangay Name</label>
                     <input type="text" id="barangayName" name="barangayName" placeholder="Input Barangay Name" required>
-                    <label for="streetName">Street Name</label>
-                    <input type="text" id="streetName" name="streetName" placeholder="Input Street Name" required>
+                    <!-- <label for="streetName">Street Name</label>
+                    <input type="text" id="streetName" name="streetName" placeholder="Input Street Name" required> -->
                 </div>
                 <button type="submit" class="modal-btn">Add Address</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Street Modal -->
+    <div id="addStreetModal" class="modal">
+        <div class="modal-content-others">
+            <span class="close" id="closeAddStreetModal">&times;</span>
+            <h2>Add Street</h2>
+            <form action="./others/add_street.php" method="POST">
+                <div class="input-group">
+                    <label for="barangayName">Street Name</label>
+                    <input type="text" id="barangayName" name="streetName" placeholder="Input Street Name" required>
+                </div>
+                <button type="submit" class="modal-btn">Add Street</button>
             </form>
         </div>
     </div>
@@ -396,6 +462,7 @@ if ($stmt = $database->prepare($query)) {
             <button class="proceed-btn" onclick="closeModal('departmentSuccessModal')">Close</button>
         </div>
     </div>
+
     <!-- Success Modal for Adding Course and Section -->
     <div id="courseSectionSuccessModal" class="modal">
         <div class="modal-content">
@@ -422,6 +489,21 @@ if ($stmt = $database->prepare($query)) {
             <h2>Address Added Successfully!</h2>
             <p>The address has been added successfully!</p>
             <button class="proceed-btn" onclick="closeModal('addressSuccessModal')">Close</button>
+        </div>
+    </div>
+
+    <!-- Success Modal for Adding Address -->
+    <div id="streetSuccessModal" class="modal">
+        <div class="modal-content">
+            <!-- Lottie Animation -->
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2>Street Added Successfully!</h2>
+            <p>The street has been added successfully!</p>
+            <button class="proceed-btn" onclick="closeModal('streetSuccessModal')">Close</button>
         </div>
     </div>
     <!-- Success Modal for Editing Department -->
@@ -466,6 +548,20 @@ if ($stmt = $database->prepare($query)) {
             <button class="proceed-btn" onclick="closeModal('addressEditModal')">Close</button>
         </div>
     </div>
+    <!-- Success Modal for Editing street -->
+    <div id="streetEditModal" class="modal">
+        <div class="modal-content">
+            <!-- Lottie Animation -->
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2>Street Updated Successfully!</h2>
+            <p>The street has been updated successfully!</p>
+            <button class="proceed-btn" onclick="closeModal('streetEditModal')">Close</button>
+        </div>
+    </div>
     <!-- Success Modal for Deleting Department -->
     <div id="departmentDeleteModal" class="modal">
         <div class="modal-content">
@@ -507,6 +603,19 @@ if ($stmt = $database->prepare($query)) {
             <p>The address has been deleted successfully!</p>
             <button class="proceed-btn" onclick="closeModal('addressDeleteModal')">Close</button>
         </div>
+    </div> <!-- Success Modal for Deleting Department -->
+    <div id="streetDeleteModal" class="modal">
+        <div class="modal-content">
+            <!-- Lottie Animation -->
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2>Street Deleted Successfully!</h2>
+            <p>The street has been deleted successfully!</p>
+            <button class="proceed-btn" onclick="closeModal('streetDeleteModal')">Close</button>
+        </div>
     </div>
     <!-- Success Modal for Duplicate Department -->
     <div id="departmentDuplicateModal" class="modal">
@@ -530,8 +639,22 @@ if ($stmt = $database->prepare($query)) {
                     style="width: 150px; height: 150px;" loop autoplay>
                 </lottie-player>
             </div>
-            <p>Address Barangay and Street name already exists!</p>
+            <p>Address Barangay already exists!</p>
             <button class="proceed-btn" onclick="closeModal('AddressDuplicateModal')">Close</button>
+        </div>
+    </div>
+
+    <!-- Success Modal for Duplicate Street -->
+    <div id="StreetDuplicateModal" class="modal">
+        <div class="modal-content">
+            <!-- Lottie Animation -->
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <p>Street Street name already exists!</p>
+            <button class="proceed-btn" onclick="closeModal('StreetDuplicateModal')">Close</button>
         </div>
     </div>
     <!-- Success Modal for Duplicate Course and Section -->
@@ -620,10 +743,26 @@ if ($stmt = $database->prepare($query)) {
                 <div class="input-group">
                     <label for="editBarangayName">Barangay Name</label>
                     <input type="text" id="editBarangayName" name="barangay_name" required>
+                    <!-- <label for="editStreetName">Street Name</label>
+                    <input type="text" id="editStreetName" name="street_name" required> -->
+                </div>
+                <button type="submit" class="modal-btn">Update Address</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit street Modal -->
+    <div id="editStreetModal" class="modal">
+        <div class="modal-content-others">
+            <span class="close" id="closeEditStreetModal">&times;</span>
+            <h2>Edit Street</h2>
+            <form id="editStreetForm" action="./others/edit_street.php" method="POST">
+                <input type="hidden" id="editStreetId" name="street_id">
+                <div class="input-group">
                     <label for="editStreetName">Street Name</label>
                     <input type="text" id="editStreetName" name="street_name" required>
                 </div>
-                <button type="submit" class="modal-btn">Update Address</button>
+                <button type="submit" class="modal-btn">Update Street</button>
             </form>
         </div>
     </div>
@@ -664,6 +803,9 @@ if ($stmt = $database->prepare($query)) {
             <?php elseif (isset($_SESSION['address_success'])): ?>
                 showModal('addressSuccessModal');
                 <?php unset($_SESSION['address_success']); ?>
+            <?php elseif (isset($_SESSION['street_success'])): ?>
+                showModal('streetSuccessModal');
+                <?php unset($_SESSION['street_success']); ?>
             <?php elseif (isset($_SESSION['department_delete'])): ?>
                 showModal('departmentDeleteModal');
                 <?php unset($_SESSION['department_delete']); ?>
@@ -673,6 +815,9 @@ if ($stmt = $database->prepare($query)) {
             <?php elseif (isset($_SESSION['address_delete'])): ?>
                 showModal('addressDeleteModal');
                 <?php unset($_SESSION['address_delete']); ?>
+            <?php elseif (isset($_SESSION['street_delete'])): ?>
+                showModal('streetDeleteModal');
+                <?php unset($_SESSION['street_delete']); ?>
             <?php elseif (isset($_SESSION['department_edit_success'])): ?>
                 showModal('departmentEditModal');
                 <?php unset($_SESSION['department_edit_success']); ?>
@@ -682,6 +827,9 @@ if ($stmt = $database->prepare($query)) {
             <?php elseif (isset($_SESSION['address_edit_success'])): ?>
                 showModal('addressEditModal');
                 <?php unset($_SESSION['address_edit_success']); ?>
+            <?php elseif (isset($_SESSION['street_edit_success'])): ?>
+                showModal('streetEditModal');
+                <?php unset($_SESSION['street_edit_success']); ?>
             <?php elseif (isset($_SESSION['error_1'])): ?>
                 showModal('departmentDuplicateModal');
                 <?php unset($_SESSION['error_1']); ?>
@@ -691,6 +839,9 @@ if ($stmt = $database->prepare($query)) {
             <?php elseif (isset($_SESSION['error_3'])): ?>
                 showModal('AddressDuplicateModal');
                 <?php unset($_SESSION['error_3']); ?>
+            <?php elseif (isset($_SESSION['error_4'])): ?>
+                showModal('StreetDuplicateModal');
+                <?php unset($_SESSION['error_4']); ?>
             <?php elseif (isset($_SESSION['error_try'])): ?>
                 showModal('TryAgainModal');
                 <?php unset($_SESSION['error_try']); ?>
@@ -701,16 +852,18 @@ if ($stmt = $database->prepare($query)) {
         var addDepartmentModal = document.getElementById("addDepartmentModal");
         var addCourseModal = document.getElementById("addCourseModal");
         var addAddressModal = document.getElementById("addAddressModal");
-
+        var addStreetModal = document.getElementById("addStreetModal");
         // Get open modal buttons
         var openAddDepartmentModalBtn = document.getElementById("openAddDepartmentModal");
         var openAddCourseModalBtn = document.getElementById("openAddCourseModal");
         var openAddAddressModalBtn = document.getElementById("openAddAddressModal");
+        var openAddStreetModalBtn = document.getElementById("openAddStreetModal");
 
         // Get close buttons
         var closeAddDepartmentModalBtn = document.getElementById("closeAddDepartmentModal");
         var closeAddCourseModalBtn = document.getElementById("closeAddCourseModal");
         var closeAddAddressModalBtn = document.getElementById("closeAddAddressModal");
+        var closeAddStreetModalBtn = document.getElementById("closeAddStreetModal");
 
         // Open modals
         openAddDepartmentModalBtn.onclick = function () {
@@ -724,7 +877,9 @@ if ($stmt = $database->prepare($query)) {
         openAddAddressModalBtn.onclick = function () {
             addAddressModal.style.display = "block";
         }
-
+        openAddStreetModalBtn.onclick = function () {
+            addStreetModal.style.display = "block";
+        }
         // Close modals
         closeAddDepartmentModalBtn.onclick = function () {
             addDepartmentModal.style.display = "none";
@@ -737,7 +892,9 @@ if ($stmt = $database->prepare($query)) {
         closeAddAddressModalBtn.onclick = function () {
             addAddressModal.style.display = "none";
         }
-
+        closeAddStreetModalBtn.onclick = function () {
+            addStreetModal.style.display = "none";
+        }
         // Close modal if clicked outside
         window.onclick = function (event) {
             if (event.target == addDepartmentModal) {
@@ -746,12 +903,16 @@ if ($stmt = $database->prepare($query)) {
                 addCourseModal.style.display = "none";
             } else if (event.target == addAddressModal) {
                 addAddressModal.style.display = "none";
+            } else if (event.target == addStreetModal) {
+                addStreetModal.style.display = "none";
             } else if (event.target == document.getElementById("editDepartmentModal")) {
                 document.getElementById("editDepartmentModal").style.display = "none";
             } else if (event.target == document.getElementById("editCourseSectionModal")) {
                 document.getElementById("editCourseSectionModal").style.display = "none";
             } else if (event.target == document.getElementById("editAddressModal")) {
                 document.getElementById("editAddressModal").style.display = "none";
+            } else if (event.target == document.getElementById("editStreetModal")) {
+                document.getElementById("editStreetModal").style.display = "none";
             }
         };
 
@@ -763,6 +924,7 @@ if ($stmt = $database->prepare($query)) {
                 const adviser_id = this.getAttribute('data-adviser-id');
                 const barangay_name = this.getAttribute('data-barangay');
                 const street_name = this.getAttribute('data-street');
+                // const street_name = this.getAttribute('data-street');
 
                 if (this.closest('.form-section-others').classList.contains('department-section')) {
                     document.getElementById('editDepartmentName').value = name;
@@ -775,9 +937,12 @@ if ($stmt = $database->prepare($query)) {
                     showModal('editCourseSectionModal');
                 } else if (this.closest('.form-section-others').classList.contains('address-section')) {
                     document.getElementById('editBarangayName').value = barangay_name;
-                    document.getElementById('editStreetName').value = street_name;
                     document.getElementById('editAddressId').value = id;
                     showModal('editAddressModal');
+                } else if (this.closest('.form-section-others').classList.contains('street-section')) {
+                    document.getElementById('editStreetName').value = street_name;
+                    document.getElementById('editStreetId').value = id;
+                    showModal('editStreetModal');
                 }
             });
         });
@@ -808,10 +973,9 @@ if ($stmt = $database->prepare($query)) {
         };
 
         // Open Edit Address Modal
-        function openEditAddressModal(addressId, barangayName, streetName) {
+        function openEditAddressModal(addressId, barangayName) {
             document.getElementById("editAddressId").value = addressId;
             document.getElementById("editBarangayName").value = barangayName;
-            document.getElementById("editStreetName").value = streetName;
             document.getElementById("editAddressModal").style.display = "block";
         }
 
@@ -820,6 +984,17 @@ if ($stmt = $database->prepare($query)) {
             document.getElementById("editAddressModal").style.display = "none";
         };
 
+        // Open Edit street Modal
+        function openEditStreetModal(streetId, streetName) {
+            document.getElementById("editStreetId").value = streetId;
+            document.getElementById("editStreetName").value = streetName;
+            document.getElementById("editStreetModal").style.display = "block";
+        }
+
+        // Close Edit Street Modal
+        document.getElementById("closeEditStreetModal").onclick = function () {
+            document.getElementById("editStreetModal").style.display = "none";
+        };
         // For deleting a department, course section, or address
         function deleteDepartment(id) {
             if (confirm('Are you sure you want to delete this department?')) {
@@ -836,6 +1011,12 @@ if ($stmt = $database->prepare($query)) {
         function deleteAddress(id) {
             if (confirm('Are you sure you want to delete this address?')) {
                 window.location.href = './others/delete_address.php?id=' + id;
+            }
+        }
+
+        function deleteStreet(id) {
+            if (confirm('Are you sure you want to delete this street?')) {
+                window.location.href = './others/delete_street.php?id=' + id;
             }
         }
     </script>

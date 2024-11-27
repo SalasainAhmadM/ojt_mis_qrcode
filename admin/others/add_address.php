@@ -5,20 +5,19 @@ require '../../conn/connection.php'; // Include the database connection
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Trim and sanitize user input to avoid whitespace issues
     $barangayName = trim($_POST['barangayName']);
-    $streetName = trim($_POST['streetName']);
 
     // Check if the required fields are not empty
-    if (empty($barangayName) || empty($streetName)) {
-        $_SESSION['error_try'] = "Both Barangay Name and Street Name are required.";
+    if (empty($barangayName)) {
+        $_SESSION['error_try'] = "Both Barangay Name are required.";
         header("Location: ../others.php");
         exit();
     }
 
     // Check if the address already exists
-    $checkQuery = "SELECT * FROM address WHERE address_barangay = ? AND address_street = ?";
+    $checkQuery = "SELECT * FROM address WHERE address_barangay = ?";
     if ($stmt = $database->prepare($checkQuery)) {
         // Bind the parameters to avoid SQL injection
-        $stmt->bind_param("ss", $barangayName, $streetName);
+        $stmt->bind_param("s", $barangayName);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -27,9 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['error_3'] = "Address already exists. Please enter a new address.";
         } else {
             // Proceed to insert the address since it doesn't exist
-            $insertQuery = "INSERT INTO address (address_barangay, address_street) VALUES (?, ?)";
+            $insertQuery = "INSERT INTO address (address_barangay) VALUES (?)";
             if ($insertStmt = $database->prepare($insertQuery)) {
-                $insertStmt->bind_param("ss", $barangayName, $streetName);
+                $insertStmt->bind_param("s", $barangayName);
 
                 if ($insertStmt->execute()) {
                     // Success: set session variable and redirect
