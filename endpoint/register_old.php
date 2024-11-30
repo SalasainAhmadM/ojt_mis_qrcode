@@ -26,37 +26,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $verification_code = md5(rand()); // Random verification code
 
     // Insert into the student table
-    $sql = "INSERT INTO student (student_firstname, student_middle, student_lastname, student_email, student_password, verification_code, otp) 
-            VALUES ('$firstname', '$middle', '$lastname', '$email', '$password', '$verification_code' , '$otp')";
+    $sql = "INSERT INTO student (student_firstname, student_middle, student_lastname, student_email, student_password, verification_code) 
+            VALUES ('$firstname', '$middle', '$lastname', '$email', '$password', '$verification_code')";
 
     if (mysqli_query($database, $sql)) {
-        // Retrieve the auto-incremented student_id
-        $student_id = mysqli_insert_id($database);
-
         $_SESSION['otp'] = $otp;
         $_SESSION['email'] = $email;
         $_SESSION['verification_code'] = $verification_code;
 
         $subject = 'Your OTP Code';
-        $verify_url = "http://localhost/ojt_mis_qrcode/endpoint/verify.php?student_id=$student_id";
-        $body = "
-            <p>Your OTP code is <b>$otp</b>. Please enter this code to verify your email address.</p>
-            <p>Alternatively, click the button below to input your OTP code:</p>
-            <a href='$verify_url' style='
-                display: inline-block;
-                background-color: #095d40;
-                color: #ffffff;
-                text-decoration: none;
-                padding: 10px 20px;
-                border-radius: 5px;
-                font-size: 16px;
-                font-weight: bold;
-            '>Verify Page</a>
-        ";
+        $body = "Your OTP code is <b>$otp</b>. Please enter this code to verify your email address.";
 
         if (sendMail($email, $subject, $body)) {
             echo "<script type='text/javascript'>
-            window.location.href = './verify.php?registration=success&student_id=$student_id';
+            window.location.href = './verify.php?registration=success';
             </script>";
             exit();
         } else {

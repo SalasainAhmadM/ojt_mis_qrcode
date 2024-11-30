@@ -455,6 +455,7 @@ CREATE TABLE `student` (
   `student_address` varchar(255) NOT NULL,
   `generated_qr_code` varchar(255) NOT NULL,
   `verification_code` varchar(255) NOT NULL,
+  `otp` varchar(255) DEFAULT NULL,
   `ojt_type` enum('Project-Based','Field-Based') NOT NULL,
   `street` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
