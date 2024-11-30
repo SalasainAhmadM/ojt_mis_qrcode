@@ -95,24 +95,36 @@ if ($holiday_stmt = $database->prepare($holiday_query)) {
 }
 
 $current_time = date('H:i:s');
+// Define the grace period in minutes
 $isLate = false;
+$gracePeriodMinutes = 15;
 
 if (isset($schedule) && !$todayIsHoliday) {  // Check if it's not a holiday and not suspended
-    // Check if there's already a 'Late' remark for the student and schedule
+    // Convert the scheduled time_in and current time into DateTime objects
+    $scheduledTime = new DateTime($schedule['time_in']);
+    $currentDateTime = new DateTime($current_time);
+
+    // Add the grace period to the scheduled time_in
+    $graceEndTime = clone $scheduledTime;
+    $graceEndTime->modify("+{$gracePeriodMinutes} minutes");
+
+    // Check if the current time is after the grace period and there's no existing 'Late' remark
     $remark_query = "SELECT * FROM attendance_remarks WHERE student_id = ? AND schedule_id = ? AND remark_type = 'Late'";
     if ($remark_stmt = $database->prepare($remark_query)) {
         $remark_stmt->bind_param("ii", $student_id, $schedule_id);
         $remark_stmt->execute();
         $remark_result = $remark_stmt->get_result();
 
-        // If no 'Late' remark exists, set $isLate based on time comparison
-        if ($remark_result->num_rows === 0 && $current_time > $schedule['time_in']) {
+        if ($remark_result->num_rows === 0 && $currentDateTime > $graceEndTime) {
             $isLate = true;
+        } else {
+            $isLate = false; // Within the grace period or already marked as late
         }
 
         $remark_stmt->close();
     }
 }
+
 
 // Function to check if a reason for absence is already submitted
 function hasSubmittedReason($database, $student_id, $schedule_id)
@@ -183,6 +195,81 @@ if ($absent_stmt = $database->prepare($absent_query)) {
     <link rel="stylesheet" href="../css/mobile.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
+<style>
+    /* For Mobile Screens */
+    @media (max-width: 768px) {
+        .bx-menu {
+            display: block;
+            /* Show the hamburger icon in mobile view */
+        }
+
+        .sidebar.close {
+            width: 78px;
+            margin-left: -78px;
+        }
+
+
+
+
+        .home-section .home-content .bx-menu {
+            margin: 0 15px;
+            cursor: pointer;
+            margin-left: -68px;
+
+        }
+
+        .home-section .home-content .text {
+            font-size: 26px;
+            font-weight: 600;
+            margin-left: -68px;
+        }
+
+        .header-box {
+            margin-left: 10px;
+            width: 110%;
+            padding-left: 10px;
+            width: calc(110% - 60px);
+            margin-left: -68px;
+        }
+
+        .left-box-qr,
+        .right-box-qr {
+            margin-left: -68px;
+            width: 120%;
+        }
+
+        .whole-box {
+            padding: 0px;
+            padding-left: 10px;
+            padding-right: 0px;
+            margin-left: -68px;
+            width: 120%;
+        }
+
+        .qr-camera {
+            margin-left: 45px;
+        }
+
+        video {
+            margin-left: 25px;
+        }
+    }
+
+    /* For Web/Desktop Screens */
+    @media (min-width: 769px) {
+        .bx-menu {
+            display: none;
+            /* Hide the hamburger icon in web/desktop view */
+        }
+    }
+
+    /* Sidebar */
+    @media (max-width: 420px) {
+        .sidebar.close .nav-links li .sub-menu {
+            display: none;
+        }
+    }
+</style>
 
 <body>
     <div class="header">
@@ -364,6 +451,8 @@ if ($absent_stmt = $database->prepare($absent_query)) {
                     <p>Reason for absence:</p>
                     <textarea style="height: 100px" id="absent-reason-text" placeholder="Explain your reason here..."
                         required></textarea>
+                    <p>Upload Proof Image:</p>
+                    <input type="file" id="proof-image" accept="image/*" required>
                 </div>
                 <button class="proceed-btn"
                     onclick="submitAbsentReason(<?= htmlspecialchars($student['student_id']) ?>)">Submit</button>
@@ -373,19 +462,29 @@ if ($absent_stmt = $database->prepare($absent_query)) {
         <script>
             function submitAbsentReason(studentId) {
                 const reason = document.getElementById("absent-reason-text").value.trim();
+                const proofImage = document.getElementById("proof-image").files[0];
+
                 if (reason === "") {
                     alert("Please provide a reason for your absence.");
+                    return;
+                }
+                if (!proofImage) {
+                    alert("Please upload a proof image.");
                     return;
                 }
 
                 // Get all schedule IDs from hidden inputs
                 const scheduleIds = Array.from(document.querySelectorAll("input[name='schedule_ids[]']")).map(input => input.value);
 
-                // Send absence reason to the server via POST
+                const formData = new FormData();
+                formData.append("student_id", studentId);
+                formData.append("reason", reason);
+                formData.append("proof_image", proofImage);
+                scheduleIds.forEach(scheduleId => formData.append("schedule_ids[]", scheduleId));
+
                 fetch('submit_absent_reason.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ student_id: studentId, schedule_ids: scheduleIds, reason: reason })
+                    body: formData
                 })
                     .then(response => response.json())
                     .then(data => {
@@ -401,7 +500,6 @@ if ($absent_stmt = $database->prepare($absent_query)) {
                         openModal('absentResponseFailureModal');
                     });
             }
-
         </script>
         <!-- Absent Response Success Modal -->
         <div id="absentResponseSuccessModal" class="modal" style="display: none;">
@@ -436,6 +534,7 @@ if ($absent_stmt = $database->prepare($absent_query)) {
             <?php else: ?>
                 <div id="qrsuccesslateTimeinModal" class="modal" style="display: none;">
                 <?php endif; ?>
+
                 <div class="modal-content-late">
                     <div style="display: flex; justify-content: center; align-items: center;">
                         <lottie-player src="../animation/clock-095d40.json" background="transparent" speed="1"
@@ -609,7 +708,11 @@ if ($absent_stmt = $database->prepare($absent_query)) {
 
                 function processQRCode(qrData) {
                     const [companyId, scannedDate] = qrData.split(' - ');
-                    const today = new Date().toISOString().split('T')[0];
+                    // Convert current date to Asia/Manila time
+                    const now = new Date();
+                    const offsetInHours = 8; // UTC+8 for Manila
+                    const manilaDate = new Date(now.getTime() + offsetInHours * 60 * 60 * 1000);
+                    const today = manilaDate.toISOString().split('T')[0];
 
                     if (scannedDate !== today) {
                         displayErrorModal('Invalid QR Code! This QR code is not for today.');
@@ -638,6 +741,7 @@ if ($absent_stmt = $database->prepare($absent_query)) {
                                     document.querySelector("#qrsuccessTimeoutModal span").innerText = data.student_name;
                                     document.querySelector("#qrsuccessTimeoutModal h3").innerText = data.time_out;
                                     document.querySelector("#ojt-hours").innerText = data.ojt_hours;
+                                    document.querySelector("#attendance-id").value = data.attendance_id;
                                     openModal('qrsuccessTimeoutModal'); // Show Time-out modal
                                 }
                             } else {
@@ -655,7 +759,28 @@ if ($absent_stmt = $database->prepare($absent_query)) {
                     document.querySelector("#qrErrorModal p").innerText = message;
                     openModal("qrErrorModal");
                 }
+                function submitTimeout() {
+                    const attendanceId = document.querySelector("#attendance-id").value;
+                    const timeoutReason = document.querySelector("#timeout-reason").value;
 
+                    fetch('update_attendance.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ attendance_id: attendanceId, reason: timeoutReason })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert("Time-out reason updated successfully!");
+                                closeModal('qrsuccessTimeoutModal');
+                            } else {
+                                alert("Failed to update time-out reason.");
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error updating time-out reason:", error);
+                        });
+                }
             </script>
 
             <!-- QR Scan Time-in Modal -->
@@ -674,20 +799,66 @@ if ($absent_stmt = $database->prepare($absent_query)) {
             </div>
 
             <!-- QR Scan Time-out Modal -->
-            <div id="qrsuccessTimeoutModal" class="modal" style="display: none;">
-                <div class="modal-content">
-                    <div style="display: flex; justify-content: center; align-items: center;">
+            <div id="qrsuccessTimeoutModal" class="modal" style="display: none; background-color: rgba(0, 0, 0, 0.5);">
+                <div class="modal-content" style="
+        color: #095d40; 
+        border-radius: 10px; 
+        width: 400px; 
+        margin: 5% auto; 
+        padding: 20px; 
+    ">
+                    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 15px;">
                         <lottie-player src="../animation/clock-095d40.json" background="transparent" speed="1"
-                            style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+                            style="width: 150px; height: 150px;" loop autoplay>
+                        </lottie-player>
                     </div>
-                    <h2>Time-out Successful!</h2>
-                    <p>Name: <span id="timeout-name" style="color: #095d40; font-size: 20px"></span></p>
-                    <p>Time-out</p>
-                    <h3 id="timeout-time"></h3>
-                    <p>OJT Hours: <strong id="ojt-hours"></strong></p>
-                    <button class="proceed-btn" onclick="closeModal('qrsuccessTimeoutModal')">Close</button>
+                    <h2 style="text-align: center; font-family: Arial, sans-serif;">Time-out Successful!</h2>
+                    <p style="text-align: center; font-size: 18px; margin-top: 10px; margin-bottom: 5px;">
+                        <span>Name:</span> <span id="timeout-name" style="font-weight: bold; font-size: 20px;"></span>
+                    </p>
+                    <p style="text-align: center; font-size: 18px; margin: 5px 0;">Time-out</p>
+                    <h3 id="timeout-time"
+                        style="text-align: center; font-size: 24px; margin: 5px 0; font-weight: bold;"></h3>
+                    <p style="text-align: center; font-size: 18px; margin: 10px 0;">
+                        OJT Hours: <strong id="ojt-hours" style="font-size: 20px;"></strong>
+                    </p>
+
+                    <input type="hidden" id="attendance-id">
+
+                    <div style="margin: 20px 0;">
+                        <label for="timeout-reason" style="display: block; font-weight: bold; margin-bottom: 10px;">
+                            Select Reason:
+                        </label>
+                        <select id="timeout-reason" style="
+                width: 100%; 
+                padding: 10px; 
+                font-size: 16px; 
+                border: 1px solid #b3d7c2; 
+                border-radius: 5px; 
+                background: #f9fff9; 
+                color: #095d40;">
+                            <option value="Time-Out">Time-Out</option>
+                            <option value="Company Errand">Company Errand</option>
+                            <option value="Lunch Break">Lunch Break</option>
+                        </select>
+                    </div>
+
+                    <button class="proceed-btn" onclick="submitTimeout()" style="
+            display: block; 
+            width: 100%; 
+            padding: 12px; 
+            font-size: 18px; 
+            font-weight: bold; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin-top: 20px;">
+                        Submit
+                    </button>
                 </div>
             </div>
+
+
             <!-- Logout Confirmation Modal -->
             <div id="logoutModal" class="modal">
                 <div class="modal-content">

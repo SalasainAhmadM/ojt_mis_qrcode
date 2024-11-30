@@ -220,7 +220,7 @@ if ($stmt = $database->prepare($query)) {
     <div id="scheduleModal" class="modal">
         <div class="modal-content-date">
             <h2 id="selectedDate">Set Schedule</h2>
-            <form id="scheduleForm" action="./calendar/submit_schedule.php" method="POST">
+            <form id="scheduleForm" action="submit_schedule.php" method="POST">
                 <input type="hidden" id="scheduleDate" name="date">
                 <input type="hidden" name="company_id" value="<?php echo $_SESSION['user_id']; ?>">
 
@@ -692,7 +692,7 @@ if ($stmt = $database->prepare($query)) {
     <div id="editScheduleModal" class="modal">
         <div class="modal-content-date">
             <h2>Edit Schedule</h2>
-            <form id="editScheduleForm" action="./calendar/update_schedule.php" method="POST">
+            <form id="editScheduleForm" action="update_schedule.php" method="POST">
                 <input type="hidden" id="scheduleId" name="schedule_id">
                 <input type="hidden" name="company_id" value="<?php echo $_SESSION['user_id']; ?>">
 

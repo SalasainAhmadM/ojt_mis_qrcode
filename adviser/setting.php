@@ -185,11 +185,11 @@ if ($departments_result->num_rows > 0) {
                     <label for="wmsu-id">Full Name</label>
                     <div class="name-inputs">
                         <input class="firstname" type="text" id="adviser-firstname" name="adviser_firstname"
-                            value="<?php echo $adviser['adviser_firstname']; ?>">
+                            value="<?php echo $adviser['adviser_firstname']; ?>" required>
                         <input class="middle" type="text" id="adviser-middle" name="adviser_middle"
                             value="<?php echo $adviser['adviser_middle']; ?>">
                         <input class="lastname" type="text" id="adviser-lastname" name="adviser_lastname"
-                            value="<?php echo $adviser['adviser_lastname']; ?>">
+                            value="<?php echo $adviser['adviser_lastname']; ?>" required>
                     </div>
                 </div>
                 <div class="form-group">
@@ -197,13 +197,13 @@ if ($departments_result->num_rows > 0) {
                         value="<?php echo $adviser['adviser_id']; ?>">
                     <label for="wmsu-email">Adviser Email</label>
                     <input type="text" id="adviser-email" name="adviser_email"
-                        value="<?php echo $adviser['adviser_email']; ?>">
+                        value="<?php echo $adviser['adviser_email']; ?>" required>
                 </div>
                 <div class="form-group">
                     <label for="contact">Contact Number</label>
                     <input type="text" id="adviser_contact" name="adviser_number"
                         value="<?php echo $adviser['adviser_number']; ?>" required maxlength="13"
-                        oninput="limitInput(this)">
+                        oninput="limitInput(this)" required>
                 </div>
                 <script>
                     function limitInput(input) {

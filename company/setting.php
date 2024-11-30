@@ -204,17 +204,17 @@ if ($result = $database->query($query)) {
                 <div class="form-group-name">
                     <label for="wmsu-id">Company Name</label>
                     <input type="text" id="company-name" name="company_name"
-                        value="<?php echo $company['company_name']; ?>">
+                        value="<?php echo $company['company_name']; ?>" required>
                 </div>
                 <div class="form-group-name">
                     <label for="wmsu-id">Representative Name</label>
                     <div class="name-inputs">
                         <input class="firstname" type="text" id="company-firstname" name="company_rep_firstname"
-                            value="<?php echo $company['company_rep_firstname']; ?>">
+                            value="<?php echo $company['company_rep_firstname']; ?>" required>
                         <input class="middle" type="text" id="company-middle" name="company_rep_middle"
                             value="<?php echo $company['company_rep_middle']; ?>">
                         <input class="lastname" type="text" id="company-lastname" name="company_rep_lastname"
-                            value="<?php echo $company['company_rep_lastname']; ?>">
+                            value="<?php echo $company['company_rep_lastname']; ?>" required>
                     </div>
                 </div>
                 <div class="form-group">
@@ -222,13 +222,13 @@ if ($result = $database->query($query)) {
                         value="<?php echo $company['company_id']; ?>">
                     <label for="wmsu-email">Company Email</label>
                     <input type="text" id="company-email" name="company_email"
-                        value="<?php echo $company['company_email']; ?>">
+                        value="<?php echo $company['company_email']; ?>" required>
                 </div>
                 <div class="form-group">
                     <label for="contact">Contact Number</label>
                     <input type="text" id="company_contact" name="company_number"
                         value="<?php echo $company['company_number']; ?>" required maxlength="13"
-                        oninput="limitInput(this)">
+                        oninput="limitInput(this)" required>
                 </div>
                 <script>
                     function limitInput(input) {

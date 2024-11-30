@@ -2,23 +2,43 @@
 session_start();
 require '../conn/connection.php';
 
-// Retrieve JSON data from the POST request
-$data = json_decode(file_get_contents('php://input'), true);
+$response = ['success' => false, 'message' => 'Invalid data received.'];
 
-// Check if the necessary data is set
-if (isset($data['student_id'], $data['schedule_ids'], $data['reason'])) {
-    $student_id = $data['student_id'];
-    $schedule_ids = $data['schedule_ids'];
-    $reason = $data['reason'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $student_id = $_POST['student_id'];
+    $schedule_ids = $_POST['schedule_ids'];
+    $reason = $_POST['reason'];
+    $proof_image = $_FILES['proof_image'];
 
-    $inserted = false; // Flag to track successful inserts
+    // Check required fields
+    if (empty($student_id) || empty($schedule_ids) || empty($reason) || empty($proof_image)) {
+        $response['message'] = 'All fields are required.';
+        echo json_encode($response);
+        exit;
+    }
 
-    // Prepare the insert statement for adding absence remarks
-    $query = "INSERT INTO attendance_remarks (student_id, schedule_id, remark_type, remark) VALUES (?, ?, 'Absent', ?)";
+    // Handle file upload
+    $uploadDir = "../uploads/student/remark/";
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+
+    $proofImageName = $uploadDir . uniqid("proof_", true) . '.' . pathinfo($proof_image['name'], PATHINFO_EXTENSION);
+
+    if (!move_uploaded_file($proof_image['tmp_name'], $proofImageName)) {
+        $response['message'] = 'Failed to upload proof image.';
+        echo json_encode($response);
+        exit;
+    }
+
+    // Insert into database
+    $inserted = false;
+    $query = "INSERT INTO attendance_remarks (student_id, schedule_id, remark_type, remark, proof_image) 
+              VALUES (?, ?, 'Absent', ?, ?)";
+
     if ($stmt = $database->prepare($query)) {
-        // Bind parameters and execute for each schedule_id
         foreach ($schedule_ids as $schedule_id) {
-            $stmt->bind_param("iis", $student_id, $schedule_id, $reason);
+            $stmt->bind_param("iiss", $student_id, $schedule_id, $reason, $proofImageName);
             if ($stmt->execute()) {
                 $inserted = true;
             }
@@ -26,13 +46,12 @@ if (isset($data['student_id'], $data['schedule_ids'], $data['reason'])) {
         $stmt->close();
     }
 
-    // Return a JSON response based on whether any inserts were successful
     if ($inserted) {
-        echo json_encode(['success' => true, 'message' => 'Absent reason submitted successfully.']);
+        $response = ['success' => true, 'message' => 'Absent reason submitted successfully.'];
     } else {
-        echo json_encode(['success' => false, 'message' => 'Failed to submit absent reason.']);
+        $response['message'] = 'Failed to submit absent reason.';
     }
-} else {
-    echo json_encode(['success' => false, 'message' => 'Invalid data received.']);
 }
+
+echo json_encode($response);
 ?>

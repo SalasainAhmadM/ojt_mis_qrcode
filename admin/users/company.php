@@ -391,7 +391,7 @@ $current_page = $pagination_data['current_page'];
                         <input type="text" id="editCompanyFirstname" name="company_rep_firstname" required>
                     </div>
                     <div class="input-group-mi">
-                        <input type="text" id="editCompanyMiddle" name="company_rep_middle" required>
+                        <input type="text" id="editCompanyMiddle" name="company_rep_middle">
                     </div>
                     <div class="input-group-ln">
                         <input type="text" id="editCompanyLastname" name="company_rep_lastname" required>

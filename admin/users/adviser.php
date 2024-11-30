@@ -291,7 +291,7 @@ $current_page = $pagination_data['current_page'];
                     </div>
                     <div class="input-group-mi" style="width: 50px;">
                         <label id="mi" for="adviserMiddle">M.I.</label>
-                        <input type="text" id="adviserMiddlename" name="adviser_middle" placeholder="M.I." required>
+                        <input type="text" id="adviserMiddlename" name="adviser_middle" placeholder="M.I.">
                     </div>
                     <div class="input-group-ln" style="width: 40%;">
                         <label for="adviserLastname">Last Name</label>

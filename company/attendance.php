@@ -607,7 +607,7 @@ if ($stmt = $database->prepare($remarks_query)) {
             <span class="close-btn" onclick="closeModal('proofModal')">&times;</span>
 
             <!-- Image -->
-            <img src="../uploads/student/remark/proof.png" alt="Proof Image" class="proof-image">
+            <img src="" alt="Proof Image" class="proof-image">
 
             <button class="approve-btn" onclick="openApprovalModal()">
                 Approve?
@@ -679,9 +679,31 @@ if ($stmt = $database->prepare($remarks_query)) {
         }
 
         function handleProofClick() {
+            const proofButton = document.querySelector('.proof-btn');
+            const remarkId = document.getElementById('remarkTypeTitle').getAttribute('data-remark-id');
             const proofModal = document.getElementById('proofModal');
-            proofModal.style.display = 'block';
+            const proofImageElement = proofModal.querySelector('.proof-image');
+
+            if (remarkId) {
+                // Fetch proof image dynamically
+                fetch(`fetch_proofimg.php?remark_id=${remarkId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.proof_image) {
+                            proofImageElement.src = `${data.proof_image}`;
+                            proofModal.style.display = 'block';
+                        } else {
+                            alert('No proof image available.');
+                        }
+                    })
+                    .catch(() => {
+                        alert('Error loading proof image.');
+                    });
+            } else {
+                alert('Remark ID not found.');
+            }
         }
+
 
         function showApproveButton() {
             closeModal('proofModal');

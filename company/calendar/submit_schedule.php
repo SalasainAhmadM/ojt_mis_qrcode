@@ -3,6 +3,8 @@ session_start();
 include('../../phpqrcode/qrlib.php');  // Include PHPQRCode library
 require '../../conn/connection.php';
 
+$database->query("SET time_zone = '+08:00'");
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $company_id = intval($_POST['company_id']);
     $date = $_POST['date'];

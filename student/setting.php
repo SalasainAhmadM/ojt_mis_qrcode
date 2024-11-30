@@ -126,6 +126,88 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
 
     </style>
 </head>
+<style>
+    /* For Mobile Screens */
+    @media (max-width: 768px) {
+        .bx-menu {
+            display: block;
+            /* Show the hamburger icon in mobile view */
+        }
+
+        .sidebar.close {
+            width: 78px;
+            margin-left: -78px;
+        }
+
+
+
+
+        .home-section .home-content .bx-menu {
+            margin: 0 15px;
+            cursor: pointer;
+            margin-left: -68px;
+
+        }
+
+        .home-section .home-content .text {
+            font-size: 26px;
+            font-weight: 600;
+            margin-left: -68px;
+        }
+
+        .header-box {
+            margin-left: 10px;
+            width: 110%;
+            padding-left: 10px;
+            width: calc(110% - 60px);
+            margin-left: -68px;
+        }
+
+        .left-box-qr,
+        .right-box-qr {
+            margin-left: -68px;
+        }
+
+        .form-container {
+            margin-left: -68px;
+            width: 95%;
+        }
+
+        .left-box,
+        .right-box,
+        .intern-company {
+            margin-left: -68px;
+            width: 120%;
+        }
+
+        .whole-box {
+            padding: 0px;
+            padding-left: 10px;
+            padding-right: 0px;
+            margin-left: -68px;
+            width: 120%;
+        }
+
+        .qr-camera {
+            margin-left: 45px;
+        }
+    }
+
+    /* For Web/Desktop Screens */
+    @media (min-width: 769px) {
+        .bx-menu {
+            display: none;
+            /* Hide the hamburger icon in web/desktop view */
+        }
+    }
+
+    /* Sidebar */
+    @media (max-width: 420px) {
+        .sidebar.close .nav-links li .sub-menu {
+            display: none;
+        }
+    }
+</style>
 
 <body>
     <div class="header">

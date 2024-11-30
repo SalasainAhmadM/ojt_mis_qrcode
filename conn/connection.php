@@ -11,4 +11,7 @@ if ($database->connect_error) {
 }
 
 $database->set_charset("utf8mb4");
+
+// Set PHP timezone
+date_default_timezone_set("Asia/Manila");
 ?>

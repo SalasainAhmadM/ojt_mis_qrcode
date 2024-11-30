@@ -63,6 +63,74 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
 
     </style>
 </head>
+<style>
+    /* For Mobile Screens */
+    @media (max-width: 768px) {
+        .bx-menu {
+            display: block;
+            /* Show the hamburger icon in mobile view */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            /* Disables horizontal scroll */
+        }
+
+        .sidebar.close {
+            width: 78px;
+            margin-left: -78px;
+        }
+
+
+
+
+        .home-section .home-content .bx-menu {
+            margin: 0 15px;
+            cursor: pointer;
+            margin-left: -68px;
+
+        }
+
+        .home-section .home-content .text {
+            font-size: 26px;
+            font-weight: 600;
+            margin-left: -68px;
+        }
+
+        .header-box {
+            margin-left: 10px;
+            width: 110%;
+            padding-left: 10px;
+            width: calc(110% - 60px);
+            margin-left: -68px;
+        }
+
+        .whole-box {
+            padding: 0px;
+            padding-left: 10px;
+            padding-right: 0px;
+            margin-left: -68px;
+            width: 120%;
+        }
+    }
+
+    /* For Web/Desktop Screens */
+    @media (min-width: 769px) {
+        .bx-menu {
+            display: none;
+            /* Hide the hamburger icon in web/desktop view */
+        }
+    }
+
+    /* Sidebar */
+    @media (max-width: 420px) {
+        .sidebar.close .nav-links li .sub-menu {
+            display: none;
+        }
+    }
+</style>
 
 <body>
     <div class="header">
@@ -163,9 +231,7 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
                     <div class="header-group">
                         <h2>Remarks</h2>
                         <div class="button-container">
-                            <button id="openAddModalBtn" class="add-btn">
-                                <i class="fa-solid fa-plus"></i>Add
-                            </button>
+
                             <button class="export-btn" id="openJournalModalBtn">
                                 <i class="fa-solid fa-file-export"></i> Export
                             </button>
@@ -177,21 +243,6 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
         </div>
     </section>
 
-    <!-- Success Modal for Manage Profile Update -->
-    <div id="settingsSuccessModal" class="modal">
-        <div class="modal-content">
-            <!-- Lottie Animation -->
-            <div style="display: flex; justify-content: center; align-items: center;">
-                <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
-                    style="width: 150px; height: 150px;" loop autoplay>
-                </lottie-player>
-            </div>
-            <h2>Profile Updated Successfully!</h2>
-            <p>You have updated your profile, <span
-                    style="color: #095d40; font-size: 20px;"><?php echo $_SESSION['full_name']; ?>!</span></p>
-            <button class="proceed-btn" onclick="closeModal('settingsSuccessModal')">Close</button>
-        </div>
-    </div>
     <!-- Logout Confirmation Modal -->
     <div id="logoutModal" class="modal">
         <div class="modal-content">
@@ -209,59 +260,7 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
         </div>
     </div>
     <script>
-        function fetchAdviser() {
-            var course_section_id = document.getElementById('course_section').value;
 
-            // AJAX request to fetch the adviser details
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", "get_adviser.php", true);
-            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState == 4 && xhr.status == 200) {
-                    var response = JSON.parse(xhr.responseText);
-                    if (response.adviser_firstname) {
-                        document.getElementById('adviser').value = response.adviser_firstname + ' ' + response.adviser_middle + '. ' + response.adviser_lastname;
-                        document.getElementById('adviser_id').value = response.adviser_id;
-                    } else {
-                        document.getElementById('adviser').value = "No adviser found";
-                        document.getElementById('adviser_id').value = "";
-                    }
-                }
-            };
-            xhr.send("course_section_id=" + course_section_id);
-        }
-        document.getElementById('student-image').addEventListener('change', function (event) {
-            const file = event.target.files[0]; // Get the selected file
-            const previewImage = document.getElementById('preview-image'); // Get the image element
-
-            if (file) {
-                const reader = new FileReader(); // Create a FileReader to read the file
-
-                reader.onload = function (e) {
-                    previewImage.src = e.target.result; // Set the image source to the file's result
-                };
-
-                reader.readAsDataURL(file); // Read the file as a data URL
-            } else {
-                previewImage.src = '../img/user.png'; // Reset to default if no file selected
-            }
-        });
-
-        function showModal(modalId) {
-            document.getElementById(modalId).style.display = "block";
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = "none";
-        }
-
-        // Show the modal if the session variable is set
-        <?php if (isset($_SESSION['settings_success']) && $_SESSION['settings_success']): ?>
-            window.onload = function () {
-                showModal('settingsSuccessModal');
-                <?php unset($_SESSION['settings_success']); ?>
-            };
-        <?php endif; ?>
     </script>
 
     <script src="./js/script.js"></script>

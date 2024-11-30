@@ -468,7 +468,7 @@ $current_page = $pagination_data['current_page'];
                     </div>
                     <div class="input-group-mi">
                         <label id="mi_edit" for="editStudentMiddle">M.I.</label>
-                        <input type="text" id="editStudentMiddle" name="student_middle" required>
+                        <input type="text" id="editStudentMiddle" name="student_middle">
                     </div>
                     <div class="input-group-ln">
                         <label for="editStudentLastname">Last Name</label>

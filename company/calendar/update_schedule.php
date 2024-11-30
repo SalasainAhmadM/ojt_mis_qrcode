@@ -37,13 +37,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($day_type === 'Regular' || $day_type === 'Halfday') {
         // Generate a new QR code for non-Suspended days
         $qrData = "$company_id - {$existingSchedule['date']}";
-        $qrCodeDir = "../uploads/company/qrcodes/";
+        $qrCodeDir = "../../uploads/company/qrcodes/";
 
         if (!is_dir($qrCodeDir)) {
             mkdir($qrCodeDir, 0755, true);
         }
 
-        $fileName = $qrCodeDir . "qr-schedule-" . $company_id . "-" . $existingSchedule['date'] . ".png";
+        $fileName = "../uploads/company/qrcodes/" . "qr-schedule-" . $company_id . "-" . $existingSchedule['date'] . ".png";
         QRcode::png($qrData, $fileName, QR_ECLEVEL_L, 10);
     }
 

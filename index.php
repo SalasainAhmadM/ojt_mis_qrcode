@@ -37,7 +37,7 @@
           <h2>Create an Account</h2>
           <div class="input-wrapper flex-wrapper">
             <input type="text" name="student_firstname" placeholder="First Name" required />
-            <input type="text" name="student_middle" placeholder="M.I." required />
+            <input type="text" name="student_middle" placeholder="M.I." />
           </div>
           <input type="text" name="student_lastname" placeholder="Last Name" required />
           <input type="email" id="signup-email" name="email" placeholder="Email" required />

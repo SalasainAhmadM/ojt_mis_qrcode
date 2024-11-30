@@ -24,6 +24,7 @@ $ojt_type = $_POST['ojt_type'];
 $company = $_POST['company'];
 $adviser = $_POST['adviser_id'];
 $address = $_POST['address'];
+$street = $_POST['street'];
 $student_image = $_FILES['student_image']['name'];
 
 // Function to generate the file name based on last name and WMSU ID
@@ -60,11 +61,11 @@ if ($student_image) {
 }
 
 // Prepare the update query
-$query = "UPDATE student SET wmsu_id = ?, contact_number = ?, course_section = ?, batch_year = ?, department = ?, ojt_type = ?,  company = ?, adviser = ?, student_address = ?, student_image = ? WHERE student_id = ?";
+$query = "UPDATE student SET wmsu_id = ?, contact_number = ?, course_section = ?, batch_year = ?, department = ?, ojt_type = ?,  company = ?, adviser = ?, student_address = ?, street = ?, student_image = ? WHERE student_id = ?";
 
 // Prepare and execute the statement
 if ($stmt = $database->prepare($query)) {
-    $stmt->bind_param("ssssssssssi", $wmsu_id, $contact, $section, $batch_year, $department, $ojt_type, $company, $adviser, $address, $student_image, $student_id);
+    $stmt->bind_param("sssssssssssi", $wmsu_id, $contact, $section, $batch_year, $department, $ojt_type, $company, $adviser, $address, $street, $student_image, $student_id);
 
     // Execute the query
     if ($stmt->execute()) {

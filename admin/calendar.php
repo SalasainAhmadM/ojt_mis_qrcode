@@ -48,6 +48,43 @@ if ($stmt = $database->prepare($query)) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 </head>
+<!-- Modal for past dates -->
+<style>
+    #pastDateModal {
+        /* display: flex; */
+        justify-content: center;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content-dateerror {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .cancel-btn {
+        background-color: #8B0000;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .cancel-btn:hover {
+        background-color: #a30000;
+    }
+</style>
 
 <body>
     <div class="header">
@@ -137,20 +174,9 @@ if ($stmt = $database->prepare($query)) {
             </li>
         </ul>
     </div>
-
-    <style>
-        .company-item {
-            cursor: pointer;
-        }
-
-        .company-item.active {
-            background-color: #f0f0f0;
-            border: 1px solid #095d40;
-        }
-    </style>
     <section class="home-section">
         <div class="home-content">
-            <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
+            <i class="fas fa-bars bx-menu"></i>
         </div>
         <div class="content-wrapper">
 
@@ -171,20 +197,17 @@ if ($stmt = $database->prepare($query)) {
                             $companyId = htmlspecialchars($company['company_id']);
 
                             echo '
-                            <div class="company-item" data-company-id="' . $companyId . '">
-                                <img src="../uploads/company/' . $companyImage . '" alt="Company Image" class="company-img">
-                                <div class="company-name">' . $companyName . '</div>
-                            </div>';
+                        <div class="company-item" data-company-id="' . $companyId . '">
+                            <img src="../uploads/company/' . $companyImage . '" alt="Company Image" class="company-img">
+                            <div class="company-name">' . $companyName . '</div>
+                        </div>';
                         }
-
 
                         $companyStmt->close();
                     }
                     ?>
                 </div>
-
                 <div id="calendar"></div>
-
             </div>
         </div>
     </section>
@@ -207,6 +230,7 @@ if ($stmt = $database->prepare($query)) {
             </form>
         </div>
     </div>
+
     <!-- Edit Holiday Modal -->
     <div id="editHolidayModal" class="modal">
         <div class="modal-content-date">
@@ -214,13 +238,11 @@ if ($stmt = $database->prepare($query)) {
             <form id="editForm" action="edit_holiday.php" method="POST">
                 <input type="hidden" id="holidayId" name="holidayId">
                 <input type="hidden" id="editDate" name="date">
-
                 <div>
                     <label for="editHolidayName">Holiday Name</label>
                     <input type="text" id="editHolidayName" name="holidayName" placeholder="Enter Holiday Name"
                         required>
                 </div>
-
                 <div class="modal-buttons" style="margin-top: 20px;">
                     <button type="button" class="confirm-dlt" onclick="triggerDelete()">
                         <i class="fa-solid fa-trash-can"></i>
@@ -233,15 +255,13 @@ if ($stmt = $database->prepare($query)) {
     </div>
 
 
-
-
     <script>
-
         function triggerDelete() {
             const form = document.getElementById('editForm');
             form.action = 'delete_holiday.php';
             form.submit();
         }
+
         let selectedDate = null;
 
         function formatDate(dateStr) {
@@ -277,7 +297,6 @@ if ($stmt = $database->prepare($query)) {
                 editable: false,
                 selectable: true,
                 dayMaxEvents: true,
-
                 eventSources: [
                     {
                         url: 'fetch_holidays.php',
@@ -290,23 +309,24 @@ if ($stmt = $database->prepare($query)) {
                         },
                     }
                 ],
-
                 dateClick: function (info) {
                     var clickedDate = new Date(info.date);
                     var today = new Date();
                     today.setHours(0, 0, 0, 0);
 
-                    // Check if clicked date has existing events
+                    // Check if there's an existing event for the clicked date
                     var existingEvent = calendar.getEvents().find(event => event.startStr === info.dateStr);
-
                     if (existingEvent) {
-                        // If there's an event, make the date unclickable
+                        // Trigger the edit modal with the existing event data
+                        openEditModal(existingEvent);
                         return;
                     }
 
+                    // If the date is in the past, show a modal to indicate that
                     if (clickedDate < today) {
                         openPastDateModal();
                     } else {
+                        // Ensure it's not a weekend before opening the new holiday modal
                         var day = clickedDate.getDay();
                         if (day !== 0 && day !== 6) {
                             openModal(info.dateStr);
@@ -324,13 +344,11 @@ if ($stmt = $database->prepare($query)) {
 
                 if (clickedCompanyItem) {
                     document.querySelectorAll('.company-item').forEach(item => item.classList.remove('active'));
-
                     clickedCompanyItem.classList.add('active');
 
                     let companyId = clickedCompanyItem.dataset.companyId;
 
                     calendar.removeAllEvents();
-
                     fetchCompanySchedule(companyId);
                 }
             });
@@ -347,13 +365,16 @@ if ($stmt = $database->prepare($query)) {
             }
         });
 
-
         function openEditModal(holiday) {
+            if (!holiday || !holiday.startStr || !holiday.extendedProps || !holiday.extendedProps.holidayId) {
+                console.error("Invalid holiday data passed to openEditModal:", holiday);
+                return;
+            }
+
             const formattedDate = formatDate(holiday.startStr);
             document.getElementById('editSelectedDate').innerHTML = 'Edit <span style="color: #8B0000;">Holiday</span> for ' + formattedDate;
 
             document.getElementById('holidayId').value = holiday.extendedProps.holidayId;
-
             document.getElementById('editHolidayName').value = holiday.title;
             document.getElementById('editDate').value = holiday.startStr;
 
@@ -408,43 +429,6 @@ if ($stmt = $database->prepare($query)) {
     </script>
 
 
-    <!-- Modal for past dates -->
-    <style>
-        #pastDateModal {
-            /* display: flex; */
-            justify-content: center;
-            align-items: center;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-content-dateerror {
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        .cancel-btn {
-            background-color: #8B0000;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .cancel-btn:hover {
-            background-color: #a30000;
-        }
-    </style>
 
     <div id="pastDateModal" class="modal">
         <div class="modal-content-dateerror">
@@ -460,7 +444,6 @@ if ($stmt = $database->prepare($query)) {
             </div>
         </div>
     </div>
-
     <!-- Schedule Success Modal -->
     <div id="scheduleSuccessModal" class="modal">
         <div class="modal-content">

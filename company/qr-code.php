@@ -1,7 +1,7 @@
 <?php
 session_start();
 require '../conn/connection.php';
-
+date_default_timezone_set('Asia/Manila');
 // Check if the user is logged in
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'company') {
     header("Location: ../index.php"); // Redirect to login page if not logged in
@@ -224,7 +224,7 @@ $isSuspended = isset($schedule['day_type']) && $schedule['day_type'] === 'Suspen
             </div>
             <div class="main-box">
                 <div class="left-box-qr">
-                    <!-- Intern Time-In Details -->
+                    <!-- Intern Time-In Details 
                     <div class="intern-timein-details">
                         <div class="intern-image">
                             <img src="../uploads/student/user.png" alt="Intern Image">
@@ -235,9 +235,9 @@ $isSuspended = isset($schedule['day_type']) && $schedule['day_type'] === 'Suspen
                             <p>Email: <strong></strong></p>
                             <p>Total OJT Hours: <span class="total-ojt-hrs"><strong></strong></span></p>
                         </div>
-                    </div>
+                    </div>-->
 
-                    <!-- Time In Details -->
+                    <!-- Time In Details 
                     <div class="time-in-details">
                         <div class="time-in-info">
                             <h3>Time In</h3>
@@ -247,7 +247,7 @@ $isSuspended = isset($schedule['day_type']) && $schedule['day_type'] === 'Suspen
                         <div class="clock-image">
                             <img src="../img/clock.png" alt="Clock Image" style="">
                         </div>
-                    </div>
+                    </div>-->
                 </div>
                 <!-- Right Box for Scanning QR Code -->
                 <div class="right-box-qr">
@@ -355,6 +355,74 @@ $isSuspended = isset($schedule['day_type']) && $schedule['day_type'] === 'Suspen
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const today = new Date();
+
+            // Format the date to Asia/Manila timezone
+            const formatter = new Intl.DateTimeFormat('en-PH', {
+                timeZone: 'Asia/Manila',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long',
+            });
+
+            const day = today.getUTCDay(); // Get day in UTC (0 = Sunday, 6 = Saturday)
+            const isWeekend = day === 0 || day === 6;
+
+            const formattedDate = formatter.format(today); // Convert to Manila timezone
+            const qrDate = document.querySelector('.qr-date');
+            const dayType = "<?php echo $holiday ? 'Holiday' : $schedule['day_type']; ?>";
+            const dayTypeText = document.getElementById('day-type-text');
+            const timePeriod = document.getElementById('time-period');
+            const holidayModal = document.getElementById('holidayModal');
+            const weekendModal = document.getElementById('weekendModal');
+            const suspendedModal = document.getElementById('suspendedModal');
+
+            // Set the formatted date to the QR date element
+            if (qrDate) {
+                qrDate.textContent = formattedDate;
+            }
+
+            if (isWeekend) {
+                if (weekendModal) {
+                    weekendModal.style.display = 'block';
+                }
+            } else if (dayType.trim() === 'Holiday') {
+                qrDate.classList.add('holiday');
+                dayTypeText.classList.add('holiday');
+                if (timePeriod) timePeriod.style.display = 'none';
+
+                if (holidayModal) {
+                    holidayModal.style.display = 'block';
+                }
+            } else if (dayType.trim() === 'Suspended') {
+                // Apply suspended styles
+                qrDate.classList.add('suspended');
+                dayTypeText.classList.add('suspended');
+
+                if (suspendedModal) {
+                    suspendedModal.style.display = 'block';
+                }
+            } else if (dayType.trim() === 'Regular') {
+                if (timePeriod) timePeriod.style.display = '';
+                dayTypeText.parentElement.style.display = 'none';
+            } else if (dayType.trim() === '') {
+                if (timePeriod) timePeriod.style.display = 'none';
+                dayTypeText.parentElement.style.display = 'none';
+            }
+        });
+
+        // Close modal function
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+
+    <!-- <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
             const day = today.getDay(); // 0 = Sunday, 6 = Saturday
             const isWeekend = day === 0 || day === 6;
 
@@ -403,7 +471,7 @@ $isSuspended = isset($schedule['day_type']) && $schedule['day_type'] === 'Suspen
             }
         }
 
-    </script>
+    </script> -->
     <!-- Holiday Modal -->
     <div id="holidayModal" class="modal" style="display: none;">
         <div class="modal-content">

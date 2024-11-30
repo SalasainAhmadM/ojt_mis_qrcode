@@ -151,17 +151,18 @@ if ($stmt = $database->prepare($query)) {
                     <label for="wmsu-id">Admin Full Name</label>
                     <div class="name-inputs">
                         <input class="firstname" type="text" id="admin-firstname" name="admin_firstname"
-                            value="<?php echo $admin['admin_firstname']; ?>">
+                            value="<?php echo $admin['admin_firstname']; ?>" required>
                         <input class="middle" type="text" id="admin-middle" name="admin_middle"
                             value="<?php echo $admin['admin_middle']; ?>">
                         <input class="lastname" type="text" id="admin-lastname" name="admin_lastname"
-                            value="<?php echo $admin['admin_lastname']; ?>">
+                            value="<?php echo $admin['admin_lastname']; ?>" required>
                     </div>
                 </div>
                 <div class="form-group">
                     <input type="hidden" id="admin-id" name="admin_id" value="<?php echo $admin['admin_id']; ?>">
                     <label for="wmsu-email">Admin Email</label>
-                    <input type="text" id="admin-email" name="admin_email" value="<?php echo $admin['admin_email']; ?>">
+                    <input type="text" id="admin-email" name="admin_email" value="<?php echo $admin['admin_email']; ?>"
+                        required>
                 </div>
 
                 <div class="form-group">

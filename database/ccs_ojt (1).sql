@@ -132,7 +132,7 @@ CREATE TABLE `attendance` (
   `time_in` timestamp NOT NULL DEFAULT current_timestamp(),
   `time_out` timestamp NULL DEFAULT NULL,
   `ojt_hours` decimal(10,5) GENERATED ALWAYS AS (timestampdiff(SECOND,`time_in`,`time_out`) / 3600) STORED,
-  `row_number` int(11) DEFAULT NULL
+  `time_out_reason` ENUM('Time-Out', 'Company Errand', 'Lunch Break') DEFAULT NULL COMMENT 'Reason for Time-Out';
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
