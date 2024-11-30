@@ -411,7 +411,7 @@ if ($company_id > 0) {
                                         <td class="action">
                                             <button class="action-icon edit-btn"
                                                 onclick="openEditStudentModal(<?php echo htmlspecialchars(json_encode($student), ENT_QUOTES); ?>)"><i
-                                                    class="fa-solid fa-eye"></i></button>
+                                                    class="fa-solid fa-pen-to-square"></i></button>
                                             <!-- <button class="action-icon delete-btn"
                                                 onclick="confirmDelete(<?php echo $student['student_id']; ?>)"><i
                                                     class="fa-solid fa-trash"></i></button> -->
@@ -451,8 +451,8 @@ if ($company_id > 0) {
                     <label for="editStudentImage">
                         <img id="editImagePreview" src="" alt="Profile Preview" class="profile-preview-img" />
                     </label>
-                    <!-- <input type="file" id="editStudentImage" name="student_image" accept="image/*"
-                        onchange="previewEditImage()" style="display: none;"> -->
+                    <input type="file" id="editStudentImage" name="student_image" accept="image/*"
+                        onchange="previewEditImage()" style="display: none;">
                     <p class="profile-img-label">Click to upload image</p>
                 </div>
 
@@ -460,15 +460,15 @@ if ($company_id > 0) {
                 <div class="input-group-row">
                     <div class="input-group-fn">
                         <label for="editStudentFirstname">First Name</label>
-                        <input type="text" id="editStudentFirstname" name="student_firstname" required readonly>
+                        <input type="text" id="editStudentFirstname" name="student_firstname" required>
                     </div>
                     <div class="input-group-mi">
                         <label id="mi_edit" for="editStudentMiddle">M.I.</label>
-                        <input type="text" id="editStudentMiddle" name="student_middle" required readonly>
+                        <input type="text" id="editStudentMiddle" name="student_middle" required>
                     </div>
                     <div class="input-group-ln">
                         <label for="editStudentLastname">Last Name</label>
-                        <input type="text" id="editStudentLastname" name="student_lastname" required readonly>
+                        <input type="text" id="editStudentLastname" name="student_lastname" required>
                     </div>
                 </div>
 
@@ -476,16 +476,16 @@ if ($company_id > 0) {
                 <div class="input-group-row">
                     <div class="input-group">
                         <label for="editStudentWmsuId">WMSU ID</label>
-                        <input type="text" id="editStudentWmsuId" name="wmsu_id" required readonly>
+                        <input type="text" id="editStudentWmsuId" name="wmsu_id" required>
                     </div>
                     <div class="input-group" style="width: 33%;">
                         <label for="editStudentEmail">Email</label>
-                        <input type="email" id="editStudentEmail" name="student_email" required readonly>
+                        <input type="email" id="editStudentEmail" name="student_email" required>
                     </div>
                     <div class="input-group" style="width: 33%;">
                         <label for="editStudentSection">Section</label>
                         <select type="text" id="editStudentSection" name="course_section_id" class="input-field"
-                            onchange="fetchAdviser()" required disabled>
+                            onchange="fetchAdviser()" required>
                             <option value="">Select Section</option>
                             <?php foreach ($course_sections as $course_section): ?>
                                 <option value="<?php echo htmlspecialchars($course_section['id'], ENT_QUOTES); ?>" <?php if ($course_section['id'] == $student['course_section'])
@@ -507,7 +507,7 @@ if ($company_id > 0) {
                     <div class="input-group" style="width: 33%;">
                         <label for="editStudentDepartment">Department</label>
                         <select type="text" id="editStudentDepartment" name="student_department" class="input-field"
-                            required disabled>
+                            required>
                             <option value="">Select Department</option>
                             <?php foreach ($departments as $department): ?>
                                 <option value="<?php echo htmlspecialchars($department['department_id'], ENT_QUOTES); ?>">
@@ -599,7 +599,7 @@ if ($company_id > 0) {
 
                 </div>
 
-                <!-- <button type="submit" class="modal-btn">Save Changes</button> -->
+                <button type="submit" class="modal-btn">Save Changes</button>
             </form>
         </div>
     </div>

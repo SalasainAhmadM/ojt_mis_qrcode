@@ -3,8 +3,8 @@ session_start();
 require '../conn/connection.php';
 
 // Set timezone to Asia/Manila
-date_default_timezone_set('Asia/Manila');
-
+// date_default_timezone_set('Asia/Manila');
+$database->query("SET time_zone = '+08:00'");
 // Check if the user is logged in
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student') {
     header("Location: ../index.php");

@@ -6,7 +6,7 @@
   }
   
   /* For Web/Desktop Screens */
-  @media (min-width: 769px) {
+  @media (min-width: 769px) { 
     .bx-menu {
         display: none; 
     }
@@ -425,7 +425,7 @@
     td.action, th.action {
       width: 15%;
     }
-    th.adviser , th.section , td.adviser , td.section {
+    th.adviser , th.section , td.adviser , td.section , th.address, th.cnumber, td.address, td.cnumber, td.department, th.department{
       display: none;
     }
 

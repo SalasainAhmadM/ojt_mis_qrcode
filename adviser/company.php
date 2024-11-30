@@ -222,11 +222,11 @@ $current_page = $pagination_data['current_page'];
                         <thead>
                             <tr>
                                 <th class="image">Profile</th>
-                                <th>Company Name</th>
-                                <th>Representative</th>
+                                <th class="name">Company Name</th>
+                                <th class="name">Representative</th>
                                 <th class="email">Email</th>
-                                <th>Contact Number</th>
-                                <th>Address</th>
+                                <th class="cnumber">Contact Number</th>
+                                <th class="address">Address</th>
                                 <th class="action">Action</th>
                             </tr>
                         </thead>
@@ -239,12 +239,13 @@ $current_page = $pagination_data['current_page'];
                                                 src="../uploads/company/<?php echo !empty($company['company_image']) ? $company['company_image'] : 'user.png'; ?>"
                                                 alt="Company Image">
                                         </td>
-                                        <td><?php echo $company['company_name']; ?></td>
-                                        <td><?php echo $company['company_rep_firstname'] . ' ' . $company['company_rep_middle'] . '.' . ' ' . $company['company_rep_lastname']; ?>
+                                        <td class="name"><?php echo $company['company_name']; ?></td>
+                                        <td class="name">
+                                            <?php echo $company['company_rep_firstname'] . ' ' . $company['company_rep_middle'] . '.' . ' ' . $company['company_rep_lastname']; ?>
                                         </td>
                                         <td class="email"><?php echo $company['company_email']; ?></td>
-                                        <td><?php echo $company['company_number']; ?></td>
-                                        <td><?php echo $company['company_address']; ?></td>
+                                        <td class="cnumber"><?php echo $company['company_number']; ?></td>
+                                        <td class="address"><?php echo $company['company_address']; ?></td>
                                         <!-- Display the full address -->
                                         <td class="action">
                                             <a href="./company/company-intern.php?company_id=<?php echo $company['company_id']; ?>"
