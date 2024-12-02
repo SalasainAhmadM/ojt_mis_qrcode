@@ -248,9 +248,53 @@ if ($stmt = $database->prepare($query)) {
             </div>
         </div>
     </div>
+
+    <script>
+        const socket = io('http://localhost:3000');
+
+        // Listen for new messages
+        socket.on('receiveMessage', (data) => {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            messageElement.textContent = `${data.senderName}: ${data.message}`;
+            chatMessages.appendChild(messageElement);
+        });
+
+        // Handle typing status
+        socket.on('typing', (senderId) => {
+            const typingElement = document.getElementById('typingStatus');
+            typingElement.textContent = `User ${senderId} is typing...`;
+        });
+
+        // Emit message
+        document.getElementById('sendMessageBtn').addEventListener('click', () => {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value;
+
+            const data = {
+                senderId: currentUserId,
+                receiverId: currentChatId,
+                message,
+            };
+
+            socket.emit('sendMessage', data);
+            messageInput.value = ''; // Clear input field
+        });
+
+        // Emit typing status
+        document.getElementById('messageInput').addEventListener('input', () => {
+            socket.emit('typing', { senderId: currentUserId, receiverId: currentChatId });
+        });
+
+    </script>
+    <script src="../js/server.js"></script>
     <script src="./js/scripts.js"></script>
     <script src="./js/message.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
+
+
 </body>
 
 </html>
