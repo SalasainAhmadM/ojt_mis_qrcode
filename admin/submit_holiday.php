@@ -5,11 +5,39 @@ require '../conn/connection.php';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Retrieve form data
     $holiday_date = $_POST['date'];
-    $holiday_name = $_POST['holidayName']; 
+    $holiday_name = $_POST['holidayName'];
+    $memo_file = $_FILES['holidayMemo'];
 
     // Validate input
-    if (empty($holiday_date) || empty($holiday_name)) {
+    if (empty($holiday_date) || empty($holiday_name) || empty($memo_file['name'])) {
         $_SESSION['error_message'] = "Invalid input. Please make sure all fields are filled.";
+        header('Location: calendar.php');
+        exit;
+    }
+
+    // Validate file upload
+    $allowed_extensions = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
+    $file_extension = strtolower(pathinfo($memo_file['name'], PATHINFO_EXTENSION));
+
+    if (!in_array($file_extension, $allowed_extensions)) {
+        $_SESSION['error_message'] = "Invalid file type. Only PDF, JPG, PNG, and Word documents are allowed.";
+        header('Location: calendar.php');
+        exit;
+    }
+
+    // Set file upload directory and ensure it exists
+    $upload_dir = '../uploads/admin/memos/';
+    if (!is_dir($upload_dir)) {
+        mkdir($upload_dir, 0775, true); // Create directory with permissions if it doesn't exist
+    }
+
+    // Set file name
+    $file_name = uniqid() . "." . $file_extension;
+    $file_path = $upload_dir . $file_name;
+
+    // Upload file
+    if (!move_uploaded_file($memo_file['tmp_name'], $file_path)) {
+        $_SESSION['error_message'] = "Failed to upload file. Please try again.";
         header('Location: calendar.php');
         exit;
     }
@@ -27,9 +55,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header('Location: calendar.php');
     } else {
         // Insert new holiday into the `holiday` table
-        $sql = "INSERT INTO holiday (holiday_date, holiday_name) VALUES (?, ?)";
+        $sql = "INSERT INTO holiday (holiday_date, holiday_name, memo) VALUES (?, ?, ?)";
         $stmt = $database->prepare($sql);
-        $stmt->bind_param("ss", $holiday_date, $holiday_name);
+        $stmt->bind_param("sss", $holiday_date, $holiday_name, $file_name);
 
         if ($stmt->execute()) {
             // Success: Redirect with success message

@@ -41,35 +41,8 @@ if ($stmt = $database->prepare($query)) {
     }
     $stmt->close(); // Close the statement
 }
+
 $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.php" : "qr-code.php";
-
-$query = "
-    SELECT 
-        ar.schedule_id, 
-        ar.remark_type, 
-        ar.remark, 
-        ar.proof_image, 
-        ar.status, 
-        s.time_in, 
-        s.time_out 
-    FROM attendance_remarks ar
-    LEFT JOIN schedule s ON ar.schedule_id = s.schedule_id
-    WHERE ar.student_id = ?
-";
-if ($stmt = $database->prepare($query)) {
-    $stmt->bind_param("i", $student_id); // Bind the student ID
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    $attendance_remarks = [];
-    while ($row = $result->fetch_assoc()) {
-        $attendance_remarks[] = $row; // Store each row in the array
-    }
-
-    $stmt->close();
-} else {
-    die("Error preparing statement: " . $database->error);
-}
 ?>
 
 <!DOCTYPE html>
@@ -279,133 +252,84 @@ if ($stmt = $database->prepare($query)) {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (!empty($attendance_remarks)): ?>
-                                <?php foreach ($attendance_remarks as $attendance): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($attendance['schedule_id']); ?></td>
-                                        <td style="
-                        <?php
-                        if ($attendance['remark_type'] === 'Absent') {
-                            echo 'color: red;';
-                        } elseif ($attendance['remark_type'] === 'Late') {
-                            echo 'color: yellow;';
-                        } elseif ($attendance['remark_type'] === 'Forgot Time-out') {
-                            echo 'color: gray;';
-                        }
-                        ?>
-                    ">
-                                            <?php echo htmlspecialchars($attendance['remark_type']); ?>
-                                        </td>
-                                        <td><?php echo htmlspecialchars($attendance['time_in'] ?? 'N/A'); ?></td>
-                                        <td><?php echo htmlspecialchars($attendance['time_out'] ?? 'N/A'); ?></td>
-                                        <td><?php echo htmlspecialchars($attendance['remark'] ?? 'N/A'); ?></td>
-                                        <td class="action">
-                                            <button class="action-icon view-btn"
-                                                onclick="openImageModal('<?php echo htmlspecialchars($attendance['proof_image'] ?? '../img/empty.png'); ?>')">
-                                                <i class="fa-solid fa-image"></i>
-                                            </button>
-                                        </td>
-                                        <td><?php echo htmlspecialchars($attendance['status']); ?></td>
-                                        <td class="action">
-                                            <button class="action-icon edit-btn"
-                                                onclick="openEditModal('<?php echo $attendance['schedule_id']; ?>', '<?php echo $attendance['remark_type']; ?>', '<?php echo $attendance['remark']; ?>')">
-                                                <i class="fa-solid fa-pen-to-square"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="8">No attendance remarks found.</td>
-                                </tr>
-                            <?php endif; ?>
+                            <tr>
+                                <td>202</td>
+                                <td>Late</td>
+                                <td>8:15 am</td>
+                                <td>5:00 pm</td>
+                                <td>Traffic Jam</td>
+                                <td class="action">
+                                    <button class="action-icon view-btn" onclick="openImageModal('../img/empty.png')">
+                                        <i class="fa-solid fa-image"></i>
+                                    </button>
+                                </td>
+                                <td>Pending</td>
+                                <td class="action">
+                                    <button class="action-icon edit-btn"
+                                        data-student-id="<?php echo $journal['student_id']; ?>">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>203</td>
+                                <td>Absent</td>
+                                <td>N/A</td>
+                                <td>N/A</td>
+                                <td>Headache and Accident</td>
+                                <td class="action">
+                                    <button class="action-icon view-btn" onclick="openImageModal('../img/empty.png')">
+                                        <i class="fa-solid fa-image"></i>
+                                    </button>
+                                </td>
+                                <td>Pending</td>
+                                <td class="action">
+                                    <button class="action-icon edit-btn"
+                                        data-student-id="<?php echo $journal['student_id']; ?>">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>203</td>
+                                <td>Forgot Time-out</td>
+                                <td>7:50 am</td>
+                                <td>4:00 pm</td>
+                                <td>Rush Hour</td>
+                                <td class="action">
+                                    <button class="action-icon view-btn" onclick="openImageModal('../img/empty.png')">
+                                        <i class="fa-solid fa-image"></i>
+                                    </button>
+                                </td>
+                                <td>Pending</td>
+                                <td class="action">
+                                    <button class="action-icon edit-btn"
+                                        data-student-id="<?php echo $journal['student_id']; ?>">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
+
+                    <!-- Modal -->
+                    <div id="imageModal" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <span class="close" onclick="closeImageModal()">&times;</span>
+                            <img id="modalImage" src="" alt="Proof Image">
+                        </div>
+                    </div>
+
 
 
                 </div>
             </div>
         </div>
     </section>
-    <style>
-        .modal-content img {
-            max-width: 500px;
-            max-height: 500px;
-            width: auto;
-            height: auto;
-            cursor: pointer;
-        }
-    </style>
-    <!-- Image Modal -->
-    <div id="imageModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <span class="close" onclick="closeImageModal()">&times;</span>
-            <img id="modalImage" src="" alt="Proof Image" onclick="closeImageModal()">
-        </div>
-    </div>
 
-    <!-- Edit Modal -->
-    <div id="editModal" class="modal" style="display: none;">
-        <div class="modal-content-big">
-            <span class="close" onclick="closeEditModal()">&times;</span>
-            <h2>Edit Attendance Remark</h2>
-
-            <form action="edit_attendance.php" method="POST">
-                <input type="hidden" id="editScheduleId" name="schedule_id">
-                <input type="hidden" id="editStudentId" name="student_id" value="<?php echo $student_id; ?>">
-
-                <label for="editRemarkType">Remark Type</label>
-                <input type="text" id="editRemarkType" name="remark_type" readonly required
-                    style="background-color: #f0f0f0; border: 1px solid #ccc; cursor: not-allowed; width: 30%; text-align: center;">
-
-                <label for="editRemark">Remark</label>
-                <textarea id="editRemark" name="remark" required></textarea>
-
-                <button type="submit" class="modal-btn">Save Changes</button>
-            </form>
-        </div>
-    </div>
-
-
-    <script>
-        // Image Modal
-        function openImageModal(imageSrc) {
-            const modal = document.getElementById("imageModal");
-            const modalImage = document.getElementById("modalImage");
-            modalImage.src = imageSrc;
-            modal.style.display = "block";
-        }
-
-        function closeImageModal() {
-            const modal = document.getElementById("imageModal");
-            modal.style.display = "none";
-        }
-
-        // Edit Modal
-        function openEditModal(scheduleId, remarkType, remark) {
-            const modal = document.getElementById("editModal");
-            document.getElementById("editScheduleId").value = scheduleId;
-            document.getElementById("editRemarkType").value = remarkType;
-            document.getElementById("editRemark").value = remark;
-            modal.style.display = "block";
-        }
-
-        function closeEditModal() {
-            const modal = document.getElementById("editModal");
-            modal.style.display = "none";
-        }
-
-        // Close modal when clicking outside
-        window.onclick = function (event) {
-            const imageModal = document.getElementById("imageModal");
-            const editModal = document.getElementById("editModal");
-            if (event.target === imageModal) {
-                closeImageModal();
-            } else if (event.target === editModal) {
-                closeEditModal();
-            }
-        }
-    </script>
     <!-- Logout Confirmation Modal -->
     <div id="logoutModal" class="modal">
         <div class="modal-content">

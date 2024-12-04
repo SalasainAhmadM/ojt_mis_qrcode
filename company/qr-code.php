@@ -481,10 +481,41 @@ $isSuspended = isset($schedule['day_type']) && $schedule['day_type'] === 'Suspen
             </div>
             <h2 style="color: #8B0000">It's a Holiday!</h2>
             <p><strong><?php echo date('F j, Y'); ?></strong></p>
-            <p style="color: #8B0000"><strong><?php echo $holiday['holiday_name']; ?></strong></p>
+            <?php if ($holiday): ?>
+                <p style="color: #8B0000"><strong><?php echo htmlspecialchars($holiday['holiday_name']); ?></strong></p>
+                <?php if (!empty($holiday['memo'])): ?>
+                    <?php
+                    $memo = $holiday['memo'];
+                    $file_extension = strtolower(pathinfo($memo, PATHINFO_EXTENSION));
+                    $memo_url = "../uploads/admin/memos/" . $memo;
+
+                    // Determine the icon and action based on file type
+                    if (in_array($file_extension, ['pdf'])): ?>
+                        <p>
+                            <i class="fa-solid fa-file-pdf" style="color: #8B0000; font-size: 24px;"></i>
+                            <a style="text-decoration: none;" href="<?php echo $memo_url; ?>" download>Memorandum</a>
+                        </p>
+                    <?php elseif (in_array($file_extension, ['doc', 'docx'])): ?>
+                        <p>
+                            <i class="fa-solid fa-file-word" style="color: #0072C6; font-size: 24px;"></i>
+                            <a style="text-decoration: none;" href="<?php echo $memo_url; ?>" download>Memorandum</a>
+                        </p>
+                    <?php elseif (in_array($file_extension, ['jpg', 'jpeg', 'png'])): ?>
+                        <p>
+                            <i class="fa-solid fa-file-image" style="color: #4CAF50; font-size: 24px;"></i>
+                            <a style="text-decoration: none;" href="<?php echo $memo_url; ?>" target="_blank">Memorandum</a>
+                        </p>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <!-- <p>No memo available for this holiday.</p> -->
+                <?php endif; ?>
+            <?php else: ?>
+                <p>No holiday scheduled for today.</p>
+            <?php endif; ?>
             <button class="proceed-btn" onclick="closeModal('holidayModal')">Close</button>
         </div>
     </div>
+
     <!-- Suspended Modal -->
     <div id="suspendedModal" class="modal" style="display: none;">
         <div class="modal-content">

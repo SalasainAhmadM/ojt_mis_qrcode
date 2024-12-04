@@ -119,11 +119,11 @@ if ($announcement_result->num_rows > 0) {
   }
 }
 
-// Check if today is a holiday
 $today = date('Y-m-d'); // Get the current date
 $holiday_message = '';
+$memo_link = '';
 
-$holiday_query = "SELECT holiday_name FROM holiday WHERE holiday_date = ?";
+$holiday_query = "SELECT holiday_name, memo FROM holiday WHERE holiday_date = ?";
 if ($stmt = $database->prepare($holiday_query)) {
   $stmt->bind_param("s", $today);
   $stmt->execute();
@@ -132,9 +132,11 @@ if ($stmt = $database->prepare($holiday_query)) {
   if ($result->num_rows > 0) {
     $holiday = $result->fetch_assoc();
     $holiday_message = "Today is a Holiday: " . $holiday['holiday_name']; // Store holiday message
+    $memo_link = $holiday['memo']; // Fetch memo file path
   }
   $stmt->close();
 }
+
 
 // Fetch company_id associated with the student
 $query = "
@@ -488,16 +490,45 @@ $login_message = $holiday_message ?: $suspended_message;
         </lottie-player>
       </div>
       <h2>Login Successful!</h2>
-      <p>Welcome back, <span style="color: #095d40; font-size: 20px"><?php echo $_SESSION['full_name']; ?>!</span></p>
+      <p>Welcome back, <span
+          style="color: #095d40; font-size: 20px;"><?php echo htmlspecialchars($_SESSION['full_name']); ?></span></p>
 
       <!-- Display Holiday or Suspension Message -->
-      <?php if ($login_message): ?>
-        <p style="color: #e74c3c; font-size: 18px;"><?php echo $login_message; ?></p>
+      <?php if (!empty($holiday_message)): ?>
+        <p style="color: red; font-size: 18px;"><?php echo htmlspecialchars($holiday_message); ?></p>
+
+        <?php if (!empty($memo_link)): ?>
+          <?php
+          $file_extension = strtolower(pathinfo($memo_link, PATHINFO_EXTENSION));
+          $file_path = "../uploads/admin/memos/" . $memo_link;
+
+          if (in_array($file_extension, ['jpg', 'jpeg', 'png', 'gif'])): ?>
+            <div>
+              <a style="text-decoration: none;" href="#" onclick="viewImage('<?php echo $file_path; ?>')">
+                <i class="fa-solid fa-file-image" style="color: #4CAF50; font-size: 24px; "></i> <span>View Memo</span>
+              </a>
+            </div>
+          <?php elseif ($file_extension === 'pdf'): ?>
+            <div>
+              <a style="text-decoration: none;" href="<?php echo $file_path; ?>" download>
+                <i class="fa-solid fa-file-pdf" style="color: #8B0000; font-size: 24px;"></i> <span>Memorandum</span>
+              </a>
+            </div>
+          <?php elseif (in_array($file_extension, ['doc', 'docx'])): ?>
+            <div>
+              <a style="text-decoration: none;" href="<?php echo $file_path; ?>" download>
+                <i class="fa-solid fa-file-word" style="color: #0072C6; font-size: 24px;"></i> <span>Memorandum</span>
+              </a>
+            </div>
+          <?php endif; ?>
+        <?php endif; ?>
       <?php endif; ?>
 
       <button class="proceed-btn" onclick="closeModallogin('loginSuccessModal')">Proceed</button>
     </div>
   </div>
+
+
 
   <!-- Holiday Modal -->
   <div id="holidayModal" class="modal" style="display: none;">
@@ -538,6 +569,33 @@ $login_message = $holiday_message ?: $suspended_message;
     </div>
   </div>
   <script>
+    function viewImage(imagePath) {
+      const modal = document.createElement('div');
+      modal.style.position = 'fixed';
+      modal.style.top = '0';
+      modal.style.left = '0';
+      modal.style.width = '100%';
+      modal.style.height = '100%';
+      modal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+      modal.style.display = 'flex';
+      modal.style.justifyContent = 'center';
+      modal.style.alignItems = 'center';
+      modal.style.zIndex = '1000';
+      modal.style.overflow = 'auto';
+
+      const img = document.createElement('img');
+      img.src = imagePath;
+      img.style.maxWidth = '90%';
+      img.style.maxHeight = '90%';
+      img.style.margin = 'auto';
+      modal.appendChild(img);
+
+      // Close the modal on click
+      modal.onclick = () => document.body.removeChild(modal);
+
+      document.body.appendChild(modal);
+    }
+
 
     function showModalprofile(modalId) {
       document.getElementById(modalId).style.display = "block";

@@ -58,7 +58,8 @@ $current_page = $pagination_data['current_page'];
     <link rel="stylesheet" href="../css/index.css">
     <link rel="stylesheet" href="../css/mobile.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&family=Poppins:wght@600&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
@@ -192,7 +193,33 @@ $current_page = $pagination_data['current_page'];
                         </form>
                     </div>
 
+                    <style>
+                        td:hover {
+                            position: relative;
+                            cursor: pointer;
+                        }
 
+                        td:hover::after {
+                            content: attr(title);
+                            position: absolute;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            bottom: 100%;
+                            font-size: 24px;
+                            background: rgba(0, 0, 0, 0.8);
+                            color: #fff;
+                            padding: 5px 10px;
+                            border-radius: 5px;
+                            white-space: nowrap;
+                            z-index: 10;
+                            font-size: 0.9em;
+                        }
+
+                        table td {
+                            font-family: 'Roboto', sans-serif;
+                            /* font-weight: 400; */
+                        }
+                    </style>
                     <table>
                         <thead>
                             <tr>
@@ -214,12 +241,22 @@ $current_page = $pagination_data['current_page'];
                                                 src="../../uploads/company/<?php echo !empty($company['company_image']) ? $company['company_image'] : 'user.png'; ?>"
                                                 alt="Company Image">
                                         </td>
-                                        <td><?php echo $company['company_name']; ?></td>
-                                        <td><?php echo $company['company_rep_firstname'] . ' ' . $company['company_rep_middle'] . '.' . ' ' . $company['company_rep_lastname']; ?>
+                                        <td title="<?php echo $company['company_name']; ?>">
+                                            <?php echo $company['company_name']; ?>
                                         </td>
-                                        <td><?php echo $company['company_email']; ?></td>
-                                        <td><?php echo $company['company_number']; ?></td>
-                                        <td><?php echo $company['company_address']; ?></td>
+                                        <td
+                                            title="<?php echo $company['company_rep_firstname'] . ' ' . $company['company_rep_middle'] . '.' . ' ' . $company['company_rep_lastname']; ?>">
+                                            <?php echo $company['company_rep_firstname'] . ' ' . $company['company_rep_middle'] . '.' . ' ' . $company['company_rep_lastname']; ?>
+                                        </td>
+                                        <td title="<?php echo $company['company_email']; ?>">
+                                            <?php echo $company['company_email']; ?>
+                                        </td>
+                                        <td title="<?php echo $company['company_number']; ?>">
+                                            <?php echo $company['company_number']; ?>
+                                        </td>
+                                        <td title="<?php echo $company['company_address']; ?>">
+                                            <?php echo $company['company_address']; ?>
+                                        </td>
                                         <!-- Display the full address -->
                                         <td class="action">
                                             <button class="action-icon edit-btn"
@@ -246,10 +283,11 @@ $current_page = $pagination_data['current_page'];
                     </table>
 
                     <!-- Display pagination links -->
-                    <div class="pagination">
-                        <?php renderPaginationLinks($total_pages, $current_page, $search_query); ?>
-                    </div>
-
+                    <?php if ($total_pages > 1): ?>
+                        <div class="pagination">
+                            <?php renderPaginationLinks($total_pages, $current_page, $search_query); ?>
+                        </div>
+                    <?php endif; ?>
 
                 </div>
             </div>

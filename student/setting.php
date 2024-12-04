@@ -442,10 +442,7 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
                 </div>
 
 
-                <div class="form-group">
-                    <label for="student-image">Student Image</label>
-                    <input type="file" id="student-image" name="student_image" accept="image/*">
-                </div>
+
             </div>
 
             <!-- Right Side Form -->
@@ -454,6 +451,10 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
                     <img id="preview-image"
                         src="../uploads/student/<?php echo !empty($student['student_image']) ? $student['student_image'] : 'user.png'; ?>"
                         alt="Preview Image">
+                </div>
+                <div class="form-group">
+                    <!-- <label for="student-image">Student Image</label> -->
+                    <input type="file" id="student-image" name="student_image" accept="image/*">
                 </div>
                 <div class="form-group">
                     <!-- <label for="password">New Password</label> -->

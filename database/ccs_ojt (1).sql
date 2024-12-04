@@ -282,7 +282,8 @@ INSERT INTO `feedback` (`feedback_id`, `student_id`, `question_1`, `question_2`,
 CREATE TABLE `holiday` (
   `holiday_id` int(11) NOT NULL,
   `holiday_date` date NOT NULL,
-  `holiday_name` varchar(255) NOT NULL
+  `holiday_name` varchar(255) NOT NULL,
+  `memo` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --

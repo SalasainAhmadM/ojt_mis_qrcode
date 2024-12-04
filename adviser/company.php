@@ -64,8 +64,22 @@ $current_page = $pagination_data['current_page'];
     <link rel="stylesheet" href="../css/mobile.css">
     <!-- <link rel="stylesheet" href="./css/style.css"> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&family=Poppins:wght@600&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400&family=Poppins:wght@600&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Roboto+Mono:wght@400&display=swap"
+        rel="stylesheet">
 
 </head>
+<style>
+    table td {
+        /* font-family: 'Roboto', sans-serif; */
+        /* font-family: 'Lato', sans-serif; */
+        /* font-family: 'Roboto Mono', monospace; */
+        font-weight: 400;
+    }
+</style>
 
 <body>
     <div class="header">
@@ -239,11 +253,16 @@ $current_page = $pagination_data['current_page'];
                                                 src="../uploads/company/<?php echo !empty($company['company_image']) ? $company['company_image'] : 'user.png'; ?>"
                                                 alt="Company Image">
                                         </td>
-                                        <td class="name"><?php echo $company['company_name']; ?></td>
-                                        <td class="name">
+                                        <td title="<?php echo $company['company_name']; ?>" class="name">
+                                            <?php echo $company['company_name']; ?>
+                                        </td>
+                                        <td title="<?php echo $company['company_rep_firstname'] . ' ' . $company['company_rep_middle'] . '.' . ' ' . $company['company_rep_lastname']; ?>"
+                                            class="name">
                                             <?php echo $company['company_rep_firstname'] . ' ' . $company['company_rep_middle'] . '.' . ' ' . $company['company_rep_lastname']; ?>
                                         </td>
-                                        <td class="email"><?php echo $company['company_email']; ?></td>
+                                        <td title="<?php echo $company['company_email']; ?>" class="email">
+                                            <?php echo $company['company_email']; ?>
+                                        </td>
                                         <td class="cnumber"><?php echo $company['company_number']; ?></td>
                                         <td class="address"><?php echo $company['company_address']; ?></td>
                                         <!-- Display the full address -->
@@ -267,10 +286,11 @@ $current_page = $pagination_data['current_page'];
                     </table>
 
                     <!-- Display pagination links -->
-                    <div class="pagination">
-                        <?php renderPaginationLinks($total_pages, $current_page, $search_query); ?>
-                    </div>
-
+                    <?php if ($total_pages > 1): ?>
+                        <div class="pagination">
+                            <?php renderPaginationLinks($total_pages, $current_page, $search_query); ?>
+                        </div>
+                    <?php endif; ?>
 
                 </div>
             </div>

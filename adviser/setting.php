@@ -226,10 +226,7 @@ if ($departments_result->num_rows > 0) {
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="adviser-image">Adviser Image</label>
-                    <input type="file" id="adviser-image" name="adviser_image" accept="image/*">
-                </div>
+
             </div>
 
             <!-- Right Side Form -->
@@ -239,7 +236,10 @@ if ($departments_result->num_rows > 0) {
                         src="../uploads/adviser/<?php echo !empty($adviser['adviser_image']) ? $adviser['adviser_image'] : 'user.png'; ?>"
                         alt="Preview Image">
                 </div>
-
+                <div class="form-group">
+                    <!-- <label for="adviser-image">Adviser Image</label> -->
+                    <input type="file" id="adviser-image" name="adviser_image" accept="image/*">
+                </div>
                 <button type="submit" class="btn-confirm"><i style="margin-right: 4px;"
                         class="fa-solid fa-circle-check"></i>Confirm</button>
             </div>

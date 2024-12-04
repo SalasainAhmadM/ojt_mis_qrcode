@@ -439,14 +439,19 @@ function feedbackText($value)
                                             <td class="feedback"><?php echo feedbackText($feedback['question_5']); ?></td>
                                             <td class="feedback"><?php echo $feedback['total_score'] . '%'; ?></td>
                                         <?php else: ?>
-                                            <td class="feedback" colspan="6">No Feedback Yet</td>
+                                            <td class="feedback">N/A</td>
+                                            <td class="feedback">N/A</td>
+                                            <td class="feedback">N/A</td>
+                                            <td class="feedback">N/A</td>
+                                            <td class="feedback">N/A</td>
+                                            <td class="feedback">No Feedback Yet</td>
                                         <?php endif; ?>
                                         <td class="action">
                                             <button class="action-rate edit-btn"
                                                 data-student-name="<?php echo $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname']; ?>"
                                                 data-student-id="<?php echo $student['student_id']; ?>" onclick="openEditFeedbackModal('<?php echo $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname']; ?>',<?php echo $student['student_id']; ?>
                                                 )">
-                                                <i class="fa-regular fa-star"></i>
+                                                <i class="fa-solid fa-eye"></i>
                                             </button>
                                         </td>
 
@@ -461,10 +466,11 @@ function feedbackText($value)
                     </table>
 
                     <!-- Pagination Links -->
-                    <div class="pagination">
-                        <?php renderPaginationLinks($total_pages, $current_page, $selected_course_section, $search_query, $company_id); ?>
-                    </div>
-
+                    <?php if ($total_pages > 1): ?>
+                        <div class="pagination">
+                            <?php renderPaginationLinks($total_pages, $current_page, $selected_course_section, $search_query, $company_id); ?>
+                        </div>
+                    <?php endif; ?>
 
                 </div>
             </div>
@@ -603,7 +609,7 @@ function feedbackText($value)
 
                 <div style="display: flex; justify-content: space-around; margin-top: 20px;">
                     <!-- <button type="submit" class="confirm-btn">Update Feedback</button> -->
-                    <button type="button" class="confirm-btn" onclick="closeModal('editFeedbackModal')">Confirm</button>
+                    <button type="button" class="confirm-btn" onclick="closeModal('editFeedbackModal')">Close</button>
                 </div>
             </form>
         </div>

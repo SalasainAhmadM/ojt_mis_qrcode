@@ -413,13 +413,16 @@ $current_page = $pagination_data['current_page'];
                                                 src="../uploads/student/<?php echo !empty($student['student_image']) ? $student['student_image'] : 'user.png'; ?>"
                                                 alt="student Image">
                                         </td>
-                                        <td class="name">
+                                        <td title="<?php echo $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname']; ?>"
+                                            class="name">
                                             <?php echo $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname']; ?>
                                         </td>
                                         <td class="wmsu_id"><?php echo $student['wmsu_id']; ?></td>
-                                        <td class="email"><?php echo $student['student_email']; ?></td>
+                                        <td title="<?php echo $student['student_email']; ?>" class="email">
+                                            <?php echo $student['student_email']; ?>
+                                        </td>
                                         <!-- <td><?php echo $student['contact_number']; ?></td> -->
-                                        <td class="company">
+                                        <td title="<?php echo $student['company_name']; ?>" class="company">
                                             <?php if (!empty($student['company_name'])): ?>
                                                 <?php echo $student['company_name']; ?>
                                             <?php else: ?>
@@ -454,10 +457,11 @@ $current_page = $pagination_data['current_page'];
                     </table>
 
                     <!-- Display pagination links -->
-                    <div class="pagination">
-                        <?php renderPaginationLinks($total_pages, $current_page, $selected_course_section, $search_query); ?>
-                    </div>
-
+                    <?php if ($total_pages > 1): ?>
+                        <div class="pagination">
+                            <?php renderPaginationLinks($total_pages, $current_page, $selected_course_section, $search_query); ?>
+                        </div>
+                    <?php endif; ?>
 
                 </div>
             </div>

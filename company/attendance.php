@@ -556,11 +556,27 @@ if ($stmt = $database->prepare($remarks_query)) {
                             <?php endif; ?>
                         </tbody>
                     </table>
-                    <div class="pagination">
-                        <?php
-                        renderPaginationLinks($total_pages, $current_page);
-                        ?>
-                    </div>
+                    <!-- Display pagination links -->
+                    <?php if ($total_students > 5): ?>
+                        <div class="pagination">
+                            <?php
+                            if ($current_page > 1) {
+                                $prev_page = $current_page - 1;
+                                $prev_url = '?' . http_build_query(array_merge($_GET, ['page' => $prev_page]));
+                                echo '<a href="' . $prev_url . '" class="prev">Previous</a>';
+                            }
+
+                            renderPaginationLinks($total_pages, $current_page);
+
+                            if ($current_page < $total_pages) {
+                                $next_page = $current_page + 1;
+                                $next_url = '?' . http_build_query(array_merge($_GET, ['page' => $next_page]));
+                                echo '<a href="' . $next_url . '" class="next">Next</a>';
+                            }
+                            ?>
+                        </div>
+                    <?php endif; ?>
+
                 </div>
             </div>
         </div>

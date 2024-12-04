@@ -639,26 +639,12 @@ for ($i = 0; $i < 5; $i++) {
                         </label>
                     </div>
                 </div>
+                <!-- Add a confirmation button -->
                 <button id="confirmViewedButton" type="button" class="modal-btn">
                     Confirm Journal
                 </button>
-            </form>
-        </div>
-    </div>
 
-    <div id="confirmJournalModal" class="modal">
-        <div class="modal-content">
-            <!-- Lottie Animation for Confirmation -->
-            <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">
-                <lottie-player src="../../animation/notice-095d40.json" background="transparent" speed="1"
-                    style="width: 150px; height: 150px;" loop autoplay>
-                </lottie-player>
-            </div>
-            <h3 style="color: black; margin-bottom: 20px;">Confirm this Journal?</h3>
-            <div style="display: flex; justify-content: space-around;">
-                <button class="confirm-btn" id="confirmJournalYes">Confirm</button>
-                <button class="cancel-btn" onclick="closeConfirmJournalModal()">Cancel</button>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -669,9 +655,6 @@ for ($i = 0; $i < 5; $i++) {
 
             <span class="close" id="closeJournalModal">&times;</span>
             <h2>Select Journals to Export</h2>
-
-            <p id="unviewedWarning" style="color: red; display: none;">Confirm Journal/s First</p>
-
             <ul id="journalList" class="green-palette">
                 <!-- Journals will be dynamically loaded here -->
             </ul>
@@ -679,7 +662,6 @@ for ($i = 0; $i < 5; $i++) {
             <button id="selectAllJournalsBtn" class="assign-btn">Select All</button>
         </div>
     </div>
-
 
     <script>
         function openJournalModal(studentId) {
@@ -752,7 +734,16 @@ for ($i = 0; $i < 5; $i++) {
             window.location.href = `export_journal.php?student_id=${studentId}&journal_ids=${journalIds}`;
         };
 
+
+
+    </script>
+
+
+
+
+    <script>
         function toggleNotify(icon, day, journalId) {
+            // Only show the modal without calling 'adviser_viewed.php'
             showEditModal(day, journalId);
         }
 
@@ -765,6 +756,14 @@ for ($i = 0; $i < 5; $i++) {
             document.getElementById('editJournalDate').value = day; // Set the date from the table
             document.getElementById('journalId').value = journalId; // Set the hidden journal ID
             document.getElementById('journalIdDisplay').value = journalId; // Display the journal ID
+
+            // Add event listener for the confirmation button
+            const confirmButton = document.getElementById('confirmViewedButton');
+            confirmButton.onclick = function () {
+                if (confirm("Are you sure you want to mark this journal as viewed?")) {
+                    markAsViewed(journalId, icon); // Trigger the backend call
+                }
+            };
 
             // Fetch full journal details from the server
             fetch('fetch_journal.php', {
@@ -797,54 +796,30 @@ for ($i = 0; $i < 5; $i++) {
                 .catch(error => console.error('Error fetching journal:', error));
         }
 
-        document.getElementById('confirmViewedButton').onclick = function () {
-            // Show confirmation modal
-            document.getElementById('confirmJournalModal').style.display = "block";
-        };
-
-        document.getElementById('confirmJournalYes').onclick = function () {
-            const journalId = document.getElementById('journalId').value;
-
-            if (journalId) {
-                // Confirm viewing action
-                fetch('adviser_viewed.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ journal_id: journalId })
+        function markAsViewed(journalId, icon) {
+            fetch('adviser_viewed.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ journal_id: journalId })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update the icon
+                        icon.classList.remove('fa-question-circle');
+                        icon.classList.add('fa-regular', 'fa-circle-check', 'checked');
+                        alert("Journal marked as viewed.");
+                        document.getElementById('editModal').style.display = "none";
+                    } else {
+                        alert("Failed to update journal status.");
+                    }
                 })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            closeModal('editModal');
-                            closeModal('confirmJournalModal');
-                            showModal('successModal');
-                        } else {
-                            alert(data.message || 'Failed to confirm journal.');
-                        }
-                    })
-                    .catch(error => console.error('Error confirming journal:', error));
-            } else {
-                alert('Invalid journal ID. Please try again.');
-            }
-        };
-        // Close confirmation modal function
-        function closeConfirmJournalModal() {
-            document.getElementById('confirmJournalModal').style.display = "none";
+                .catch(error => console.error('Error:', error));
         }
 
         document.getElementById('closeEditModal').onclick = function () {
             document.getElementById('editModal').style.display = "none";
         };
-
-        // Show modal
-        function showModal(modalId) {
-            document.getElementById(modalId).style.display = "block";
-        }
-
-        // Reload page
-        function reloadPage() {
-            location.reload();
-        }
 
         function showPastDateModal() {
             document.getElementById('pastDateModal').style.display = 'block';
@@ -854,21 +829,6 @@ for ($i = 0; $i < 5; $i++) {
             document.getElementById('pastDateModal').style.display = 'none';
         }
     </script>
-
-    <!-- success -->
-    <div id="successModal" class="modal">
-        <div class="modal-content">
-            <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">
-                <lottie-player src="../../animation/success-095d40.json" background="transparent" speed="1"
-                    style="width: 150px; height: 150px;" loop autoplay>
-                </lottie-player>
-            </div>
-            <h2>Journal Confirmed!</h2>
-            <p>The journal has been successfully marked as confirmed.</p>
-            <button class="proceed-btn" onclick="reloadPage()">Close</button>
-        </div>
-    </div>
-
     <!-- Error modal structure -->
     <div id="pastDateModal" class="modal">
         <div class="modal-content">

@@ -57,7 +57,8 @@ $current_page = $pagination_data['current_page'];
     <link rel="stylesheet" href="../css/index.css">
     <link rel="stylesheet" href="../css/mobile.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&family=Poppins:wght@600&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
@@ -176,8 +177,7 @@ $current_page = $pagination_data['current_page'];
                                 <?php foreach ($departments as $department): ?>
                                     <option
                                         value="<?php echo htmlspecialchars($department['department_name'], ENT_QUOTES); ?>"
-                                        <?php echo $selected_department == $department['department_name'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($department['department_name'], ENT_QUOTES); ?>
+                                        <?php echo $selected_department == $department['department_name'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($department['department_name'], ENT_QUOTES); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -206,7 +206,33 @@ $current_page = $pagination_data['current_page'];
                         </form>
                     </div>
 
+                    <style>
+                        td:hover {
+                            position: relative;
+                            cursor: pointer;
+                        }
 
+                        td:hover::after {
+                            content: attr(title);
+                            position: absolute;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            bottom: 100%;
+                            font-size: 24px;
+                            background: rgba(0, 0, 0, 0.8);
+                            color: #fff;
+                            padding: 5px 10px;
+                            border-radius: 5px;
+                            white-space: nowrap;
+                            z-index: 10;
+                            font-size: 0.9em;
+                        }
+
+                        table td {
+                            font-family: 'Roboto', sans-serif;
+                            /* font-weight: 400; */
+                        }
+                    </style>
                     <table>
                         <thead>
                             <tr>
@@ -227,11 +253,18 @@ $current_page = $pagination_data['current_page'];
                                                 src="../../uploads/adviser/<?php echo !empty($adviser['adviser_image']) ? $adviser['adviser_image'] : 'user.png'; ?>"
                                                 alt="Adviser Image">
                                         </td>
-                                        <td><?php echo $adviser['adviser_firstname'] . ' ' . $adviser['adviser_middle'] . '.' . ' ' . $adviser['adviser_lastname']; ?>
+                                        <td
+                                            title="<?php echo $adviser['adviser_firstname'] . ' ' . $adviser['adviser_middle'] . '.' . ' ' . $adviser['adviser_lastname']; ?>">
+                                            <?php echo $adviser['adviser_firstname'] . ' ' . $adviser['adviser_middle'] . '.' . ' ' . $adviser['adviser_lastname']; ?>
                                         </td>
-                                        <td><?php echo $adviser['adviser_email']; ?></td>
-                                        <td><?php echo $adviser['adviser_number']; ?></td>
-                                        <td><?php echo $adviser['department']; ?></td>
+                                        <td title="<?php echo $adviser['adviser_email']; ?>">
+                                            <?php echo $adviser['adviser_email']; ?>
+                                        </td>
+                                        <td title="<?php echo $adviser['adviser_number']; ?>">
+                                            <?php echo $adviser['adviser_number']; ?>
+                                        </td>
+                                        <td title="<?php echo $adviser['department']; ?>"><?php echo $adviser['department']; ?>
+                                        </td>
                                         <td class="action">
                                             <button class="action-icon edit-btn"
                                                 onclick="openEditAdviserModal(<?php echo htmlspecialchars(json_encode($adviser), ENT_QUOTES); ?>)">
@@ -256,10 +289,11 @@ $current_page = $pagination_data['current_page'];
                     </table>
 
                     <!-- Display pagination links -->
-                    <div class="pagination">
-                        <?php renderPaginationLinks($total_pages, $current_page, $selected_department, $search_query); ?>
-                    </div>
-
+                    <?php if ($total_pages > 1): ?>
+                        <div class="pagination">
+                            <?php renderPaginationLinks($total_pages, $current_page, $selected_department, $search_query); ?>
+                        </div>
+                    <?php endif; ?>
 
                 </div>
             </div>

@@ -505,6 +505,7 @@ if ($search_date) {
                 <th class="title">Title</th>
                 <th class="description">Description</th>
                 <th class="date">Date Submitted</th>
+                <th class="date">Status</th>
                 <th class="action">Action</th>
               </tr>
             </thead>
@@ -539,6 +540,10 @@ if ($search_date) {
                     <td class="title"><?php echo htmlspecialchars($journal['journal_name']); ?></td>
                     <td class="description"><?php echo htmlspecialchars($journal['journal_description']); ?></td>
                     <td class="date"><?php echo date("M d, Y", strtotime($journal['journal_date'])); ?></td>
+                    <td class="date">
+                      <?php echo $journal['adviser_viewed'] == 1 ? 'Checked' : 'Pending'; ?>
+                    </td>
+
                     <td class="action">
                       <button class="action-icon delete-btn"
                         onclick="openJournalImages(<?php echo $journal['journal_id']; ?>)">
@@ -562,6 +567,7 @@ if ($search_date) {
                     </td>
                     <td class="description <?php echo $status_class; ?>"><?php echo $description; ?></td>
                     <td class="date <?php echo $status_class; ?>"><?php echo date("M d, Y", strtotime($date)); ?></td>
+                    <td class="date">N/A</td>
                     <td class="action">—</td>
                   </tr>
                 <?php endif; ?>
@@ -894,6 +900,7 @@ if ($search_date) {
               <p class="journal-img-label">Click to upload image 3</p>
             </div>
           </div>
+
           <button type="submit" class="modal-btn">Add Entry</button>
         </form>
       </div>

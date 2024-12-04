@@ -771,8 +771,35 @@ if ($absent_stmt = $database->prepare($absent_query)) {
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                alert("Time-out reason updated successfully!");
-                                closeModal('qrsuccessTimeoutModal');
+                                // Dynamic modal title and animation based on the reason
+                                let modalTitle, animationSrc;
+                                switch (timeoutReason) {
+                                    case 'Time-Out':
+                                        closeModal('qrsuccessTimeoutModal');
+                                        modalTitle = "You have successfully timed out!";
+                                        animationSrc = "../animation/success-095d40.json";
+                                        break;
+                                    case 'Company Errand':
+                                        closeModal('qrsuccessTimeoutModal');
+                                        modalTitle = "Company errand time-out recorded successfully!";
+                                        animationSrc = "../animation/success-095d40.json";
+                                        break;
+                                    case 'Lunch Break':
+                                        closeModal('qrsuccessTimeoutModal');
+                                        modalTitle = "Lunch break time-out recorded successfully!";
+                                        animationSrc = "../animation/success-095d40.json";
+                                        break;
+                                    default:
+                                        modalTitle = "Time-out reason updated successfully!";
+                                        animationSrc = "../animation/success-095d40.json";
+                                }
+
+                                // Update the modal content dynamically
+                                document.querySelector("#timeoutModal h2").textContent = modalTitle;
+                                document.querySelector("#timeoutModal lottie-player").setAttribute("src", animationSrc);
+
+                                // Show the modal
+                                document.querySelector("#timeoutModal").style.display = "block";
                             } else {
                                 alert("Failed to update time-out reason.");
                             }
@@ -781,7 +808,19 @@ if ($absent_stmt = $database->prepare($absent_query)) {
                             console.error("Error updating time-out reason:", error);
                         });
                 }
+
             </script>
+
+            <div id="timeoutModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div style="display: flex; justify-content: center; align-items: center;">
+                        <lottie-player src="../animation/success-095d40.json" background=" transparent" speed="1"
+                            style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+                    </div>
+                    <h2></h2>
+                    <button class="proceed-btn" onclick="closeModal('timeoutModal')">Close</button>
+                </div>
+            </div>
 
             <!-- QR Scan Time-in Modal -->
             <div id="qrsuccessTimeinModal" class="modal" style="display: none;">

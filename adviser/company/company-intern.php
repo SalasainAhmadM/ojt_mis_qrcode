@@ -427,9 +427,11 @@ if ($company_id > 0) {
                     </table>
 
                     <!-- Pagination Links -->
-                    <div class="pagination">
-                        <?php renderPaginationLinks($total_pages, $current_page, $selected_course_section, $search_query, $company_id); ?>
-                    </div>
+                    <?php if ($total_pages > 1): ?>
+                        <div class="pagination">
+                            <?php renderPaginationLinks($total_pages, $current_page, $selected_course_section, $search_query, $company_id); ?>
+                        </div>
+                    <?php endif; ?>
 
 
                 </div>

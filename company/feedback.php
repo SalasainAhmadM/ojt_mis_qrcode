@@ -459,10 +459,11 @@ $current_page = $pagination_data['current_page'];
                     </table>
 
                     <!-- Display pagination links -->
-                    <div class="pagination">
-                        <?php renderPaginationLinks($total_pages, $current_page, $selected_course_section, $search_query); ?>
-                    </div>
-
+                    <?php if ($total_pages > 1): ?>
+                        <div class="pagination">
+                            <?php renderPaginationLinks($total_pages, $current_page, $selected_course_section, $search_query); ?>
+                        </div>
+                    <?php endif; ?>
 
                 </div>
             </div>

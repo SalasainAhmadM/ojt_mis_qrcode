@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap'); */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap');
 
 * {
   margin: 0;
@@ -883,11 +884,13 @@ hr {
     padding: 8px;
     border: 1px solid #ddd;
     text-align: left;
+    font-family: 'Roboto', sans-serif;
   }
   .whole-box table td {
     padding: 8px;
     border: 1px solid #ddd;
     text-align: left;
+    font-family: 'Roboto', sans-serif;
   }
   .left-box table th , .whole-box table th {
     padding: 8px;
@@ -1088,6 +1091,7 @@ td.maxlength , td.section , td.wmsu_id , td.contact , td.adviser, td.email{
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  font-family: 'Roboto', sans-serif;
 }
 
   .whole-box table th.action,
@@ -1100,6 +1104,7 @@ td.maxlength , td.section , td.wmsu_id , td.contact , td.adviser, td.email{
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    font-family: 'Roboto', sans-serif;
   }
 
 
@@ -2127,3 +2132,4 @@ textarea#approvalReason {
 .course-section-dropdown:focus {
   outline: none;
 }
+

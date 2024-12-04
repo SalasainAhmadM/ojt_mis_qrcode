@@ -216,11 +216,16 @@ if ($stmt = $database->prepare($query)) {
     <div id="scheduleHolidayModal" class="modal">
         <div class="modal-content-date">
             <h2 style="color: #000" id="selectedDate"></h2>
-            <form id="scheduleForm" action="submit_holiday.php" method="POST">
+            <form id="scheduleForm" action="submit_holiday.php" method="POST" enctype="multipart/form-data">
                 <input type="hidden" id="scheduleDate" name="date">
                 <div>
                     <label for="holidayName">Holiday Name</label>
                     <input type="text" id="holidayName" name="holidayName" placeholder="Enter Holiday Name" required>
+                </div>
+                <div>
+                    <label for="holidayMemo">Upload Memo</label>
+                    <input type="file" id="holidayMemo" name="holidayMemo" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                        required>
                 </div>
                 <div class="modal-buttons" style="margin-top: 20px;">
                     <button type="submit" class="confirm-btn">Confirm</button>
@@ -231,17 +236,22 @@ if ($stmt = $database->prepare($query)) {
         </div>
     </div>
 
+
     <!-- Edit Holiday Modal -->
     <div id="editHolidayModal" class="modal">
         <div class="modal-content-date">
             <h2 style="color: #000" id="editSelectedDate"></h2>
-            <form id="editForm" action="edit_holiday.php" method="POST">
+            <form id="editForm" action="edit_holiday.php" method="POST" enctype="multipart/form-data">
                 <input type="hidden" id="holidayId" name="holidayId">
                 <input type="hidden" id="editDate" name="date">
                 <div>
                     <label for="editHolidayName">Holiday Name</label>
                     <input type="text" id="editHolidayName" name="holidayName" placeholder="Enter Holiday Name"
                         required>
+                </div>
+                <div>
+                    <label for="editHolidayMemo">Change Memo</label>
+                    <input type="file" id="editHolidayMemo" name="holidayMemo" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
                 </div>
                 <div class="modal-buttons" style="margin-top: 20px;">
                     <button type="button" class="confirm-dlt" onclick="triggerDelete()">
@@ -253,6 +263,7 @@ if ($stmt = $database->prepare($query)) {
             </form>
         </div>
     </div>
+
 
 
     <script>
@@ -427,8 +438,6 @@ if ($stmt = $database->prepare($query)) {
             };
         <?php endif; ?>
     </script>
-
-
 
     <div id="pastDateModal" class="modal">
         <div class="modal-content-dateerror">
