@@ -177,7 +177,7 @@ if ($showSuccessModal) {
     .whole-box {
         max-height: 600px;
         overflow-y: auto;
-        border: 1px solid #ddd;
+        /* border: 1px solid #ddd; */
     }
 
     .whole-box table {
@@ -188,7 +188,7 @@ if ($showSuccessModal) {
     .whole-box thead {
         position: sticky;
         top: 0;
-        background: #f9f9f9;
+        /* background: #f9f9f9; */
         z-index: 1;
     }
 </style>

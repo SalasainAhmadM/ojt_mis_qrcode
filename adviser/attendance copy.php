@@ -57,9 +57,6 @@ function getStudents($database, $selected_course_section, $search_query, $advise
            attendance_earliest.time_in AS first_time_in,
            attendance_latest.time_out AS last_time_out,
            IFNULL(SUM(attendance.ojt_hours), 0) AS total_ojt_hours,
-           (SELECT IFNULL(SUM(attendance.ojt_hours), 0) 
-            FROM attendance 
-            WHERE attendance.student_id = student.student_id) AS total_ojt_hours_all_dates,
            attendance_remarks.remark_type AS attendance_remark,
            attendance_remarks.remark AS attendance_remark_description,
            attendance_remarks.status AS attendance_remark_status
@@ -93,10 +90,12 @@ function getStudents($database, $selected_course_section, $search_query, $advise
     WHERE student.adviser = ?";
 
     if (!empty($selected_course_section)) {
+        $total_students_query .= " AND course_section = ?";
         $students_query .= " AND student.course_section = ?";
     }
 
     if (!empty($search_query)) {
+        $total_students_query .= " AND (student_firstname LIKE ? OR student_middle LIKE ? OR student_lastname LIKE ?)";
         $students_query .= " AND (student_firstname LIKE ? OR student_middle LIKE ? OR student_lastname LIKE ?)";
     }
 
@@ -289,18 +288,13 @@ $current_page = $pagination_data['current_page'];
                     <li><a href="./company/company-intern-feedback.php">Intern Feedback</a></li>
                 </ul>
             </li>
-
             <li>
-                <div class="iocn-link">
-                    <a href="attendance.php">
-                        <i class="fa-regular fa-clock"></i>
-                        <span class="link_name">Attendance</span>
-                    </a>
-                    <i class="fas fa-chevron-down arrow"></i>
-                </div>
-                <ul class="sub-menu">
+                <a href="attendance.php" class="active">
+                    <i class="fa-regular fa-clock"></i>
+                    <span class="link_name">Attendance</span>
+                </a>
+                <ul class="sub-menu blank">
                     <li><a class="link_name" href="attendance.php">Attendance</a></li>
-                    <li><a href="./intern/attendance-intern.php">Intern Attendance</a></li>
                 </ul>
             </li>
             <li>
@@ -434,13 +428,13 @@ $current_page = $pagination_data['current_page'];
                         </form>
 
                         <!-- Date Picker Form for Date Navigation -->
-                        <!-- <form method="GET" action="" class="date-picker-form">
+                        <form method="GET" action="" class="date-picker-form">
                             <div class="search-bar-container">
                                 <input type="date" class="search-bar" id="searchDate" name="day"
                                     value="<?php echo htmlspecialchars($selected_day, ENT_QUOTES); ?>"
                                     onchange="this.form.submit()">
                             </div>
-                        </form> -->
+                        </form>
                         <!-- Reset Button Form -->
                         <form method="GET" action="attendance.php">
                             <button type="submit" class="reset-bar-icon">
@@ -454,9 +448,10 @@ $current_page = $pagination_data['current_page'];
                                 <th class="image">Profile</th>
                                 <th class="name">Full Name</th>
                                 <th class="section">Section</th>
-                                <th class="company">Company</th>
-                                <th class="duration">Total Hours</th>
-                                <th class="action">Action</th>
+                                <th class="timein">Time-in</th>
+                                <th class="timeout">Time-out</th>
+                                <th class="duration">Duration</th>
+                                <th class="status">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -473,47 +468,32 @@ $current_page = $pagination_data['current_page'];
                                         </td>
                                         <td class="section"><?php echo htmlspecialchars($student['course_section_name']); ?>
                                         </td>
-                                        <td class="company"><?php echo htmlspecialchars($student['company_name']); ?></td>
-                                        <td class="duration">
+                                        <td class="timein"><?php echo htmlspecialchars($student['first_time_in']); ?></td>
+                                        <td class="timeout"><?php echo htmlspecialchars($student['last_time_out']); ?></td>
+                                        <td class="duration"><?php echo htmlspecialchars($student['total_ojt_hours']); ?></td>
+                                        <td class="status">
                                             <?php
-                                            // Get the total hours as a float
-                                            $total_hours = $student['total_ojt_hours_all_dates'];
-
-                                            // Check if the total hours is a valid number
-                                            if (is_numeric($total_hours) && $total_hours > 0) {
-                                                $hours = floor($total_hours); // Extract the whole number part (hours)
-                                                $minutes = round(($total_hours - $hours) * 60); // Calculate remaining minutes
-                                    
-                                                // Build the formatted string
-                                                $formatted_time = '';
-                                                if ($hours > 0) {
-                                                    $formatted_time .= $hours . 'hr' . ($hours > 1 ? 's' : '');
+                                            if (!empty($student['attendance_remark'])) {
+                                                if ($student['attendance_remark'] === 'Late') {
+                                                    echo '<span style="color: yellow;">Late Timed-in</span>';
+                                                } elseif ($student['attendance_remark'] === 'Absent') {
+                                                    echo '<span style="color: #8B0000;">Absent</span>';
                                                 }
-                                                if ($minutes > 0) {
-                                                    $formatted_time .= ($hours > 0 ? ' ' : '') . $minutes . 'min' . ($minutes > 1 ? 's' : '');
-                                                }
-
-                                                echo htmlspecialchars($formatted_time);
+                                            } elseif ($student['first_time_in'] === 'N/A' && $student['last_time_out'] === 'N/A') {
+                                                echo '<span style="color:gray;">No Record Yet</span>';
+                                            } elseif ($student['last_time_out'] === 'N/A') {
+                                                echo '<span style="color: #095d40;">Timed-in</span>';
                                             } else {
-                                                // If no valid hours, display "N/A"
-                                                echo 'N/A';
+                                                echo $student['status'];
                                             }
                                             ?>
-                                        </td>
 
-
-
-                                        <td class="action">
-                                            <a href="./intern/attendance-intern.php?student_id=<?php echo $student['student_id']; ?>"
-                                                class="action-icon delete-btn">
-                                                <i class='fa-solid fa-users'></i>
-                                            </a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="5">No students found</td>
+                                    <td colspan="7">No students found</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>

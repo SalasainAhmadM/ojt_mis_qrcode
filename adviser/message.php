@@ -110,12 +110,16 @@ if ($stmt = $database->prepare($query)) {
                 </ul>
             </li>
             <li>
-                <a href="attendance.php">
-                    <i class="fa-regular fa-clock"></i>
-                    <span class="link_name">Attendance</span>
-                </a>
-                <ul class="sub-menu blank">
+                <div class="iocn-link">
+                    <a href="attendance.php">
+                        <i class="fa-regular fa-clock"></i>
+                        <span class="link_name">Attendance</span>
+                    </a>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </div>
+                <ul class="sub-menu">
                     <li><a class="link_name" href="attendance.php">Attendance</a></li>
+                    <li><a href="./intern/attendance-intern.php">Intern Attendance</a></li>
                 </ul>
             </li>
             <li>

@@ -363,7 +363,8 @@ CREATE TABLE `student` (
   `verification_code` varchar(255) NOT NULL,
   `ojt_type` enum('Project-Based','Field-Based') NOT NULL,
   `street` varchar(255) DEFAULT NULL,
-  `otp` varchar(15) DEFAULT NULL
+  `otp` varchar(15) DEFAULT NULL,
+  `date_start` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --

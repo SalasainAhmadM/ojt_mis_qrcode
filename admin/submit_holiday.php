@@ -9,37 +9,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $memo_file = $_FILES['holidayMemo'];
 
     // Validate input
-    if (empty($holiday_date) || empty($holiday_name) || empty($memo_file['name'])) {
-        $_SESSION['error_message'] = "Invalid input. Please make sure all fields are filled.";
+    if (empty($holiday_date) || empty($holiday_name)) {
+        $_SESSION['error_message'] = "Invalid input. Please make sure all required fields are filled.";
         header('Location: calendar.php');
         exit;
     }
 
-    // Validate file upload
-    $allowed_extensions = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
-    $file_extension = strtolower(pathinfo($memo_file['name'], PATHINFO_EXTENSION));
+    $file_name = null; // Default value for the memo file
 
-    if (!in_array($file_extension, $allowed_extensions)) {
-        $_SESSION['error_message'] = "Invalid file type. Only PDF, JPG, PNG, and Word documents are allowed.";
-        header('Location: calendar.php');
-        exit;
-    }
+    // Check if a file is uploaded
+    if (!empty($memo_file['name'])) {
+        // Validate file upload
+        $allowed_extensions = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
+        $file_extension = strtolower(pathinfo($memo_file['name'], PATHINFO_EXTENSION));
 
-    // Set file upload directory and ensure it exists
-    $upload_dir = '../uploads/admin/memos/';
-    if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0775, true); // Create directory with permissions if it doesn't exist
-    }
+        if (!in_array($file_extension, $allowed_extensions)) {
+            $_SESSION['error_message'] = "Invalid file type. Only PDF, JPG, PNG, and Word documents are allowed.";
+            header('Location: calendar.php');
+            exit;
+        }
 
-    // Set file name
-    $file_name = uniqid() . "." . $file_extension;
-    $file_path = $upload_dir . $file_name;
+        // Set file upload directory and ensure it exists
+        $upload_dir = '../uploads/admin/memos/';
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0775, true); // Create directory with permissions if it doesn't exist
+        }
 
-    // Upload file
-    if (!move_uploaded_file($memo_file['tmp_name'], $file_path)) {
-        $_SESSION['error_message'] = "Failed to upload file. Please try again.";
-        header('Location: calendar.php');
-        exit;
+        // Set file name
+        $file_name = uniqid() . "." . $file_extension;
+        $file_path = $upload_dir . $file_name;
+
+        // Upload file
+        if (!move_uploaded_file($memo_file['tmp_name'], $file_path)) {
+            $_SESSION['error_message'] = "Failed to upload file. Please try again.";
+            header('Location: calendar.php');
+            exit;
+        }
     }
 
     // Check if the holiday already exists in the database

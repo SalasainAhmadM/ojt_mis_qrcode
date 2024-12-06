@@ -146,7 +146,9 @@ $absent_query = "
     FROM schedule s
     LEFT JOIN attendance a ON s.schedule_id = a.schedule_id AND a.student_id = ?
     LEFT JOIN holiday h ON s.date = h.holiday_date
+    JOIN student st ON st.student_id = ? 
     WHERE s.company_id = ? 
+    AND s.date >= DATE(st.date_start) -- Ensure schedules are after student's start date
     AND s.date < CURDATE() 
     AND DAYOFWEEK(s.date) NOT IN (1, 7) 
     AND s.day_type != 'Suspended'
@@ -157,7 +159,7 @@ $absentDates = [];
 $isAbsent = false;
 
 if ($absent_stmt = $database->prepare($absent_query)) {
-    $absent_stmt->bind_param("ii", $student_id, $company_id);
+    $absent_stmt->bind_param("iii", $student_id, $student_id, $company_id); // Bind student_id twice: once for attendance and once for date_start
     $absent_stmt->execute();
     $absent_result = $absent_stmt->get_result();
 

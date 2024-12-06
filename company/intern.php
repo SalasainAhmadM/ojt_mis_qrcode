@@ -419,8 +419,6 @@ $current_page = $pagination_data['current_page'];
                                 <th class="wmsu_id">Student ID</th>
                                 <th class="section">Section</th>
                                 <th class="adviser">Adviser</th>
-                                <!-- <th>Email</th>
-                                <th class="contact">Contact Number</th> -->
                                 <th class="ojthours">OJT Hours</th>
                                 <th class="action">Action</th>
                             </tr>
@@ -432,7 +430,7 @@ $current_page = $pagination_data['current_page'];
                                         <td class="image">
                                             <img style="border-radius: 50%;"
                                                 src="../uploads/student/<?php echo !empty($student['student_image']) ? $student['student_image'] : 'user.png'; ?>"
-                                                alt="student Image">
+                                                alt="Student Image">
                                         </td>
                                         <td class="name">
                                             <?php echo $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname']; ?>
@@ -440,23 +438,31 @@ $current_page = $pagination_data['current_page'];
                                         <td class="wmsu_id"><?php echo $student['wmsu_id']; ?></td>
                                         <td class="section"><?php echo $student['course_section_name']; ?></td>
                                         <td class="adviser"><?php echo $student['adviser_fullname']; ?></td>
-                                        <!-- <td class="maxlength"><?php echo $student['student_email']; ?></td>
-                                        <td class="contact"><?php echo $student['contact_number']; ?></td> -->
                                         <td class="ojt-hours" data-hours="<?php echo $student['total_ojt_hours']; ?>"></td>
 
                                         <td class="action">
-                                            <button class="action-view edit-btn"
-                                                data-student-image="<?php echo htmlspecialchars(!empty($student['student_image']) ? $student['student_image'] : 'user.png'); ?>"
-                                                data-student-id="<?php echo $student['wmsu_id']; ?>"
-                                                data-student-name="<?php echo $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname']; ?>"
-                                                data-student-email="<?php echo $student['student_email']; ?>"
-                                                data-contact-number="<?php echo $student['contact_number']; ?>"
-                                                data-section-id="<?php echo $student['course_section_name']; ?>"
-                                                data-student-adviser="<?php echo $student['adviser_fullname']; ?>"
-                                                data-student-ojthours="<?php echo $student['total_ojt_hours']; ?>">
-                                                <i class="fa-solid fa-eye"></i>
-                                            </button>
+                                            <?php if (empty($student['date_start'])): ?>
+                                                <!-- Show "Date Start" button if date_start is NULL -->
+                                                <button class="action-view edit-btn" title="No Start Date Recorded"
+                                                    onclick="openDateStartModal(<?php echo $student['student_id']; ?>)">
+                                                    <i class="fa-solid fa-calendar"></i>
+                                                </button>
+                                            <?php else: ?>
+                                                <!-- Show view icon if date_start exists -->
+                                                <button class="action-view edit-btn"
+                                                    data-student-image="<?php echo htmlspecialchars(!empty($student['student_image']) ? $student['student_image'] : 'user.png'); ?>"
+                                                    data-student-id="<?php echo $student['wmsu_id']; ?>"
+                                                    data-student-name="<?php echo $student['student_firstname'] . ' ' . $student['student_middle'] . '.' . ' ' . $student['student_lastname']; ?>"
+                                                    data-student-email="<?php echo $student['student_email']; ?>"
+                                                    data-contact-number="<?php echo $student['contact_number']; ?>"
+                                                    data-section-id="<?php echo $student['course_section_name']; ?>"
+                                                    data-student-adviser="<?php echo $student['adviser_fullname']; ?>"
+                                                    data-student-ojthours="<?php echo $student['total_ojt_hours']; ?>">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            <?php endif; ?>
                                         </td>
+
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
@@ -466,6 +472,8 @@ $current_page = $pagination_data['current_page'];
                             <?php endif; ?>
                         </tbody>
                     </table>
+
+
 
 
                     <!-- Display pagination links -->
@@ -481,6 +489,43 @@ $current_page = $pagination_data['current_page'];
             </div>
         </div>
     </section>
+    <!-- Date Start Modal -->
+    <div id="dateStartModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" id="closeDateStartModal">&times;</span>
+            <h2>Set Start Date for Student</h2>
+            <form id="dateStartForm" action="add_date_start.php" method="POST">
+                <input type="hidden" name="student_id" id="modalStudentId">
+                <label for="date_start">Start Date:</label>
+                <input type="date" name="date_start" id="dateStartInput" required>
+                <button type="submit" class="assign-btn">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Function to set the default date in Asia/Manila timezone
+        function setDefaultDate() {
+            const dateInput = document.getElementById('dateStartInput');
+            const now = new Date();
+            // Convert current time to Asia/Manila timezone
+            const manilaTime = now.toLocaleString("en-US", { timeZone: "Asia/Manila" });
+            const manilaDate = new Date(manilaTime);
+
+            // Format date as yyyy-MM-dd for the input field
+            const year = manilaDate.getFullYear();
+            const month = String(manilaDate.getMonth() + 1).padStart(2, '0');
+            const day = String(manilaDate.getDate()).padStart(2, '0');
+
+            dateInput.value = `${year}-${month}-${day}`;
+        }
+
+        // Call the function when the modal is displayed
+        document.addEventListener('DOMContentLoaded', setDefaultDate);
+    </script>
+
+
+
     <!-- Add Student Modal -->
     <div id="addStudentModal" class="modal" style="display:none;">
         <div class="modal-content">
@@ -616,6 +661,7 @@ $current_page = $pagination_data['current_page'];
         });
 
     </script>
+
     <!-- Update Success Modal -->
     <div id="updateSuccessModal" class="modal">
         <div class="modal-content">
@@ -631,6 +677,15 @@ $current_page = $pagination_data['current_page'];
     </div>
 
     <script>
+        function openDateStartModal(studentId) {
+            document.getElementById('modalStudentId').value = studentId; // Pass student ID to the modal
+            document.getElementById('dateStartModal').style.display = 'block';
+        }
+
+        // Close the modal
+        document.getElementById('closeDateStartModal').addEventListener('click', function () {
+            document.getElementById('dateStartModal').style.display = 'none';
+        });
         // Function to open the modal
         function openModal(modalId) {
             document.getElementById(modalId).style.display = "block";

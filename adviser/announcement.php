@@ -131,12 +131,16 @@ $current_page = $pagination_data['current_page'];
                 </ul>
             </li>
             <li>
-                <a href="attendance.php">
-                    <i class="fa-regular fa-clock"></i>
-                    <span class="link_name">Attendance</span>
-                </a>
-                <ul class="sub-menu blank">
+                <div class="iocn-link">
+                    <a href="attendance.php">
+                        <i class="fa-regular fa-clock"></i>
+                        <span class="link_name">Attendance</span>
+                    </a>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </div>
+                <ul class="sub-menu">
                     <li><a class="link_name" href="attendance.php">Attendance</a></li>
+                    <li><a href="./intern/attendance-intern.php">Intern Attendance</a></li>
                 </ul>
             </li>
             <li>
@@ -271,11 +275,11 @@ $current_page = $pagination_data['current_page'];
                             <?php endif; ?>
                         </tbody>
                     </table>
-
-                    <div class="pagination">
-                        <?php renderPaginationLinks($total_pages, $current_page, $search_query); ?>
-                    </div>
-
+                    <?php if ($total_pages > 1): ?>
+                        <div class="pagination">
+                            <?php renderPaginationLinks($total_pages, $current_page, $search_query); ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

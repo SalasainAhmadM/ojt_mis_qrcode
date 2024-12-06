@@ -224,8 +224,7 @@ if ($stmt = $database->prepare($query)) {
                 </div>
                 <div>
                     <label for="holidayMemo">Upload Memo</label>
-                    <input type="file" id="holidayMemo" name="holidayMemo" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                        required>
+                    <input type="file" id="holidayMemo" name="holidayMemo" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
                 </div>
                 <div class="modal-buttons" style="margin-top: 20px;">
                     <button type="submit" class="confirm-btn">Confirm</button>
