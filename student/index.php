@@ -60,7 +60,8 @@ $attendance_query = "
 SELECT DATE_FORMAT(time_in, '%b %d, %Y') AS attendance_date,
 TIME_FORMAT(time_in, '%h:%i %p') AS time_in,
 TIME_FORMAT(time_out, '%h:%i %p') AS time_out,
-IFNULL(ojt_hours, 0) AS total_hours
+IFNULL(ojt_hours, 0) AS total_hours,
+time_out_reason
 FROM attendance
 WHERE student_id = ?
 ";
@@ -69,7 +70,7 @@ if ($filter_date) {
   $attendance_query .= " AND DATE(time_in) = ?"; // Add date filter if provided
 }
 
-$attendance_query .= " ORDER BY time_in DESC";
+$attendance_query .= " ORDER BY DATE(time_in) DESC, time_in DESC"; // Order by date (latest first) and time-in
 
 $attendance_data = [];
 if ($stmt = $database->prepare($attendance_query)) {
@@ -87,6 +88,7 @@ if ($stmt = $database->prepare($attendance_query)) {
   }
   $stmt->close();
 }
+
 
 // Function to convert hours into "X hrs Y mins" format
 function formatOjtHours($decimalHours)
@@ -406,6 +408,7 @@ $login_message = $holiday_message ?: $suspended_message;
                 <th>Time-in</th>
                 <th>Time-out</th>
                 <th>Total Hours</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -416,6 +419,7 @@ $login_message = $holiday_message ?: $suspended_message;
                     <td><?php echo htmlspecialchars($attendance['time_in']); ?></td>
                     <td><?php echo htmlspecialchars($attendance['time_out'] ?? 'N/A'); ?></td>
                     <td><?php echo formatOjtHours($attendance['total_hours']); ?></td>
+                    <td><?php echo htmlspecialchars($attendance['time_out_reason'] ?? 'N/A'); ?></td>
                   </tr>
                 <?php endforeach; ?>
               <?php else: ?>

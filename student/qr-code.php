@@ -426,7 +426,7 @@ if ($absent_stmt = $database->prepare($absent_query)) {
         <?php else: ?>
             <div id="absentNotificationModal" class="modal" style="display: none;">
             <?php endif; ?>
-            <div class="modal-content-absent">
+            <div style=" margin: 5% auto;" class="modal-content-absent">
                 <div style="display: flex; justify-content: center; align-items: center;">
                     <lottie-player src="../animation/alert-8B0000.json" background="transparent" speed="1"
                         style="width: 150px; height: 150px;" loop autoplay></lottie-player>
@@ -535,7 +535,7 @@ if ($absent_stmt = $database->prepare($absent_query)) {
                 <div id="qrsuccesslateTimeinModal" class="modal" style="display: none;">
                 <?php endif; ?>
 
-                <div class="modal-content-late">
+                <div style=" margin: 5% auto;" class="modal-content-late">
                     <div style="display: flex; justify-content: center; align-items: center;">
                         <lottie-player src="../animation/clock-095d40.json" background="transparent" speed="1"
                             style="width: 150px; height: 150px;" loop autoplay></lottie-player>
@@ -897,6 +897,14 @@ if ($absent_stmt = $database->prepare($absent_query)) {
                 </div>
             </div>
 
+            <!-- QR Scan Error Modal -->
+            <div id="qrErrorModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <h2>QR Scan Error</h2>
+                    <p style="color: red; font-size: 16px;"></p>
+                    <button class="proceed-btn" onclick="closeModal('qrErrorModal')">Close</button>
+                </div>
+            </div>
 
             <!-- Logout Confirmation Modal -->
             <div id="logoutModal" class="modal">

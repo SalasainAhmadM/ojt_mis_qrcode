@@ -50,12 +50,20 @@ $query = "
         ar.remark, 
         ar.proof_image, 
         ar.status, 
-        s.time_in, 
-        s.time_out 
+        s.date AS schedule_date, 
+        MIN(a.time_in) AS first_time_in, 
+        MAX(a.time_out) AS last_time_out,
+        COALESCE(SUM(a.ojt_hours), 0) AS total_hours
     FROM attendance_remarks ar
     LEFT JOIN schedule s ON ar.schedule_id = s.schedule_id
+    LEFT JOIN attendance a ON ar.schedule_id = a.schedule_id 
+        AND ar.student_id = a.student_id 
+        AND DATE(a.time_in) = s.date  -- Match attendance by date
     WHERE ar.student_id = ?
+    GROUP BY ar.schedule_id, s.date, ar.remark_type, ar.remark, ar.proof_image, ar.status
+    ORDER BY s.date ASC
 ";
+
 if ($stmt = $database->prepare($query)) {
     $stmt->bind_param("i", $student_id); // Bind the student ID
     $stmt->execute();
@@ -70,7 +78,15 @@ if ($stmt = $database->prepare($query)) {
 } else {
     die("Error preparing statement: " . $database->error);
 }
+
+
+
+$showSuccessModal = isset($_SESSION['success']) ? $_SESSION['success'] : false;
+if ($showSuccessModal) {
+    unset($_SESSION['success']); // Clear the flag
+}
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -156,6 +172,24 @@ if ($stmt = $database->prepare($query)) {
         .sidebar.close .nav-links li .sub-menu {
             display: none;
         }
+    }
+
+    .whole-box {
+        max-height: 600px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+    }
+
+    .whole-box table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .whole-box thead {
+        position: sticky;
+        top: 0;
+        background: #f9f9f9;
+        z-index: 1;
     }
 </style>
 
@@ -258,21 +292,22 @@ if ($stmt = $database->prepare($query)) {
                     <div class="header-group">
                         <h2>Remarks</h2>
                         <div class="button-container">
-
-                            <button class="export-btn" id="openJournalModalBtn">
-                                <i class="fa-solid fa-file-export"></i> Export
+                            <button class="export-btn"
+                                onclick="window.location.href='export_dtr.php?student_id=<?php echo $student_id; ?>';">
+                                <i class="fa-solid fa-file-export"></i> Export DTR
                             </button>
-
                         </div>
                     </div>
+
                     <table>
                         <thead>
                             <tr>
-                                <th>Schedule ID</th>
+                                <th>Schedule Date</th>
                                 <th>Remark Type</th>
-                                <th>Time-in</th>
-                                <th>Time-out</th>
-                                <th>Remark</th>
+                                <th>First Time-in</th>
+                                <th>Last Time-out</th>
+                                <th>Total Hours</th>
+                                <th class="remark">Remark</th>
                                 <th class="action">Proof Image</th>
                                 <th>Status</th>
                                 <th class="action">Actions</th>
@@ -281,31 +316,71 @@ if ($stmt = $database->prepare($query)) {
                         <tbody>
                             <?php if (!empty($attendance_remarks)): ?>
                                 <?php foreach ($attendance_remarks as $attendance): ?>
+                                    <?php
+                                    // Format first time-in and last time-out
+                                    $first_time_in = isset($attendance['first_time_in']) ? date("g:i A", strtotime($attendance['first_time_in'])) : 'N/A';
+                                    $last_time_out = isset($attendance['last_time_out']) ? date("g:i A", strtotime($attendance['last_time_out'])) : 'N/A';
+
+                                    // Check if the remark type is "Absent"
+                                    if ($attendance['remark_type'] === 'Absent') {
+                                        $total_hours_formatted = "N/A";
+                                    } else {
+                                        // Calculate total hours in hours and minutes
+                                        $total_hours_decimal = $attendance['total_hours'] ?? 0;
+                                        $hours = floor($total_hours_decimal);
+                                        $minutes = round(($total_hours_decimal - $hours) * 60);
+
+                                        $total_hours_formatted = ($hours > 0 ? "{$hours} hr" . ($hours > 1 ? "s" : "") : "") .
+                                            ($minutes > 0 ? " {$minutes} min" . ($minutes > 1 ? "s" : "") : "");
+                                    }
+                                    ?>
                                     <tr>
-                                        <td><?php echo htmlspecialchars($attendance['schedule_id']); ?></td>
+                                        <!-- Schedule Date -->
+                                        <td><?php echo htmlspecialchars(date("m/d/Y", strtotime($attendance['schedule_date']))); ?>
+                                        </td>
+
+                                        <!-- Remark Type with Color Coding -->
                                         <td style="
-                        <?php
-                        if ($attendance['remark_type'] === 'Absent') {
-                            echo 'color: red;';
-                        } elseif ($attendance['remark_type'] === 'Late') {
-                            echo 'color: yellow;';
-                        } elseif ($attendance['remark_type'] === 'Forgot Time-out') {
-                            echo 'color: gray;';
-                        }
-                        ?>
-                    ">
+                    <?php
+                    if ($attendance['remark_type'] === 'Absent') {
+                        echo 'color: red;';
+                    } elseif ($attendance['remark_type'] === 'Late') {
+                        echo 'color: yellow;';
+                    } elseif ($attendance['remark_type'] === 'Forgot Time-out') {
+                        echo 'color: gray;';
+                    }
+                    ?>
+                ">
                                             <?php echo htmlspecialchars($attendance['remark_type']); ?>
                                         </td>
-                                        <td><?php echo htmlspecialchars($attendance['time_in'] ?? 'N/A'); ?></td>
-                                        <td><?php echo htmlspecialchars($attendance['time_out'] ?? 'N/A'); ?></td>
-                                        <td><?php echo htmlspecialchars($attendance['remark'] ?? 'N/A'); ?></td>
+
+                                        <!-- First Time-In -->
+                                        <td><?php echo htmlspecialchars($first_time_in); ?></td>
+
+                                        <!-- Last Time-Out -->
+                                        <td><?php echo htmlspecialchars($last_time_out); ?></td>
+
+                                        <!-- Total Hours -->
+                                        <td><?php echo htmlspecialchars($total_hours_formatted); ?></td>
+
+                                        <!-- Remark -->
+                                        <td class="remark"
+                                            title="<?php echo htmlspecialchars($attendance['remark'] ?? 'N/A'); ?>">
+                                            <?php echo htmlspecialchars($attendance['remark'] ?? 'N/A'); ?>
+                                        </td>
+
+                                        <!-- Proof Image -->
                                         <td class="action">
                                             <button class="action-icon view-btn"
-                                                onclick="openImageModal('<?php echo htmlspecialchars($attendance['proof_image'] ?? '../img/empty.png'); ?>')">
+                                                onclick="viewImage('<?php echo htmlspecialchars($attendance['proof_image'] ?? '../img/empty.png'); ?>')">
                                                 <i class="fa-solid fa-image"></i>
                                             </button>
                                         </td>
+
+                                        <!-- Status -->
                                         <td><?php echo htmlspecialchars($attendance['status']); ?></td>
+
+                                        <!-- Edit Action -->
                                         <td class="action">
                                             <button class="action-icon edit-btn"
                                                 onclick="openEditModal('<?php echo $attendance['schedule_id']; ?>', '<?php echo $attendance['remark_type']; ?>', '<?php echo $attendance['remark']; ?>')">
@@ -315,42 +390,26 @@ if ($stmt = $database->prepare($query)) {
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
+                                <!-- No Records Found -->
                                 <tr>
-                                    <td colspan="8">No attendance remarks found.</td>
+                                    <td colspan="9">No attendance remarks found.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
-                    </table>
 
 
                 </div>
             </div>
         </div>
     </section>
-    <style>
-        .modal-content img {
-            max-width: 500px;
-            max-height: 500px;
-            width: auto;
-            height: auto;
-            cursor: pointer;
-        }
-    </style>
-    <!-- Image Modal -->
-    <div id="imageModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <span class="close" onclick="closeImageModal()">&times;</span>
-            <img id="modalImage" src="" alt="Proof Image" onclick="closeImageModal()">
-        </div>
-    </div>
 
     <!-- Edit Modal -->
     <div id="editModal" class="modal" style="display: none;">
-        <div class="modal-content-big">
+        <div style=" margin: 5% auto;" class="modal-content">
             <span class="close" onclick="closeEditModal()">&times;</span>
             <h2>Edit Attendance Remark</h2>
 
-            <form action="edit_attendance.php" method="POST">
+            <form action="edit_attendance_remark.php" method="POST">
                 <input type="hidden" id="editScheduleId" name="schedule_id">
                 <input type="hidden" id="editStudentId" name="student_id" value="<?php echo $student_id; ?>">
 
@@ -368,6 +427,34 @@ if ($stmt = $database->prepare($query)) {
 
 
     <script>
+
+        function viewImage(imagePath) {
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            modal.style.display = 'flex';
+            modal.style.justifyContent = 'center';
+            modal.style.alignItems = 'center';
+            modal.style.zIndex = '1000';
+            modal.style.overflow = 'auto';
+
+            const img = document.createElement('img');
+            img.src = imagePath;
+            img.style.maxWidth = '90%';
+            img.style.maxHeight = '90%';
+            img.style.margin = 'auto';
+            modal.appendChild(img);
+
+            // Close the modal on click
+            modal.onclick = () => document.body.removeChild(modal);
+
+            document.body.appendChild(modal);
+        }
+
         // Image Modal
         function openImageModal(imageSrc) {
             const modal = document.getElementById("imageModal");
@@ -406,6 +493,22 @@ if ($stmt = $database->prepare($query)) {
             }
         }
     </script>
+    <?php if ($showSuccessModal): ?>
+        <div id="successModal" class="modal" style="display: flex;">
+            <div class="modal-content">
+                <!-- Lottie Animation -->
+                <div style="display: flex; justify-content: center; align-items: center;">
+                    <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+                        style="width: 150px; height: 150px;" loop autoplay>
+                    </lottie-player>
+                </div>
+                <h2>Attendance Remark Updated Successfully!</h2>
+                <p>You successfully updated your remark, <span style="color: #095d40; font-size: 20px">
+                        <?php echo $_SESSION['full_name']; ?>!</span></p>
+                <button class="proceed-btn" onclick="closeModal('successModal')">Close</button>
+            </div>
+        </div>
+    <?php endif; ?>
     <!-- Logout Confirmation Modal -->
     <div id="logoutModal" class="modal">
         <div class="modal-content">

@@ -155,7 +155,7 @@ CREATE TABLE `attendance_remarks` (
   `remark_id` int(11) NOT NULL,
   `student_id` int(11) NOT NULL,
   `schedule_id` int(11) NOT NULL,
-  `remark_type` enum('Late','Absent') NOT NULL,
+  `remark_type` enum('Late','Absent','Forgot Time-out') NOT NULL,
   `remark` varchar(255) DEFAULT NULL,
   `proof_image` varchar(255) DEFAULT NULL,
   `status` enum('Pending','Approved') NOT NULL DEFAULT 'Pending'

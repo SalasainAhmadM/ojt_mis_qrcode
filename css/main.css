@@ -1086,14 +1086,20 @@ hr {
 .date {
   width: 15%;
 }
-td.maxlength , td.section , td.wmsu_id , td.contact , td.adviser, td.email{
+td.maxlength , td.section , td.wmsu_id , td.contact , td.adviser, td.email {
   max-width: 20%;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   font-family: 'Roboto', sans-serif;
 }
-
+td.remark {
+  max-width: 30%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: 'Roboto', sans-serif;
+}
   .whole-box table th.action,
   .whole-box table td.action , .main-box table th.action,
   .main-box table td.action{
