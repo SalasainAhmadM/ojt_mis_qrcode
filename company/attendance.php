@@ -170,7 +170,7 @@ function formatDuration($hours)
 }
 
 $remarks_query = "
-    SELECT remark_id, student_id, remark_type 
+    SELECT remark_id, student_id, remark_type , status
     FROM attendance_remarks 
     WHERE schedule_id = (SELECT schedule_id FROM schedule WHERE company_id = ? AND date = ?)
 ";
@@ -184,7 +184,8 @@ if ($stmt = $database->prepare($remarks_query)) {
         // Store the remark details indexed by student_id
         $remarks[$row['student_id']] = [
             'remark_id' => $row['remark_id'],
-            'remark_type' => $row['remark_type']
+            'remark_type' => $row['remark_type'],
+            'status' => $row['status']
         ];
     }
     $stmt->close();
@@ -476,6 +477,7 @@ if ($stmt = $database->prepare($remarks_query)) {
                                     if ($remark) {
                                         $remark_id = $remark['remark_id'];
                                         $remark_type = $remark['remark_type'];
+                                        $remark_status = $remark['status'];
 
                                         if ($remark_type === 'Absent') {
                                             $status = '<span style="color:#8B0000;">Absent</span>';
@@ -487,16 +489,18 @@ if ($stmt = $database->prepare($remarks_query)) {
                                             <img style="border-radius: 50%;"
                                                 src="../uploads/student/<?php echo !empty($attendance['student_image']) ? htmlspecialchars($attendance['student_image'], ENT_QUOTES) : 'user.png'; ?>"
                                                 alt="Student Image">
-                                            <?php if ($remark && $remark_type === 'Absent'): ?>
-                                                <span class="tooltip-icon absent" title="Absent"
-                                                    onclick="openRemarkModal(<?php echo $student_id; ?>, '<?php echo $remark_type; ?>', <?php echo $remark_id; ?>)">
-                                                    X
-                                                </span>
-                                            <?php elseif ($remark && $remark_type === 'Late'): ?>
-                                                <span class="tooltip-icon late" title="Late"
-                                                    onclick="openRemarkModal(<?php echo $student_id; ?>, 'Late', <?php echo $remark_id; ?>)">
-                                                    ?
-                                                </span>
+                                            <?php if ($remark && $remark['status'] === 'Pending'): ?>
+                                                <?php if ($remark_type === 'Absent'): ?>
+                                                    <span class="tooltip-icon absent" title="Absent"
+                                                        onclick="openRemarkModal(<?php echo $student_id; ?>, '<?php echo $remark_type; ?>', <?php echo $remark_id; ?>)">
+                                                        X
+                                                    </span>
+                                                <?php elseif ($remark_type === 'Late'): ?>
+                                                    <span class="tooltip-icon late" title="Late"
+                                                        onclick="openRemarkModal(<?php echo $student_id; ?>, 'Late', <?php echo $remark_id; ?>)">
+                                                        ?
+                                                    </span>
+                                                <?php endif; ?>
                                             <?php endif; ?>
                                         </td>
 
@@ -513,6 +517,7 @@ if ($stmt = $database->prepare($remarks_query)) {
                                         <td class="status"><?php echo $status; ?></td>
                                     </tr>
                                 <?php endforeach; ?>
+
 
 
 
@@ -775,9 +780,21 @@ if ($stmt = $database->prepare($remarks_query)) {
             </div>
             <h2>Remark Approved!</h2>
             <p>The remark has been successfully approved.</p>
-            <button class="proceed-btn" onclick="closeModal('remarkApprovalSuccessModal')">Proceed</button>
+            <button class="proceed-btn" onclick="closeModalAndReload('remarkApprovalSuccessModal')">Proceed</button>
         </div>
     </div>
+
+    <script>
+        // Function to close the modal and reload the page
+        function closeModalAndReload(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none'; // Close the modal
+            }
+            location.reload(); // Reload the page
+        }
+    </script>
+
 
     <!-- Logout Confirmation Modal -->
     <div id="logoutModal" class="modal">

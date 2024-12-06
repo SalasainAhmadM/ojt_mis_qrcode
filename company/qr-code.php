@@ -211,7 +211,13 @@ $isSuspended = isset($schedule['day_type']) && $schedule['day_type'] === 'Suspen
             </li>
         </ul>
     </div>
-
+    <style>
+        #qr-code-img {
+            width: 400px;
+            height: 400px;
+            margin-bottom: 0px;
+        }
+    </style>
     <section class="home-section">
         <div class="home-content">
             <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
@@ -223,7 +229,7 @@ $isSuspended = isset($schedule['day_type']) && $schedule['day_type'] === 'Suspen
                 <label style="color: #a6a6a6; margin-left: 10px;">QR Scanner</label>
             </div>
             <div class="main-box">
-                <div class="left-box-qr">
+                <div class="whole-box">
                     <!-- Intern Time-In Details 
                     <div class="intern-timein-details">
                         <div class="intern-image">
@@ -248,10 +254,10 @@ $isSuspended = isset($schedule['day_type']) && $schedule['day_type'] === 'Suspen
                             <img src="../img/clock.png" alt="Clock Image" style="">
                         </div>
                     </div>-->
-                </div>
-                <!-- Right Box for Scanning QR Code -->
-                <div class="right-box-qr">
-                    <h2 style="text-align: center;">Today's QR Code</h2>
+                    <!-- </div> -->
+                    <!-- Right Box for Scanning QR Code -->
+                    <!-- <div class="right-box-qr"> -->
+                    <h2 style="text-align: center; margin-bottom: 0">Today's QR Code</h2>
                     <div class="qr-container">
                         <img src="<?php echo !empty($schedule['generated_qr_code']) ? $schedule['generated_qr_code'] : '../img/qr-code-error.png'; ?>"
                             alt="QR Code" id="qr-code-img" style="">

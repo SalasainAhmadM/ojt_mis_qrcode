@@ -95,8 +95,9 @@ if ($street_result->num_rows > 0) {
 
 $student_email = $student['student_email'];
 
-// Extract characters from the 3rd to the 11th position (0-indexed, start at 2 and take 10 characters)
-$extracted_email_part = substr($student_email, 2, 10);
+// Extract characters from the 3rd position (0-indexed) up to the '@' character
+$at_position = strpos($student_email, '@');
+$extracted_email_part = substr($student_email, 2, $at_position - 2);
 
 // Insert a hyphen after the 4th character
 $formatted_email = substr_replace($extracted_email_part, '-', 4, 0);
@@ -211,14 +212,30 @@ $formatted_email = substr_replace($extracted_email_part, '-', 4, 0);
         <label for="batch-year">Batch Year</label>
         <select id="batch-year" name="batch_year" required>
           <option value="" disabled selected>Select Batch Year</option>
-          <option value="2020-2021">2020-2021</option>
-          <option value="2021-2022">2021-2022</option>
-          <option value="2022-2023">2022-2023</option>
-          <option value="2023-2024">2023-2024</option>
-          <option value="2024-2025">2024-2025</option>
-          <option value="2025-2026">2025-2026</option>
         </select>
       </div>
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          const selectBatchYear = document.getElementById("batch-year");
+          const currentYear = new Date().getFullYear(); // Get the current year
+          const pastYearsToExclude = 5;
+          const futureYearsToInclude = 1;
+
+          // Generate batch year options
+          for (let i = -pastYearsToExclude + 1; i <= futureYearsToInclude; i++) {
+            const startYear = currentYear + i;
+            if (startYear < currentYear - pastYearsToExclude) continue;
+            if (startYear > currentYear + futureYearsToInclude) break;
+            const endYear = startYear + 1;
+
+            const option = document.createElement("option");
+            option.value = `${startYear}-${endYear}`;
+            option.textContent = `${startYear}-${endYear}`;
+            selectBatchYear.appendChild(option);
+          }
+        });
+      </script>
+
       <div class="form-group">
         <label for="department">Department</label>
         <select id="department" name="department" required>
@@ -254,6 +271,12 @@ $formatted_email = substr_replace($extracted_email_part, '-', 4, 0);
 
     <!-- Right Side Form -->
     <div class="form-section">
+      <?php
+      usort($address, function ($a, $b) {
+        return strcmp($a['address_barangay'], $b['address_barangay']);
+      });
+      ?>
+
       <div class="form-group">
         <label for="address">Address</label>
         <select name="address" id="address">
@@ -265,6 +288,7 @@ $formatted_email = substr_replace($extracted_email_part, '-', 4, 0);
           <?php endforeach; ?>
         </select>
       </div>
+
       <div class="form-group">
         <label for="street">Street</label>
         <select name="street" id="street">
