@@ -12,11 +12,11 @@ $currentTime = date('H:i:s');
 $currentDayOfWeek = date('N');
 
 // Check if the current time is within the auto time-out window (6 PM to 8 AM)
+// Check if the current time is within the auto time-out window (6 PM to 8 AM)
 if ($currentTime >= '18:00:00' || $currentTime < '08:00:00') {
-    // Determine the date for time-out based on the current time
     $timeoutDate = $currentTime < '08:00:00' ? date('Y-m-d', strtotime('-1 day')) : $currentDate;
 
-    // SQL to update attendance records with time_out = schedule.time_out for the specific date
+    // Update attendance records with auto time-out where time_out is NULL
     $timeoutQuery = "
         UPDATE attendance a
         JOIN schedule s ON a.schedule_id = s.schedule_id
@@ -26,43 +26,29 @@ if ($currentTime >= '18:00:00' || $currentTime < '08:00:00') {
           AND s.date = ?
     ";
 
-    // Prepare and execute the update query
     if ($stmt = $database->prepare($timeoutQuery)) {
         $stmt->bind_param("s", $timeoutDate);
         $stmt->execute();
 
-        // Get the number of affected rows
-        $affectedRows = $stmt->affected_rows;
-        $stmt->close();
+        // Insert attendance remarks for records that were just updated
+        $remarksQuery = "
+            INSERT INTO attendance_remarks (student_id, schedule_id, remark_type, remark, status)
+            SELECT a.student_id, a.schedule_id, 'Forgot Time-out', 'Automatic time-out applied', 'Pending'
+            FROM attendance a
+            JOIN schedule s ON a.schedule_id = s.schedule_id
+            WHERE a.time_out IS NULL
+              AND s.date = ?
+        ";
 
-        // If rows were updated, insert remarks for each affected student
-        if ($affectedRows > 0) {
-            // SQL to insert into attendance_remarks while avoiding duplicates
-            $remarkQuery = "
-                INSERT INTO attendance_remarks (student_id, schedule_id, remark_type, remark, status)
-                SELECT DISTINCT a.student_id, a.schedule_id, 'Forgot Time-out', 'Auto time-out applied.', 'Pending'
-                FROM attendance a
-                JOIN schedule s ON a.schedule_id = s.schedule_id
-                WHERE a.time_out_reason = 'Time-Out'
-                  AND s.date = ?
-                  AND NOT EXISTS (
-                      SELECT 1 
-                      FROM attendance_remarks ar
-                      WHERE ar.student_id = a.student_id
-                        AND ar.schedule_id = a.schedule_id
-                  )
-            ";
-
-            // Prepare and execute the insert query
-            if ($stmt = $database->prepare($remarkQuery)) {
-                $stmt->bind_param("s", $timeoutDate);
-                $stmt->execute();
-                $stmt->close();
-            }
+        if ($remarkStmt = $database->prepare($remarksQuery)) {
+            $remarkStmt->bind_param("s", $timeoutDate);
+            $remarkStmt->execute();
+            $remarkStmt->close();
         }
+
+        $stmt->close();
     }
 }
-
 
 
 $isHoliday = false;

@@ -99,31 +99,37 @@ $current_time = date('H:i:s');
 $isLate = false;
 $gracePeriodMinutes = 15;
 
-if (isset($schedule) && !$todayIsHoliday) {  // Check if it's not a holiday and not suspended
-    // Convert the scheduled time_in and current time into DateTime objects
-    $scheduledTime = new DateTime($schedule['time_in']);
+if (isset($schedule) && !$todayIsHoliday) { // Check if it's not a holiday and not suspended
+    // Convert scheduled time_in and current time into DateTime objects
+    $scheduledTimeIn = new DateTime($schedule['time_in']);
+    $scheduledTimeOut = new DateTime($schedule['time_out']);
     $currentDateTime = new DateTime($current_time);
 
     // Add the grace period to the scheduled time_in
-    $graceEndTime = clone $scheduledTime;
+    $graceEndTime = clone $scheduledTimeIn;
     $graceEndTime->modify("+{$gracePeriodMinutes} minutes");
 
-    // Check if the current time is after the grace period and there's no existing 'Late' remark
-    $remark_query = "SELECT * FROM attendance_remarks WHERE student_id = ? AND schedule_id = ? AND remark_type = 'Late'";
-    if ($remark_stmt = $database->prepare($remark_query)) {
-        $remark_stmt->bind_param("ii", $student_id, $schedule_id);
-        $remark_stmt->execute();
-        $remark_result = $remark_stmt->get_result();
+    // Check if the current time is after the grace period and before the schedule's time_out
+    if ($currentDateTime > $graceEndTime && $currentDateTime < $scheduledTimeOut) {
+        // Check if there's no existing 'Late' remark
+        $remark_query = "SELECT * FROM attendance_remarks WHERE student_id = ? AND schedule_id = ? AND remark_type = 'Late'";
+        if ($remark_stmt = $database->prepare($remark_query)) {
+            $remark_stmt->bind_param("ii", $student_id, $schedule_id);
+            $remark_stmt->execute();
+            $remark_result = $remark_stmt->get_result();
 
-        if ($remark_result->num_rows === 0 && $currentDateTime > $graceEndTime) {
-            $isLate = true;
-        } else {
-            $isLate = false; // Within the grace period or already marked as late
+            // Only mark as late if no existing 'Late' remark
+            if ($remark_result->num_rows === 0) {
+                $isLate = true;
+            }
+
+            $remark_stmt->close();
         }
-
-        $remark_stmt->close();
+    } else {
+        $isLate = false; // Either within the grace period or past the time_out
     }
 }
+
 
 
 // Function to check if a reason for absence is already submitted
