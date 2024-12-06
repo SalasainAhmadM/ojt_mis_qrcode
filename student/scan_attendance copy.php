@@ -1,10 +1,11 @@
 <?php
 session_start();
+
 require '../conn/connection.php'; // Assuming your database connection is in this file
 
 // Set timezone to Manila
-date_default_timezone_set('Asia/Manila');
-
+// date_default_timezone_set('Asia/Manila');
+$database->query("SET time_zone = '+08:00'");
 // Function to format hours and minutes
 function formatTime($hours, $minutes)
 {
@@ -80,6 +81,8 @@ if ($stmt = $database->prepare($query)) {
         $checkStmt->bind_param("iis", $student_id, $schedule_id, $current_date);
         $checkStmt->execute();
         $checkResult = $checkStmt->get_result();
+        // Set timezone to Manila
+        date_default_timezone_set('Asia/Manila');
 
         if ($checkResult->num_rows > 0) {
             // Student is timing out
@@ -136,6 +139,7 @@ if ($stmt = $database->prepare($query)) {
                                     'time_out' => $time_out,
                                     'date_in' => $date_in,
                                     'ojt_hours' => $ojt_hours,
+                                    'attendance_id' => $attendance_id,
                                     'total_ojt_hours' => $total_ojt_hours
                                 ]);
                             }
@@ -145,39 +149,39 @@ if ($stmt = $database->prepare($query)) {
             }
         } else {
             // Student is timing in
-            // Student is timing in
-            $insertQuery = "INSERT INTO attendance (student_id, schedule_id, time_in, row_number) 
-                VALUES (?, ?, NOW(), 
-                (SELECT COALESCE(MAX(row_number), 0) + 1 
-                 FROM attendance 
-                 WHERE student_id = ? AND DATE(time_in) = ?))";
+            $insertQuery = "INSERT INTO attendance (student_id, schedule_id, time_in) VALUES (?, ?, NOW())";
             if ($insertStmt = $database->prepare($insertQuery)) {
-                $insertStmt->bind_param("iiis", $student_id, $schedule_id, $student_id, $current_date);
+                $insertStmt->bind_param("ii", $student_id, $schedule_id);
+
                 if ($insertStmt->execute()) {
                     $attendance_id = $insertStmt->insert_id;
-                    $timeInQuery = "SELECT time_in, row_number FROM attendance WHERE attendance_id = ?";
+
+                    // Fetch time-in details
+                    $timeInQuery = "SELECT time_in FROM attendance WHERE attendance_id = ?";
                     if ($timeInStmt = $database->prepare($timeInQuery)) {
                         $timeInStmt->bind_param("i", $attendance_id);
                         $timeInStmt->execute();
                         $timeInResult = $timeInStmt->get_result();
+
                         if ($timeInRow = $timeInResult->fetch_assoc()) {
                             $time_in = (new DateTime($timeInRow['time_in']))->format('h:i A');
                             $date_in = (new DateTime($timeInRow['time_in']))->format('F j, Y');
-                            $row_number = $timeInRow['row_number'];
 
+                            // Calculate total OJT hours
                             $totalHoursQuery = "
-                    SELECT SUM(TIMESTAMPDIFF(MINUTE, time_in, time_out)) AS total_ojt_minutes 
-                    FROM attendance 
-                    WHERE student_id = ? AND time_out IS NOT NULL";
+                                SELECT SUM(TIMESTAMPDIFF(MINUTE, time_in, time_out)) AS total_ojt_minutes 
+                                FROM attendance 
+                                WHERE student_id = ? AND time_out IS NOT NULL";
                             if ($totalHoursStmt = $database->prepare($totalHoursQuery)) {
                                 $totalHoursStmt->bind_param("i", $student_id);
                                 $totalHoursStmt->execute();
                                 $totalHoursResult = $totalHoursStmt->get_result();
                                 $totalOjtHoursRow = $totalHoursResult->fetch_assoc();
-                                $total_minutes = $totalOjtHoursRow['total_ojt_minutes'];
+
+                                $total_minutes = $totalOjtHoursRow['total_ojt_minutes'] ?? 0;
                                 $total_hours = floor($total_minutes / 60);
                                 $total_remaining_minutes = $total_minutes % 60;
-                                $total_ojt_hours = formatTime($total_hours, $total_remaining_minutes);
+                                $total_ojt_hours = sprintf("%d hours, %d minutes", $total_hours, $total_remaining_minutes);
 
                                 echo json_encode([
                                     'success' => true,
@@ -189,7 +193,6 @@ if ($stmt = $database->prepare($query)) {
                                     'email' => $student['student_email'],
                                     'time_in' => $time_in,
                                     'date_in' => $date_in,
-                                    'row_number' => $row_number,
                                     'total_ojt_hours' => $total_ojt_hours
                                 ]);
                             }
@@ -197,7 +200,6 @@ if ($stmt = $database->prepare($query)) {
                     }
                 }
             }
-
         }
     }
 }

@@ -162,6 +162,25 @@ if ($holiday_stmt = $database->prepare($holiday_query)) {
 //     $isAbsent = count($absentDates) > 0;
 //     $absent_stmt->close();
 // }
+// Check if the student has already timed out today
+$hasTimedOutToday = false;
+
+if (isset($schedule_id)) { // Ensure there's a valid schedule ID
+    $timeout_query = "
+        SELECT * 
+        FROM attendance 
+        WHERE student_id = ? 
+        AND schedule_id = ? 
+        AND time_out_reason = 'Time-Out'";
+
+    if ($timeout_stmt = $database->prepare($timeout_query)) {
+        $timeout_stmt->bind_param("ii", $student_id, $schedule_id);
+        $timeout_stmt->execute();
+        $timeout_result = $timeout_stmt->get_result();
+        $hasTimedOutToday = $timeout_result->num_rows > 0;
+        $timeout_stmt->close();
+    }
+}
 
 ?>
 
@@ -394,15 +413,73 @@ if ($holiday_stmt = $database->prepare($holiday_query)) {
                         <video id="video" autoplay hidden></video>
                         <canvas id="canvas" hidden></canvas>
 
-                        <button id="start-scan" class="start-scan">Start Scan <i
-                                class="fa-solid fa-camera"></i></button>
+                        <div id="start-scan-container" class="start-scan-container">
+                            <?php if ($hasTimedOutToday): ?>
+                                <button id="stop-scan" class="start-scan timed-out">Timed-Out <i
+                                        class="fa-solid fa-ban"></i></button>
+                            <?php else: ?>
+                                <button id="start-scan" class="start-scan">Start Scan <i
+                                        class="fa-solid fa-camera"></i></button>
+                            <?php endif; ?>
+                        </div>
+
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Absent Response Failure Modal -->
+    <div id="absentResponseFailureModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/error-8B0000.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+            </div>
+            <h2 style="color: #8B0000">Start Scan Failed</h2>
+            <p>You cannot scan as you have already timed out for today.</p>
+            <button class="cancel-btn" onclick="closeModal('absentResponseFailureModal')">Okay</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const stopScanButton = document.getElementById("stop-scan");
+            const startScanButton = document.getElementById("start-scan");
 
+            if (stopScanButton) {
+                // If the "stop-scan" button exists (Timed-Out case)
+                stopScanButton.addEventListener("click", function () {
+                    showModal("absentResponseFailureModal");
+                });
+            }
+
+            if (startScanButton) {
+                // If the "start-scan" button exists (Start Scan case)
+                startScanButton.addEventListener("click", function () {
+                    console.log("Starting QR scan...");
+                    // Add QR scanning functionality here
+                });
+            }
+        });
+
+        // Function to show the modal
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = "block";
+            }
+        }
+
+        // Function to close the modal
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = "none";
+            }
+        }
+
+
+    </script>
 
     <script>
         document.getElementById("start-scan").addEventListener("click", function () {
