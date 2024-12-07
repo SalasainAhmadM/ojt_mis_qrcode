@@ -275,11 +275,11 @@ CREATE TABLE `feedback` (
 
 CREATE TABLE `feedback_questions` (
   `id` int(11) NOT NULL,
-  `question1` int(11) NOT NULL,
-  `question2` int(11) NOT NULL,
-  `question3` int(11) NOT NULL,
-  `question4` int(11) NOT NULL,
-  `question5` int(11) NOT NULL
+  `question1` varchar(255) NOT NULL,
+  `question2` varchar(255) NOT NULL,
+  `question3` varchar(255) NOT NULL,
+  `question4` varchar(255) NOT NULL,
+  `question5` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 -- --------------------------------------------------------

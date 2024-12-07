@@ -257,6 +257,27 @@ $login_message = $holiday_message ?: $suspended_message;
     .qr-camera {
       margin-left: 45px;
     }
+
+    .content-wrapper {
+      margin-top: 0;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .modal-content {
+      z-index: 1000;
+      width: 80%;
+      padding: 15px;
+    }
+
+    .form-container {
+      width: 95%;
+      flex-direction: column;
+      padding: 10px;
+      margin-left: 10px;
+      margin-right: 10px;
+      font-size: 12px;
+    }
   }
 
   /* For Web/Desktop Screens */

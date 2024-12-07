@@ -498,6 +498,7 @@
   }
 .export-btn, .add-btn {
   font-size: 10px;
+  margin-top: 10px;
 }
 .whole-box tbody {
   width: calc(100%);

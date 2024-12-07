@@ -102,9 +102,7 @@ if ($showSuccessModal) {
     <!-- <link rel="stylesheet" href="./css/index.css"> -->
     <link rel="stylesheet" href="../css/mobile.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <style>
 
-    </style>
 </head>
 <style>
     /* For Mobile Screens */
@@ -127,8 +125,6 @@ if ($showSuccessModal) {
         }
 
 
-
-
         .home-section .home-content .bx-menu {
             margin: 0 15px;
             cursor: pointer;
@@ -146,8 +142,12 @@ if ($showSuccessModal) {
             margin-left: 10px;
             width: 110%;
             padding-left: 10px;
-            width: calc(110% - 60px);
-            margin-left: -68px;
+            width: calc(110% - 78px);
+            margin-left: -60px;
+        }
+
+        .content-wrapper {
+            margin-top: 0;
         }
 
         .whole-box {
@@ -156,6 +156,23 @@ if ($showSuccessModal) {
             padding-right: 0px;
             margin-left: -68px;
             width: 120%;
+        }
+
+        table th.status,
+        table td.status,
+        table th.time,
+        table td.time,
+        table th.sched,
+        table td.sched,
+        table th.action,
+        table td.action,
+        table th.remark,
+        table td.remark {
+            padding: 6px;
+            font-size: 10px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
         }
     }
 
@@ -171,6 +188,13 @@ if ($showSuccessModal) {
     @media (max-width: 420px) {
         .sidebar.close .nav-links li .sub-menu {
             display: none;
+        }
+    }
+
+    /* Add a media query for mobile view */
+    @media only screen and (max-width: 768px) {
+        .clickable-row {
+            cursor: pointer;
         }
     }
 
@@ -302,14 +326,14 @@ if ($showSuccessModal) {
                     <table>
                         <thead>
                             <tr>
-                                <th>Schedule Date</th>
-                                <th>Remark Type</th>
-                                <th>First Time-in</th>
-                                <th>Last Time-out</th>
-                                <th>Total Hours</th>
+                                <th class="sched">Schedule Date</th>
+                                <th class="remark">Remark Type</th>
+                                <th class="time">First Time-in</th>
+                                <th class="time">Last Time-out</th>
+                                <th class="time">Total Hours</th>
                                 <th class="remark">Remark</th>
                                 <th class="action">Proof Image</th>
-                                <th>Status</th>
+                                <th class="status">Status</th>
                                 <th class="action">Actions</th>
                             </tr>
                         </thead>
@@ -325,72 +349,43 @@ if ($showSuccessModal) {
                                     if ($attendance['remark_type'] === 'Absent') {
                                         $total_hours_formatted = "N/A";
                                     } else {
-                                        // Calculate total hours in hours and minutes
                                         $total_hours_decimal = $attendance['total_hours'] ?? 0;
                                         $hours = floor($total_hours_decimal);
                                         $minutes = round(($total_hours_decimal - $hours) * 60);
-
                                         $total_hours_formatted = ($hours > 0 ? "{$hours} hr" . ($hours > 1 ? "s" : "") : "") .
                                             ($minutes > 0 ? " {$minutes} min" . ($minutes > 1 ? "s" : "") : "");
                                     }
                                     ?>
-                                    <tr>
-                                        <!-- Schedule Date -->
-                                        <td><?php echo htmlspecialchars(date("m/d/Y", strtotime($attendance['schedule_date']))); ?>
+                                    <tr class="clickable-row"
+                                        data-schedule-id="<?php echo htmlspecialchars($attendance['schedule_id']); ?>"
+                                        data-remark-type="<?php echo htmlspecialchars($attendance['remark_type']); ?>"
+                                        data-remark="<?php echo htmlspecialchars($attendance['remark']); ?>"
+                                        data-first-time-in="<?php echo htmlspecialchars($first_time_in); ?>"
+                                        data-last-time-out="<?php echo htmlspecialchars($last_time_out); ?>"
+                                        data-total-hours="<?php echo htmlspecialchars($total_hours_formatted); ?>"
+                                        onclick="openRowModal(this)">
+                                        <td class="sched">
+                                            <?php echo htmlspecialchars(date("m/d/Y", strtotime($attendance['schedule_date']))); ?>
                                         </td>
-
-                                        <!-- Remark Type with Color Coding -->
-                                        <td style="
-                    <?php
-                    if ($attendance['remark_type'] === 'Absent') {
-                        echo 'color: red;';
-                    } elseif ($attendance['remark_type'] === 'Late') {
-                        echo 'color: yellow;';
-                    } elseif ($attendance['remark_type'] === 'Forgot Time-out') {
-                        echo 'color: gray;';
-                    }
-                    ?>
-                ">
-                                            <?php echo htmlspecialchars($attendance['remark_type']); ?>
-                                        </td>
-
-                                        <!-- First Time-In -->
-                                        <td><?php echo htmlspecialchars($first_time_in); ?></td>
-
-                                        <!-- Last Time-Out -->
-                                        <td><?php echo htmlspecialchars($last_time_out); ?></td>
-
-                                        <!-- Total Hours -->
-                                        <td><?php echo htmlspecialchars($total_hours_formatted); ?></td>
-
-                                        <!-- Remark -->
-                                        <td class="remark"
-                                            title="<?php echo htmlspecialchars($attendance['remark'] ?? 'N/A'); ?>">
-                                            <?php echo htmlspecialchars($attendance['remark'] ?? 'N/A'); ?>
-                                        </td>
-
-                                        <!-- Proof Image -->
+                                        <td class="remark"><?php echo htmlspecialchars($attendance['remark_type']); ?></td>
+                                        <td class="time"><?php echo htmlspecialchars($first_time_in); ?></td>
+                                        <td class="time"><?php echo htmlspecialchars($last_time_out); ?></td>
+                                        <td class="time"><?php echo htmlspecialchars($total_hours_formatted); ?></td>
+                                        <td class="remark"><?php echo htmlspecialchars($attendance['remark'] ?? 'N/A'); ?></td>
                                         <td class="action">
-                                            <button class="action-icon view-btn"
-                                                onclick="viewImage('<?php echo htmlspecialchars($attendance['proof_image'] ?? '../img/empty.png'); ?>')">
+                                            <button class="action-icon view-btn">
                                                 <i class="fa-solid fa-image"></i>
                                             </button>
                                         </td>
-
-                                        <!-- Status -->
-                                        <td><?php echo htmlspecialchars($attendance['status']); ?></td>
-
-                                        <!-- Edit Action -->
+                                        <td class="status"><?php echo htmlspecialchars($attendance['status']); ?></td>
                                         <td class="action">
-                                            <button class="action-icon edit-btn"
-                                                onclick="openEditModal('<?php echo $attendance['schedule_id']; ?>', '<?php echo $attendance['remark_type']; ?>', '<?php echo $attendance['remark']; ?>')">
+                                            <button class="action-icon edit-btn">
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </button>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
-                                <!-- No Records Found -->
                                 <tr>
                                     <td colspan="9">No attendance remarks found.</td>
                                 </tr>
@@ -402,6 +397,21 @@ if ($showSuccessModal) {
             </div>
         </div>
     </section>
+    <div id="editModal" class="modal" style="display: none;">
+        <div style="margin: 5% auto;" class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2>Edit Attendance Remark</h2>
+            <form action="edit_attendance_remark.php" method="POST">
+                <input type="hidden" id="editScheduleId" name="schedule_id">
+                <label for="editRemarkType">Remark Type</label>
+                <input type="text" id="editRemarkType" name="remark_type" readonly required
+                    style="background-color: #f0f0f0; border: 1px solid #ccc; cursor: not-allowed; width: 30%; text-align: center;">
+                <label for="editRemark">Remark</label>
+                <textarea id="editRemark" name="remark" required></textarea>
+                <button type="submit" class="modal-btn">Save Changes</button>
+            </form>
+        </div>
+    </div>
 
     <!-- Edit Modal -->
     <div id="editModal" class="modal" style="display: none;">
@@ -427,6 +437,26 @@ if ($showSuccessModal) {
 
 
     <script>
+        function openRowModal(row) {
+            const scheduleId = row.getAttribute('data-schedule-id');
+            const remarkType = row.getAttribute('data-remark-type');
+            const remark = row.getAttribute('data-remark');
+            const firstTimeIn = row.getAttribute('data-first-time-in');
+            const lastTimeOut = row.getAttribute('data-last-time-out');
+            const totalHours = row.getAttribute('data-total-hours');
+
+            // Populate modal fields
+            document.getElementById('editScheduleId').value = scheduleId;
+            document.getElementById('editRemarkType').value = remarkType;
+            document.getElementById('editRemark').value = remark;
+
+            // Display modal
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
 
         function viewImage(imagePath) {
             const modal = document.createElement('div');

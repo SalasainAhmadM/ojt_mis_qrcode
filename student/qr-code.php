@@ -256,8 +256,12 @@ if (isset($schedule_id)) { // Ensure there's a valid schedule ID
             margin-left: 10px;
             width: 110%;
             padding-left: 10px;
-            width: calc(110% - 60px);
-            margin-left: -68px;
+            width: calc(110% - 78px);
+            margin-left: -60px;
+        }
+
+        .content-wrapper {
+            margin-top: 0;
         }
 
         .left-box-qr,

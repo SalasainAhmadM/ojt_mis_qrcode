@@ -118,7 +118,6 @@ $formatted_email = substr_replace($extracted_email_part, '-', 4, 0);
   <!-- <link rel="stylesheet" href="./css/style.css"> -->
   <!-- <link rel="stylesheet" href="./css/index.css"> -->
   <link rel="stylesheet" href="../css/mobile.css">
-  <link rel="stylesheet" href="../css/mobile.css">
 </head>
 <style>
   @media (max-width: 768px) {
@@ -126,6 +125,10 @@ $formatted_email = substr_replace($extracted_email_part, '-', 4, 0);
       z-index: 1000;
       width: 80%;
       padding: 15px;
+    }
+
+    .content-wrapper {
+      margin-top: 0;
     }
 
     .form-container {

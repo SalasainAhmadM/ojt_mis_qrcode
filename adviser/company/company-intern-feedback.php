@@ -210,6 +210,16 @@ function feedbackText($value)
             return 'No Feedback';
     }
 }
+
+// Fetch questions from the table
+$sql = "SELECT * FROM feedback_questions WHERE id = 1";
+$result = $database->query($sql);
+
+if ($result->num_rows > 0) {
+    $question = $result->fetch_assoc();
+} else {
+    die("No questions found in the database.");
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -516,7 +526,7 @@ function feedbackText($value)
                     <p><strong><span id="edit_student_name"></span></strong>performance feedback:</p>
 
                     <!-- Question 1 -->
-                    <label>1. Demonstrates initiative in completing tasks.</label>
+                    <label>1. <?php echo $question['question1']; ?></label>
                     <div class="checkbox-group">
                         <input type="radio" id="q1-strongly-agree" name="question_1" value="100" disabled>
                         <label for="q1-strongly-agree">Strongly Agree</label>
@@ -535,7 +545,7 @@ function feedbackText($value)
                     </div>
 
                     <!-- Question 2 -->
-                    <label>2. Works well with others in a team environment.</label>
+                    <label>2. <?php echo $question['question2']; ?></label>
                     <div class="checkbox-group">
                         <input type="radio" id="q2-strongly-agree" name="question_2" value="100" disabled>
                         <label for="q2-strongly-agree">Strongly Agree</label>
@@ -554,7 +564,7 @@ function feedbackText($value)
                     </div>
 
                     <!-- Question 3 -->
-                    <label>3. Demonstrates responsibility and accountability.</label>
+                    <label>3. <?php echo $question['question3']; ?></label>
                     <div class="checkbox-group">
                         <input type="radio" id="q3-strongly-agree" name="question_3" value="100" disabled>
                         <label for="q3-strongly-agree">Strongly Agree</label>
@@ -573,7 +583,7 @@ function feedbackText($value)
                     </div>
 
                     <!-- Question 4 -->
-                    <label>4. Effectively manages time to meet deadlines.</label>
+                    <label>4. <?php echo $question['question4']; ?></label>
                     <div class="checkbox-group">
                         <input type="radio" id="q4-strongly-agree" name="question_4" value="100" disabled>
                         <label for="q4-strongly-agree">Strongly Agree</label>
@@ -592,7 +602,7 @@ function feedbackText($value)
                     </div>
 
                     <!-- Question 5 -->
-                    <label>5. Communicates effectively in both written and verbal forms.</label>
+                    <label>5. <?php echo $question['question5']; ?></label>
                     <div class="checkbox-group">
                         <input type="radio" id="q5-strongly-agree" name="question_5" value="100" disabled>
                         <label for="q5-strongly-agree">Strongly Agree</label>

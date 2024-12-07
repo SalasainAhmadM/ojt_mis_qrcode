@@ -210,6 +210,15 @@ $students = $pagination_data['students'];
 $total_pages = $pagination_data['total_pages'];
 $current_page = $pagination_data['current_page'];
 
+// Fetch questions from the table
+$sql = "SELECT * FROM feedback_questions WHERE id = 1";
+$result = $database->query($sql);
+
+if ($result->num_rows > 0) {
+    $question = $result->fetch_assoc();
+} else {
+    die("No questions found in the database.");
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -518,7 +527,7 @@ $current_page = $pagination_data['current_page'];
                     <p>Evaluate <strong><span id="eval_student_name"></span></strong>'s performance:</p>
 
                     <!-- Question 1 -->
-                    <label>1. Demonstrates initiative in completing tasks.</label>
+                    <label>1. <?php echo $question['question1']; ?></label>
                     <div class="checkbox-group">
                         <label><input type="checkbox" name="question_1" value="Strongly Agree"> Strongly Agree</label>
                         <label><input type="checkbox" name="question_1" value="Agree"> Agree</label>
@@ -529,7 +538,7 @@ $current_page = $pagination_data['current_page'];
                     </div>
 
                     <!-- Question 2 -->
-                    <label>2. Works well with others in a team environment.</label>
+                    <label>2. <?php echo $question['question2']; ?></label>
                     <div class="checkbox-group">
                         <label><input type="checkbox" name="question_2" value="Strongly Agree"> Strongly Agree</label>
                         <label><input type="checkbox" name="question_2" value="Agree"> Agree</label>
@@ -540,7 +549,7 @@ $current_page = $pagination_data['current_page'];
                     </div>
 
                     <!-- Question 3 -->
-                    <label>3. Demonstrates responsibility and accountability.</label>
+                    <label>3. <?php echo $question['question3']; ?></label>
                     <div class="checkbox-group">
                         <label><input type="checkbox" name="question_3" value="Strongly Agree"> Strongly Agree</label>
                         <label><input type="checkbox" name="question_3" value="Agree"> Agree</label>
@@ -551,7 +560,7 @@ $current_page = $pagination_data['current_page'];
                     </div>
 
                     <!-- Question 4 -->
-                    <label>4. Effectively manages time to meet deadlines.</label>
+                    <label>4. <?php echo $question['question4']; ?></label>
                     <div class="checkbox-group">
                         <label><input type="checkbox" name="question_4" value="Strongly Agree"> Strongly Agree</label>
                         <label><input type="checkbox" name="question_4" value="Agree"> Agree</label>
@@ -562,7 +571,7 @@ $current_page = $pagination_data['current_page'];
                     </div>
 
                     <!-- Question 5 -->
-                    <label>5. Communicates effectively in both written and verbal forms.</label>
+                    <label>5. <?php echo $question['question5']; ?></label>
                     <div class="checkbox-group">
                         <label><input type="checkbox" name="question_5" value="Strongly Agree"> Strongly Agree</label>
                         <label><input type="checkbox" name="question_5" value="Agree"> Agree</label>
@@ -649,7 +658,7 @@ $current_page = $pagination_data['current_page'];
                     <p>Edit <strong><span id="edit_student_name"></span></strong>'s performance feedback:</p>
 
                     <!-- Question 1 -->
-                    <label>1. Demonstrates initiative in completing tasks.</label>
+                    <label>1. <?php echo $question['question1']; ?></label>
                     <div class="checkbox-group">
                         <label><input type="radio" name="question_1" value="100"> Strongly Agree</label>
                         <label><input type="radio" name="question_1" value="80"> Agree</label>
@@ -659,7 +668,7 @@ $current_page = $pagination_data['current_page'];
                     </div>
 
                     <!-- Question 2 -->
-                    <label>2. Works well with others in a team environment.</label>
+                    <label>2. <?php echo $question['question2']; ?></label>
                     <div class="checkbox-group">
                         <label><input type="radio" name="question_2" value="100"> Strongly Agree</label>
                         <label><input type="radio" name="question_2" value="80"> Agree</label>
@@ -669,7 +678,7 @@ $current_page = $pagination_data['current_page'];
                     </div>
 
                     <!-- Question 3 -->
-                    <label>3. Demonstrates responsibility and accountability.</label>
+                    <label>3. <?php echo $question['question3']; ?></label>
                     <div class="checkbox-group">
                         <label><input type="radio" name="question_3" value="100"> Strongly Agree</label>
                         <label><input type="radio" name="question_3" value="80"> Agree</label>
@@ -679,7 +688,7 @@ $current_page = $pagination_data['current_page'];
                     </div>
 
                     <!-- Question 4 -->
-                    <label>4. Effectively manages time to meet deadlines.</label>
+                    <label>4. <?php echo $question['question4']; ?></label>
                     <div class="checkbox-group">
                         <label><input type="radio" name="question_4" value="100"> Strongly Agree</label>
                         <label><input type="radio" name="question_4" value="80"> Agree</label>
@@ -689,7 +698,7 @@ $current_page = $pagination_data['current_page'];
                     </div>
 
                     <!-- Question 5 -->
-                    <label>5. Communicates effectively in both written and verbal forms.</label>
+                    <label>5. <?php echo $question['question5']; ?></label>
                     <div class="checkbox-group">
                         <label><input type="radio" name="question_5" value="100"> Strongly Agree</label>
                         <label><input type="radio" name="question_5" value="80"> Agree</label>

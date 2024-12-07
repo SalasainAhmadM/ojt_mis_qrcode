@@ -281,8 +281,12 @@ if ($search_date) {
       margin-left: 10px;
       width: 110%;
       padding-left: 10px;
-      width: calc(110% - 60px);
-      margin-left: -68px;
+      width: calc(110% - 78px);
+      margin-left: -60px;
+    }
+
+    .content-wrapper {
+      margin-top: 0;
     }
 
     .whole-box {
@@ -291,6 +295,16 @@ if ($search_date) {
       padding-right: 0px;
       margin-left: -68px;
       width: 120%;
+    }
+
+    .modal-content {
+      z-index: 1000;
+      width: 50%;
+      padding: 15px;
+    }
+
+    .content-wrapper {
+      margin-top: 0;
     }
   }
 
