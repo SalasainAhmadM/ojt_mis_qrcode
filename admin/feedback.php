@@ -37,7 +37,7 @@ if ($stmt = $database->prepare($query)) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin - Dashboard</title>
+  <title>Admin - Feedback</title>
   <link rel="icon" href="../img/ccs.png" type="image/icon type">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" type="text/css" href="./css/style.css">
@@ -69,7 +69,7 @@ if ($stmt = $database->prepare($query)) {
     <hr>
     <ul class="nav-links">
       <li>
-        <a href="index.php" class="active">
+        <a href="index.php">
           <i class="fas fa-th-large"></i>
           <span class="link_name">Dashboard</span>
         </a>
@@ -111,7 +111,7 @@ if ($stmt = $database->prepare($query)) {
         </ul>
       </li>
       <li>
-        <a href="feedback.php">
+        <a href="feedback.php" class="active">
           <i class="fa-solid fa-percent"></i>
           <span class="link_name">Feedback</span>
         </a>
@@ -148,149 +148,73 @@ if ($stmt = $database->prepare($query)) {
       <i style="z-index: 100;" class="fas fa-bars bx-menu"></i>
     </div>
 
-    <div class="rectangles-container">
-      <?php
-      // Count Students
-      $student_count_query = "SELECT COUNT(*) AS student_count FROM student";
-      $student_count_result = $database->query($student_count_query);
-      $student_count = $student_count_result->fetch_assoc()['student_count'];
+    <div class="content-wrapper">
 
-      // Count Advisers
-      $adviser_count_query = "SELECT COUNT(*) AS adviser_count FROM adviser";
-      $adviser_count_result = $database->query($adviser_count_query);
-      $adviser_count = $adviser_count_result->fetch_assoc()['adviser_count'];
-
-      // Count Companies
-      $company_count_query = "SELECT COUNT(*) AS company_count FROM company";
-      $company_count_result = $database->query($company_count_query);
-      $company_count = $company_count_result->fetch_assoc()['company_count'];
-
-      // Output the counts
-      echo "<div class='rectangle-box1'>
-      <div class='box-left'>
-        <span class='box-name'>STUDENTS</span><br>
-        <span class='box-number'>{$student_count}</span>
+      <div class="header-box">
+        <label style="color: #a6a6a6;">Feedback Management</label>
       </div>
-      <div class='box-right'>
-        <i class='fa-solid fa-users'></i>
-      </div>
-    </div>";
+      <div class="main-box">
+        <div class="whole-box">
+          <table>
+            <thead>
+              <th>Feedback Questions</th>
+              <th class="action">Action</th>
+              <!-- <th></th>
+              <th></th>
+              <th></th> -->
+            </thead>
+            <tbody>
+              <?php
+              // Fetch feedback questions
+              $sql = "SELECT * FROM feedback_questions";
+              $result = $database->query($sql);
 
-      echo "<div class='rectangle-box2'>
-        <div class='box-left'>
-          <span class='box-name'>ADVISERS</span><br>
-          <span class='box-number'>{$adviser_count}</span>
-        </div>
-        <div class='box-right'>
-          <i class='fa-solid fa-chalkboard-user'></i>
-        </div>
-      </div>";
+              if ($result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                  for ($i = 1; $i <= 5; $i++) {
+                    $question = $row["question$i"];
+                    echo "
+                              <tr>
+                                  <td>$question</td>
+                                  <td class=\"action\">
+                                      <button class=\"action-icon edit-btn\" onclick=\"openEditModal($row[id], 'question$i', '$question')\">
+                                          <i class=\"fa-solid fa-pen-to-square\"></i>
+                                      </button>
+                                  </td>
+                              </tr>
+                          ";
+                  }
+                }
+              } else {
+                echo "<tr><td colspan='2'>No feedback questions found.</td></tr>";
+              }
 
-      echo "<div class='rectangle-box3'>
-        <div class='box-left'>
-          <span class='box-name'>COMPANIES</span><br>
-          <span class='box-number'>{$company_count}</span>
-        </div>
-        <div class='box-right'>
-           <i class='fa-solid fa-building'></i>
-        </div>
-      </div>";
-
-      ?>
-
-    </div>
-    <div class="rectangles-container">
-      <?php
-      // Count Sections
-      $section_count_query = "SELECT COUNT(*) AS section_count FROM course_sections";
-      $section_count_result = $database->query($section_count_query);
-      $section_count = $section_count_result->fetch_assoc()['section_count'];
-
-      // Count Departments
-      $department_count_query = "SELECT COUNT(*) AS department_count FROM departments";
-      $department_count_result = $database->query($department_count_query);
-      $department_count = $department_count_result->fetch_assoc()['department_count'];
-
-      // Count Announcements
-      $announcement_count_query = "SELECT COUNT(*) AS announcement_count FROM adviser_announcement";
-      $announcement_count_result = $database->query($announcement_count_query);
-      $announcement_count = $announcement_count_result->fetch_assoc()['announcement_count'];
-
-      // Output the counts
-      
-      echo " <div class='rectangle-box1'>
-        <div class='box-left'>
-          <span class='box-name'>DEPARTMENTS</span><br>
-          <span class='box-number'>{$department_count}</span>
-        </div>
-        <div class='box-right'>
-          <i class='fa-solid fa-school'></i>
-        </div>
-      </div>";
-
-      echo "<div class='rectangle-box2'>
-      <div class='box-left'>
-        <span class='box-name'>SECTIONS</span><br>
-        <span class='box-number'>{$section_count}</span>
-      </div>
-      <div class='box-right'>
-        <i class='fa-solid fa-clipboard-list'></i>
-      </div>
-    </div>";
-
-      echo "<div class='rectangle-box3'>
-        <div class='box-left'>
-          <span class='box-name'>ANNOUNCEMENTS</span><br>
-          <span class='box-number'>{$announcement_count}</span>
-        </div>
-        <div class='box-right'>
-          <i class='fa-solid fa-bullhorn'></i>
-        </div>
-      </div>";
-      ?>
-
-    </div>
-
-    <?php
-    $sql = "SELECT required_hours FROM required_hours ORDER BY required_hours_id DESC LIMIT 1";
-    $result = $database->query($sql);
-    $currentOjtHours = ($result->num_rows > 0) ? $result->fetch_assoc()['required_hours'] : 0;
-
-    $database->close();
-    ?>
-    <div class="rectangles-container">
-      <div class='rectangle-box1' id="ojtHoursBox" onclick="openModal('updateOjtModal')">
-        <div class='box-left'>
-          <span class='box-name'>OJT HOURS</span><br>
-          <span class='box-number'><?php echo $currentOjtHours; ?> hours</span>
-        </div>
-        <div class='box-right'>
-          <i class="fa-solid fa-business-time"></i>
+              ?>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
-
   </section>
 
-  <!-- Updating OJT Hours Modal -->
-  <div id="updateOjtModal" class="modal">
+  <!-- Edit Feedback Modal -->
+  <div id="editFeedbackModal" class="modal">
     <div class="modal-content-others">
-      <span class="close" onclick="closeModal('updateOjtModal')">&times;</span>
-      <h2>Update OJT Hours</h2>
-      <form action="./others/update_ojt_hours.php" method="POST">
+      <span class="close" id="closeEditFeedbackModal">&times;</span>
+      <h2>Edit Feedback Question</h2>
+      <form id="editFeedbackForm" action="./edit_feedback.php" method="POST">
+        <input type="hidden" id="editFeedbackId" name="feedback_id">
+        <input type="hidden" id="editFeedbackField" name="feedback_field">
         <div class="input-group">
-          <label for="ojtHours">OJT Hours</label>
-          <input type="number" id="ojtHours" name="ojtHours" placeholder="Enter new OJT hours"
-            value="<?php echo $currentOjtHours; ?>" required>
+          <label for="editFeedbackText">Feedback Question</label>
+          <textarea id="editFeedbackText" name="feedback_text" rows="4" required></textarea>
         </div>
-        <button type="submit" class="modal-btn">Update Hours</button>
+        <button type="submit" class="modal-btn">Update Feedback</button>
       </form>
     </div>
   </div>
-
-
-  <!-- Success Modal for Updating OJT Hours -->
-  <div id="updateOjtSuccessModal" class="modal">
+  <!-- Success Modal -->
+  <div id="updateFeedbackSuccessModal" class="modal">
     <div class="modal-content">
       <div style="display: flex; justify-content: center; align-items: center;">
         <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
@@ -298,25 +222,12 @@ if ($stmt = $database->prepare($query)) {
         </lottie-player>
       </div>
       <h2>Updated Successfully!</h2>
-      <p>The OJT hours updated successfully!</p>
-      <button class="proceed-btn" onclick="closeModal('updateOjtSuccessModal')">Close</button>
+      <p>The feedback question was updated successfully!</p>
+      <button class="proceed-btn" onclick="closeModal('updateFeedbackSuccessModal')">Close</button>
     </div>
   </div>
 
-  <!-- Login Success Modal -->
-  <div id="loginSuccessModal" class="modal">
-    <div class="modal-content">
-      <!-- Lottie Animation -->
-      <div style="display: flex; justify-content: center; align-items: center;">
-        <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
-          style="width: 150px; height: 150px;" loop autoplay>
-        </lottie-player>
-      </div>
-      <h2>Login Successful!</h2>
-      <p>Welcome, <span style="color: #095d40; font-size: 20px"><?php echo $_SESSION['full_name']; ?>!</span></p>
-      <button class="proceed-btn" onclick="closeModal('loginSuccessModal')">Proceed</button>
-    </div>
-  </div>
+
   <!-- Logout Confirmation Modal -->
   <div id="logoutModal" class="modal">
     <div class="modal-content">
@@ -334,8 +245,38 @@ if ($stmt = $database->prepare($query)) {
     </div>
   </div>
   <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const modal = document.getElementById("editFeedbackModal");
+      const closeModal = document.getElementById("closeEditFeedbackModal");
+
+      // Open modal
+      window.openEditModal = function (id, field, text) {
+        document.getElementById("editFeedbackId").value = id;
+        document.getElementById("editFeedbackField").value = field;
+        document.getElementById("editFeedbackText").value = text;
+
+        modal.style.display = "block";
+      };
+
+      // Close modal
+      closeModal.addEventListener("click", function () {
+        modal.style.display = "none";
+      });
+
+      // Close modal when clicking outside the modal content
+      window.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          modal.style.display = "none";
+        }
+      });
+    });
+
     // Function to open the modal
     function openModal(modalId) {
+      document.getElementById(modalId).style.display = "block";
+    }
+
+    function showModal(modalId) {
       document.getElementById(modalId).style.display = "block";
     }
 
@@ -344,21 +285,11 @@ if ($stmt = $database->prepare($query)) {
       document.getElementById(modalId).style.display = "none";
     }
 
-    // Function to open a modal by its ID
-    function showModal(modalId) {
-      document.getElementById(modalId).style.display = 'block';
-    }
-
     // Check session variables for success messages and open respective modals
     window.onload = function () {
-      <?php if (isset($_SESSION['update_success'])): ?>
-        showModal('updateOjtSuccessModal');
+      <?php if (isset($_SESSION['update_success']) && $_SESSION['update_success'] === true): ?>
+        showModal('updateFeedbackSuccessModal');
         <?php unset($_SESSION['update_success']); // Remove after displaying ?>
-      <?php endif; ?>
-
-      <?php if (isset($_SESSION['login_success']) && $_SESSION['login_success']): ?>
-        openModal('loginSuccessModal');
-        <?php unset($_SESSION['login_success']); // Clear after displaying ?>
       <?php endif; ?>
     };
   </script>

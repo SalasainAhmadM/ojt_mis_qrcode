@@ -32,12 +32,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Fetch the conversation with the clicked adviser
             fetchConversation(selectedAdviserId);
-
-            // Start polling for new messages
-            startMessagePolling();
         });
     });
 
+    // Function to send a message
     sendMessageBtn.addEventListener('click', function () {
         const message = messageInput.value.trim();
 
@@ -63,9 +61,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
 
-                // Clear existing messages
-                chatMessages.innerHTML = '';
-
                 // Display the fetched messages
                 messages.forEach(msg => {
                     const messageDiv = document.createElement('div');
@@ -80,9 +75,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     // Message content and timestamp
                     messageDiv.innerHTML = `
-                        ${msg.message}
-                        <span class="timestamp">${new Date(msg.timestamp).toLocaleString()}</span>
-                    `;
+            ${msg.message}
+            <span class="timestamp">${new Date(msg.timestamp).toLocaleString()}</span>
+        `;
 
                     chatMessages.appendChild(messageDiv);
                 });
@@ -111,9 +106,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     const messageDiv = document.createElement('div');
                     messageDiv.classList.add('message', 'sent');
                     messageDiv.innerHTML = `
-                        ${message}
-                        <span class="timestamp">${new Date().toLocaleString()}</span>
-                    `;
+            ${message}
+            <span class="timestamp">${new Date().toLocaleString()}</span>
+        `;
 
                     chatMessages.appendChild(messageDiv);
 
@@ -124,50 +119,5 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
             .catch(error => console.error('Error sending message:', error));
-    }
-
-    // Function to poll for new messages
-    function startMessagePolling() {
-        if (!selectedAdviserId) return;
-
-        setInterval(() => {
-            fetch('fetch_messages.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: `adviser_id=${selectedAdviserId}`
-            })
-                .then(response => response.json())
-                .then(messages => {
-                    if (messages.error) {
-                        console.error(messages.error);
-                        return;
-                    }
-
-                    // Clear existing messages and update the chat box
-                    chatMessages.innerHTML = '';
-                    messages.forEach(msg => {
-                        const messageDiv = document.createElement('div');
-                        messageDiv.classList.add('message');
-                        if (msg.sender_type === 'company') {
-                            messageDiv.classList.add('sent');
-                        } else {
-                            messageDiv.classList.add('received');
-                        }
-
-                        messageDiv.innerHTML = `
-                            ${msg.message}
-                            <span class="timestamp">${new Date(msg.timestamp).toLocaleString()}</span>
-                        `;
-
-                        chatMessages.appendChild(messageDiv);
-                    });
-
-                    // Scroll to the bottom of the chat
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                })
-                .catch(error => console.error('Error fetching new messages:', error));
-        }, 3000); // Poll every 3 seconds
     }
 });

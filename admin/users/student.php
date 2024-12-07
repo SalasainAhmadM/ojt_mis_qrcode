@@ -291,6 +291,15 @@ $current_page = $pagination_data['current_page'];
                 </ul>
             </li>
             <li>
+                <a href="../feedback.php">
+                    <i class="fa-solid fa-percent"></i>
+                    <span class="link_name">Feedback</span>
+                </a>
+                <ul class="sub-menu blank">
+                    <li><a class="link_name" href="../feedback.php">Feedback Management</a></li>
+                </ul>
+            </li>
+            <li>
                 <a href="../setting.php">
                     <i class="fas fa-cog"></i>
                     <span class="link_name">Manage Profile</span>

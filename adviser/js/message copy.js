@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const sendMessageBtn = document.getElementById('sendMessageBtn');
 
     let selectedCompanyId = null;
-    let pollingInterval = null;
 
     companyItems.forEach(item => {
         item.addEventListener('click', function () {
@@ -33,9 +32,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Fetch the conversation with the clicked company
             fetchConversation(selectedCompanyId);
-
-            // Start polling for new messages
-            startMessagePolling();
         });
     });
 
@@ -66,7 +62,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 // Display the fetched messages
-                chatMessages.innerHTML = ''; // Clear existing messages to avoid duplication
                 messages.forEach(msg => {
                     const messageDiv = document.createElement('div');
                     messageDiv.classList.add('message');
@@ -80,9 +75,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     // Message content and timestamp
                     messageDiv.innerHTML = `
-                        ${msg.message}
-                        <span class="timestamp">${new Date(msg.timestamp).toLocaleString()}</span>
-                    `;
+            ${msg.message}
+            <span class="timestamp">${new Date(msg.timestamp).toLocaleString()}</span>
+        `;
 
                     chatMessages.appendChild(messageDiv);
                 });
@@ -111,9 +106,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     const messageDiv = document.createElement('div');
                     messageDiv.classList.add('message', 'sent');
                     messageDiv.innerHTML = `
-                        ${message}
-                        <span class="timestamp">${new Date().toLocaleString()}</span>
-                    `;
+            ${message}
+            <span class="timestamp">${new Date().toLocaleString()}</span>
+        `;
 
                     chatMessages.appendChild(messageDiv);
 
@@ -124,55 +119,5 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
             .catch(error => console.error('Error sending message:', error));
-    }
-
-    // Function to poll for new messages
-    function startMessagePolling() {
-        // Clear any existing polling interval to avoid multiple intervals running
-        if (pollingInterval) {
-            clearInterval(pollingInterval);
-        }
-
-        pollingInterval = setInterval(() => {
-            if (!selectedCompanyId) return;
-
-            fetch('fetch_messages.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: `company_id=${selectedCompanyId}`
-            })
-                .then(response => response.json())
-                .then(messages => {
-                    if (messages.error) {
-                        console.error(messages.error);
-                        return;
-                    }
-
-                    // Clear and update the chat box with new messages
-                    chatMessages.innerHTML = '';
-                    messages.forEach(msg => {
-                        const messageDiv = document.createElement('div');
-                        messageDiv.classList.add('message');
-                        if (msg.sender_type === 'adviser') {
-                            messageDiv.classList.add('sent');
-                        } else {
-                            messageDiv.classList.add('received');
-                        }
-
-                        messageDiv.innerHTML = `
-                            ${msg.message}
-                            <span class="timestamp">${new Date(msg.timestamp).toLocaleString()}</span>
-                        `;
-
-                        chatMessages.appendChild(messageDiv);
-                    });
-
-                    // Scroll to the bottom of the chat
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                })
-                .catch(error => console.error('Error fetching new messages:', error));
-        }, 3000); // Poll every 3 seconds
     }
 });

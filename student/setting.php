@@ -374,26 +374,26 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
                     <label for="batch-year">Batch Year</label>
                     <select id="batch-year" name="batch_year" required>
                         <option disabled>Select Batch Year</option>
-                        <option value="2020-2021" <?php if ($student['batch_year'] == '2020-2021')
-                            echo 'selected'; ?>>
-                            2020-2021</option>
-                        <option value="2021-2022" <?php if ($student['batch_year'] == '2021-2022')
-                            echo 'selected'; ?>>
-                            2021-2022</option>
-                        <option value="2022-2023" <?php if ($student['batch_year'] == '2022-2023')
-                            echo 'selected'; ?>>
-                            2022-2023</option>
-                        <option value="2023-2024" <?php if ($student['batch_year'] == '2023-2024')
-                            echo 'selected'; ?>>
-                            2023-2024</option>
-                        <option value="2024-2025" <?php if ($student['batch_year'] == '2024-2025')
-                            echo 'selected'; ?>>
-                            2024-2025</option>
-                        <option value="2025-2026" <?php if ($student['batch_year'] == '2025-2026')
-                            echo 'selected'; ?>>
-                            2025-2026</option>
+                        <?php
+                        $currentYear = date('Y');
+                        $startYear = $currentYear - 2;
+                        $endYear = $currentYear + 3;
+
+                        for ($year = $startYear; $year <= $endYear; $year++) {
+                            $batchYear = $year . '-' . ($year + 1);
+
+                            if ($student['batch_year'] == $batchYear) {
+                                echo "<option value=\"$batchYear\" selected>$batchYear</option>";
+                                continue;
+                            }
+
+                            echo "<option value=\"$batchYear\">$batchYear</option>";
+                        }
+                        ?>
                     </select>
                 </div>
+
+
                 <div class="form-group">
                     <label for="department">Department</label>
                     <select id="department" name="department" required>
