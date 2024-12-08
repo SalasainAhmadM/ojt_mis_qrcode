@@ -254,6 +254,14 @@ if ($stmt = $database->prepare($query)) {
     </div>
 
     <script>
+        document.getElementById('messageInput').addEventListener('keypress', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('sendMessageBtn').click();
+            }
+        });
+
+
         const socket = io('http://localhost:3000');
 
         // Listen for new messages
@@ -290,6 +298,7 @@ if ($stmt = $database->prepare($query)) {
         document.getElementById('messageInput').addEventListener('input', () => {
             socket.emit('typing', { senderId: currentUserId, receiverId: currentChatId });
         });
+
 
     </script>
     <script src="../js/server.js"></script>
