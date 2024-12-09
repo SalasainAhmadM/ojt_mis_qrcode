@@ -4,6 +4,7 @@ require '../../../conn/connection.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $student_id = $_POST['student_id'];
+    $wmsu_id = $_POST['wmsu_id'];
     $student_firstname = $_POST['student_firstname'];
     $student_middle = $_POST['student_middle'];
     $student_lastname = $_POST['student_lastname'];
@@ -21,14 +22,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         return strtolower($student_lastname) . '_' . $student_id . '.' . pathinfo($_FILES['student_image']['name'], PATHINFO_EXTENSION);
     }
 
-    // Fetch the current image from the database if no new image is uploaded
     if (isset($_FILES['student_image']) && $_FILES['student_image']['error'] == 0) {
         $uploadDir = '../../../uploads/student/';
         $student_image = generateFileName($student_lastname, $student_id);
         $uploadFile = $uploadDir . $student_image;
 
         if (move_uploaded_file($_FILES['student_image']['tmp_name'], $uploadFile)) {
-            // Image uploaded successfully
+
         } else {
             die('Failed to upload image.');
         }
@@ -59,14 +59,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Update the student's details, including the image (if changed)
     $sql = "UPDATE student 
-            SET student_firstname = ?, student_middle = ?, student_lastname = ?, student_image = ?, student_email = ?, 
+            SET wmsu_id = ?, student_firstname = ?, student_middle = ?, student_lastname = ?, student_image = ?, student_email = ?, 
                 contact_number = ?, course_section = ?, company = ?, batch_year = ?, department = ?, adviser = ?, 
                 student_address = ? , street = ? 
             WHERE student_id = ?";
 
     $stmt = $database->prepare($sql);
     $stmt->bind_param(
-        'sssssssssssssi',
+        'ssssssssssssssi',
+        $wmsu_id,
         $student_firstname,
         $student_middle,
         $student_lastname,
