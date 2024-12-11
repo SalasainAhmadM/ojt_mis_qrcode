@@ -356,14 +356,7 @@ if ($showSuccessModal) {
                                             ($minutes > 0 ? " {$minutes} min" . ($minutes > 1 ? "s" : "") : "");
                                     }
                                     ?>
-                                    <tr class="clickable-row"
-                                        data-schedule-id="<?php echo htmlspecialchars($attendance['schedule_id']); ?>"
-                                        data-remark-type="<?php echo htmlspecialchars($attendance['remark_type']); ?>"
-                                        data-remark="<?php echo htmlspecialchars($attendance['remark']); ?>"
-                                        data-first-time-in="<?php echo htmlspecialchars($first_time_in); ?>"
-                                        data-last-time-out="<?php echo htmlspecialchars($last_time_out); ?>"
-                                        data-total-hours="<?php echo htmlspecialchars($total_hours_formatted); ?>"
-                                        onclick="openRowModal(this)">
+                                    <tr>
                                         <td class="sched">
                                             <?php echo htmlspecialchars(date("m/d/Y", strtotime($attendance['schedule_date']))); ?>
                                         </td>
@@ -373,13 +366,27 @@ if ($showSuccessModal) {
                                         <td class="time"><?php echo htmlspecialchars($total_hours_formatted); ?></td>
                                         <td class="remark"><?php echo htmlspecialchars($attendance['remark'] ?? 'N/A'); ?></td>
                                         <td class="action">
-                                            <button class="action-icon view-btn">
-                                                <i class="fa-solid fa-image"></i>
-                                            </button>
+                                            <?php if (!empty($attendance['proof_image'])): ?>
+                                                <button class="action-icon view-btn"
+                                                    onclick="viewImage('<?php echo htmlspecialchars($attendance['proof_image']); ?>')">
+                                                    <i class="fa-solid fa-image"></i>
+                                                </button>
+                                            <?php else: ?>
+                                                N/A
+                                            <?php endif; ?>
                                         </td>
+
+
                                         <td class="status"><?php echo htmlspecialchars($attendance['status']); ?></td>
                                         <td class="action">
-                                            <button class="action-icon edit-btn">
+                                            <button class="action-icon edit-btn" class="clickable-row"
+                                                data-schedule-id="<?php echo htmlspecialchars($attendance['schedule_id']); ?>"
+                                                data-remark-type="<?php echo htmlspecialchars($attendance['remark_type']); ?>"
+                                                data-remark="<?php echo htmlspecialchars($attendance['remark']); ?>"
+                                                data-first-time-in="<?php echo htmlspecialchars($first_time_in); ?>"
+                                                data-last-time-out="<?php echo htmlspecialchars($last_time_out); ?>"
+                                                data-total-hours="<?php echo htmlspecialchars($total_hours_formatted); ?>"
+                                                onclick="openRowModal(this)">
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </button>
                                         </td>

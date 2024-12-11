@@ -25,9 +25,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     function generateFileName($company_name)
     {
-        $file_extension = pathinfo($_FILES['company_image']['name'], PATHINFO_EXTENSION); // Get file extension
-        return 'company' . ucfirst($company_name) . '.' . $file_extension;
+        date_default_timezone_set('Asia/Manila');
+        $date_today = date('Ymd');
+        $random_number = rand(1000, 9999);
+        $file_extension = pathinfo($_FILES['company_image']['name'], PATHINFO_EXTENSION);
+        return 'company_' . ucfirst($company_name) . '_' . $date_today . '_' . $random_number . '.' . $file_extension;
     }
+
+
 
     // Handle image upload if an image was submitted
     $company_image = null;

@@ -310,6 +310,7 @@ if ($result->num_rows > 0) {
                 <ul class="sub-menu">
                     <li><a class="link_name" href="../attendance.php">Attendance</a></li>
                     <li><a href="../intern/attendance-intern.php">Intern Attendance</a></li>
+                    <li><a href="../intern/attendance-monitor.php">Monitoring</a></li>
                 </ul>
             </li>
             <li>

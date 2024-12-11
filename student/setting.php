@@ -441,7 +441,10 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
                     </select>
                 </div>
 
-
+                <div class="form-group">
+                    <label for="wmsu-id">OJT Type</label>
+                    <input type="text" id="wmsu-id" name="wmsu_id" value="<?php echo $student['ojt_type']; ?>" readonly>
+                </div>
 
             </div>
 

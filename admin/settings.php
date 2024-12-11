@@ -31,10 +31,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Function to generate the image file name based on user details
     function generateFileName($admin_lastname, $admin_firstname, $admin_middle)
     {
-        $middle_initial = $admin_middle ? strtoupper(substr($admin_middle, 0, 1)) : ''; // Use the middle initial
-        $file_extension = pathinfo($_FILES['admin_image']['name'], PATHINFO_EXTENSION); // Get file extension
-        return 'admin' . ucfirst($admin_lastname) . ucfirst($admin_firstname) . $middle_initial . '.' . $file_extension;
+        date_default_timezone_set('Asia/Manila');
+        $date_today = date('Ymd');
+        $random_number = rand(1000, 9999);
+        $middle_initial = $admin_middle ? strtoupper(substr($admin_middle, 0, 1)) : '';
+        $file_extension = pathinfo($_FILES['admin_image']['name'], PATHINFO_EXTENSION);
+
+        return 'admin_' . ucfirst($admin_lastname) . ucfirst($admin_firstname) . $middle_initial . '_' . $date_today . '_' . $random_number . '.' . $file_extension;
     }
+
 
     // Handle image upload if an image is submitted
     $admin_image = null;

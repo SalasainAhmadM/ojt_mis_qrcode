@@ -1,10 +1,10 @@
 <?php
 session_start();
-require '../conn/connection.php';
+require '../../conn/connection.php';
 
 // Check if the user is logged in
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'company') {
-    header("Location: ../index.php"); // Redirect to login page if not logged in
+    header("Location: ../../index.php"); // Redirect to login page if not logged in
     exit();
 }
 
@@ -12,152 +12,62 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'company') {
 $company_id = $_SESSION['user_id'];
 $query = "SELECT * FROM company WHERE company_id = ?";
 if ($stmt = $database->prepare($query)) {
-    $stmt->bind_param("i", $company_id); // Bind parameters
-    $stmt->execute(); // Execute the query
-    $result = $stmt->get_result(); // Get the result
+    $stmt->bind_param("i", $company_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
-        $company = $result->fetch_assoc(); // Fetch company details
+        $company = $result->fetch_assoc();
     } else {
-        // Handle case where company is not found
         $company = [
             'company_name' => 'Unknown',
             'company_email' => 'unknown@wmsu.edu.ph'
         ];
     }
-    $stmt->close(); // Close the statement
+    $stmt->close();
 }
-$company_id = $_SESSION['user_id'];
 
 // Get the selected day (or default to today)
 $selected_day = isset($_GET['day']) ? $_GET['day'] : date('Y-m-d');
 
-// Check if the selected day is a holiday
-$holiday_name = '';
-$holiday_query = "SELECT holiday_name FROM holiday WHERE holiday_date = ?";
-if ($stmt = $database->prepare($holiday_query)) {
-    $stmt->bind_param("s", $selected_day);
-    $stmt->execute();
-    $stmt->bind_result($holiday_name);
-    $stmt->fetch();
-    $stmt->close();
-}
-
-// Check if the selected day is suspended based on schedule
-$schedule_day_type = 'Regular';
-$schedule_query = "SELECT day_type FROM schedule WHERE company_id = ? AND date = ?";
-if ($stmt = $database->prepare($schedule_query)) {
-    $stmt->bind_param("is", $company_id, $selected_day);
-    $stmt->execute();
-    $stmt->bind_result($schedule_day_type);
-    $stmt->fetch();
-    $stmt->close();
-}
-
-// Set display text and color based on holiday or suspension status
-$display_text = '';
-$display_color = '#095d40'; // Default color
-
-if ($schedule_day_type === 'Suspended') {
-    $display_text = "Suspended (" . date('F d, Y', strtotime($selected_day)) . ")";
-    $display_color = 'orange';
-} elseif ($holiday_name) {
-    $display_text = "$holiday_name (" . date('F d, Y', strtotime($selected_day)) . ")";
-    $display_color = 'darkred';
-} else {
-    $display_text = date('F d, Y', strtotime($selected_day));
-}
-
-// Handle search query
+// Fetch attendance data for the selected day
 $search = isset($_GET['search']) ? '%' . $_GET['search'] . '%' : null;
 
-// Pagination logic
-$students_per_page = 5; // Number of students per page
-$current_page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
-$offset = ($current_page - 1) * $students_per_page;
-
-// Fetch all students, regardless of attendance
-$students_query = "
-    SELECT s.student_id, s.student_firstname, s.student_middle, s.student_lastname, s.student_image, 
-           a.time_in, a.time_out, a.ojt_hours
-    FROM student s
-    LEFT JOIN attendance a ON s.student_id = a.student_id AND DATE(a.time_in) = ?
-    WHERE s.company = ?
+$attendance_query = "
+    SELECT s.student_id, s.student_firstname, s.student_middle, s.student_lastname, s.student_image,
+           a.time_in, a.time_out, a.ojt_hours, a.time_out_reason
+    FROM attendance a
+    JOIN student s ON a.student_id = s.student_id
+    WHERE DATE(a.time_in) = ? AND s.company = ?
 ";
 
 // Add search condition if applicable
+$query_params = [$selected_day, $company_id];
 if ($search) {
-    $students_query .= " AND (s.student_firstname LIKE ? OR s.student_lastname LIKE ?)";
-    $query_params = [$selected_day, $company_id, $search, $search];
-} else {
-    $query_params = [$selected_day, $company_id];
+    $attendance_query .= " AND (s.student_firstname LIKE ? OR s.student_lastname LIKE ?)";
+    $query_params[] = $search;
+    $query_params[] = $search;
 }
 
-// Add LIMIT for pagination
-$students_query .= " ORDER BY s.student_lastname, a.time_in ASC LIMIT ? OFFSET ?";
-$query_params[] = $students_per_page;
-$query_params[] = $offset;
+$attendance_query .= " ORDER BY a.time_in ASC";
 
-if ($stmt = $database->prepare($students_query)) {
+if ($stmt = $database->prepare($attendance_query)) {
     $stmt->bind_param(str_repeat("s", count($query_params)), ...$query_params);
     $stmt->execute();
     $result = $stmt->get_result();
 
-    $students = [];
+    $attendances = [];
     while ($row = $result->fetch_assoc()) {
-        $students[$row['student_id']][] = $row;
+        $attendances[] = $row;
     }
     $stmt->close();
 }
-
-// Get the total number of students for pagination
-$total_students_query = "
-    SELECT COUNT(*) AS total
-    FROM student s
-    WHERE s.company = ?
-";
-
-// Add search condition if applicable
-if ($search) {
-    $total_students_query .= " AND (s.student_firstname LIKE ? OR s.student_lastname LIKE ?)";
-    $total_query_params = [$company_id, $search, $search];
-} else {
-    $total_query_params = [$company_id];
-}
-
-if ($stmt = $database->prepare($total_students_query)) {
-    $stmt->bind_param(str_repeat("s", count($total_query_params)), ...$total_query_params);
-    $stmt->execute();
-    $stmt->bind_result($total_students);
-    $stmt->fetch();
-    $stmt->close();
-}
-
-$total_pages = ceil($total_students / $students_per_page);
-
-// Function to render pagination links
-function renderPaginationLinks($total_pages, $current_page)
-{
-    // Get current query parameters
-    $query_params = $_GET;
-    for ($i = 1; $i <= $total_pages; $i++) {
-        $query_params['page'] = $i;
-        $url = '?' . http_build_query($query_params); // Generate query string
-        $active_class = $i == $current_page ? 'class="active"' : '';
-        echo '<a ' . $active_class . ' href="' . $url . '">' . $i . '</a>';
-    }
-}
-
-
-// Function to format hours into "X hrs Y mins"
 function formatDuration($hours)
 {
-    // Convert hours to total minutes
-    $totalMinutes = round($hours * 60); // Use round to ensure accurate minute representation
-    $hrs = floor($totalMinutes / 60);  // Extract hours
-    $mins = $totalMinutes % 60;        // Extract remaining minutes
+    $totalMinutes = round($hours * 60);
+    $hrs = floor($totalMinutes / 60);
+    $mins = $totalMinutes % 60;
 
-    // Format output
     $formatted = '';
     if ($hrs > 0) {
         $formatted .= $hrs . ' hr' . ($hrs > 1 ? 's' : '') . ' ';
@@ -168,30 +78,6 @@ function formatDuration($hours)
 
     return trim($formatted) ?: '0 mins';
 }
-
-$remarks_query = "
-    SELECT remark_id, student_id, remark_type , status
-    FROM attendance_remarks 
-    WHERE schedule_id = (SELECT schedule_id FROM schedule WHERE company_id = ? AND date = ?)
-";
-$remarks = [];
-if ($stmt = $database->prepare($remarks_query)) {
-    $stmt->bind_param("is", $company_id, $selected_day);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    while ($row = $result->fetch_assoc()) {
-        // Store the remark details indexed by student_id
-        $remarks[$row['student_id']] = [
-            'remark_id' => $row['remark_id'],
-            'remark_type' => $row['remark_type'],
-            'status' => $row['status']
-        ];
-    }
-    $stmt->close();
-}
-
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -200,10 +86,10 @@ if ($stmt = $database->prepare($remarks_query)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Company - Attendance</title>
-    <link rel="icon" href="../img/ccs.png" type="image/icon type">
+    <link rel="icon" href="../../img/ccs.png" type="image/icon type">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="../css/main.css">
-    <link rel="stylesheet" href="../css/mobile.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/mobile.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         .whole-box tbody {
@@ -259,12 +145,12 @@ if ($stmt = $database->prepare($remarks_query)) {
         <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
                 style="color: #095d40;">|</span>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
-            <img src="../img/ccs.png">
+            <img src="../../img/ccs.png">
         </div>
     </div>
     <div class="sidebar close">
         <div class="profile-details">
-            <img src="../uploads/company/<?php echo !empty($company['company_image']) ? $company['company_image'] : 'user.png'; ?>"
+            <img src="../../uploads/company/<?php echo !empty($company['company_image']) ? $company['company_image'] : 'user.png'; ?>"
                 alt="Company Image" class="logout-img">
             <div style="margin-top: 10px;" class="profile-info">
                 <span class="profile_name"><?php echo $company['company_name']; ?></span>
@@ -275,30 +161,30 @@ if ($stmt = $database->prepare($remarks_query)) {
         <hr>
         <ul class="nav-links">
             <li>
-                <a href="index.php">
+                <a href="../index.php">
                     <i class="fa-solid fa-house"></i>
                     <span class="link_name">Home</span>
                 </a>
                 <ul class="sub-menu blank">
-                    <li><a class="link_name" href="index.php">Home</a></li>
+                    <li><a class="link_name" href="../index.php">Home</a></li>
                 </ul>
             </li>
             <li>
-                <a href="qr-code.php">
+                <a href="../qr-code.php">
                     <i class="fa-solid fa-qrcode"></i>
                     <span class="link_name">QR Scanner</span>
                 </a>
                 <ul class="sub-menu blank">
-                    <li><a class="link_name" href="qr-code.php">QR Scanner</a></li>
+                    <li><a class="link_name" href="../qr-code.php">QR Scanner</a></li>
                 </ul>
             </li>
             <li>
-                <a href="intern.php">
+                <a href="../intern.php">
                     <i class="fa-solid fa-user"></i>
                     <span class="link_name">Interns</span>
                 </a>
                 <ul class="sub-menu blank">
-                    <li><a class="link_name" href="intern.php">Interns</a></li>
+                    <li><a class="link_name" href="../intern.php">Interns</a></li>
                 </ul>
             </li>
             <!-- <li>
@@ -317,63 +203,52 @@ if ($stmt = $database->prepare($remarks_query)) {
                 </ul>
             </li> -->
             <li>
-                <a href="message.php">
+                <a href="../message.php">
                     <i class="fa-regular fa-comments"></i>
                     <span class="link_name">Message</span>
                 </a>
                 <ul class="sub-menu blank">
-                    <li><a class="link_name" href="message.php">Message</a></li>
+                    <li><a class="link_name" href="../message.php">Message</a></li>
                 </ul>
             </li>
             <li>
-                <a href="feedback.php">
+                <a href="../feedback.php">
                     <i class="fa-regular fa-star"></i>
                     <span class="link_name">Feedback</span>
                 </a>
                 <ul class="sub-menu blank">
-                    <li><a class="link_name" href="feedback.php">Feedback</a></li>
+                    <li><a class="link_name" href="../feedback.php">Feedback</a></li>
                 </ul>
             </li>
-
             <li>
                 <div class="iocn-link" class="active">
-                    <a href="attendance.php">
+                    <a href="../attendance.php">
                         <i class="fa-regular fa-clock"></i>
                         <span class="link_name">Attendance</span>
                     </a>
                     <i class="fas fa-chevron-down arrow"></i>
                 </div>
                 <ul class="sub-menu">
-                    <li><a class="link_name" href="attendance.php">Attendance</a></li>
-                    <li><a href="./intern/attendance.php">Monitoring</a></li>
+                    <li><a class="link_name" href="../attendance.php">Attendance</a></li>
+                    <li><a href="./attendance.php">Monitoring</a></li>
                 </ul>
             </li>
-
-            <!-- <li>
-                <a href="attendance.php" class="active">
-                    <i class="fa-regular fa-clock"></i>
-                    <span class="link_name">Attendance</span>
-                </a>
-                <ul class="sub-menu blank">
-                    <li><a class="link_name" href="attendance.php">Attendance</a></li>
-                </ul>
-            </li> -->
             <li>
-                <a href="calendar.php">
+                <a href="../calendar.php">
                     <i class="fa-regular fa-calendar-days"></i>
                     <span class="link_name">Schedule</span>
                 </a>
                 <ul class="sub-menu blank">
-                    <li><a class="link_name" href="calendar.php">Manage Schedule</a></li>
+                    <li><a class="link_name" href="../calendar.php">Manage Schedule</a></li>
                 </ul>
             </li>
             <li>
-                <a href="setting.php">
+                <a href="../setting.php">
                     <i class="fas fa-cog"></i>
                     <span class="link_name">Manage Profile</span>
                 </a>
                 <ul class="sub-menu blank">
-                    <li><a class="link_name" href="setting.php">Manage Profile</a></li>
+                    <li><a class="link_name" href="../setting.php">Manage Profile</a></li>
                 </ul>
             </li>
             <li>
@@ -397,18 +272,16 @@ if ($stmt = $database->prepare($remarks_query)) {
         </div>
 
         <div class="content-wrapper">
-
             <div class="header-box">
-                <label style="color: #a6a6a6; margin-left: 5px;">Attendance</label>
+                <label style="color: #a6a6a6; margin-left: 5px;">Attendance Monitoring</label>
             </div>
             <div class="main-box">
                 <div class="whole-box">
                     <h2>Attendance -
-                        <span style="color: <?php echo $display_color; ?>">
-                            <?php echo $display_text; ?>
+                        <span style="color: #095d40;">
+                            <?php echo date('F d, Y', strtotime($selected_day)); ?>
                         </span>
                     </h2>
-
 
                     <div class="filter-group">
                         <!-- Search Student Form -->
@@ -434,15 +307,11 @@ if ($stmt = $database->prepare($remarks_query)) {
                         </form>
                         <!-- Reset Button Form -->
                         <form method="GET" action="">
-                            <input type="hidden" name="day"
-                                value="<?php echo htmlspecialchars($selected_day, ENT_QUOTES); ?>">
                             <button type="submit" class="reset-bar-icon">
                                 <i class="fa fa-times-circle"></i>
                             </button>
                         </form>
-
                     </div>
-
 
                     <table>
                         <thead>
@@ -452,150 +321,42 @@ if ($stmt = $database->prepare($remarks_query)) {
                                 <th class="timein">Time-in</th>
                                 <th class="timeout">Time-out</th>
                                 <th class="duration">Duration</th>
-                                <th class="status">Status</th>
+                                <th class="duration">Action</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php if (!empty($students) || !empty($remarks)): ?>
-                                <?php foreach ($students as $student_id => $attendances): ?>
-                                    <?php
-                                    $first_time_in = null;
-                                    $latest_time_in_without_out = null;
-                                    $latest_time_out = null;
-                                    $total_hours_today = 0;
-
-                                    foreach ($attendances as $attendance) {
-                                        if (!$first_time_in || strtotime($attendance['time_in']) < strtotime($first_time_in)) {
-                                            $first_time_in = $attendance['time_in'];
-                                        }
-                                        if ($attendance['time_in'] && !$attendance['time_out']) {
-                                            $latest_time_in_without_out = $attendance['time_in'];
-                                        }
-                                        if ($attendance['time_out'] && (!$latest_time_out || strtotime($attendance['time_out']) > strtotime($latest_time_out))) {
-                                            $latest_time_out = $attendance['time_out'];
-                                        }
-                                        $total_hours_today += $attendance['ojt_hours'] ?? 0;
-                                    }
-
-                                    $displayed_time_out = $latest_time_in_without_out ? '' : ($latest_time_out ? date('h:i A', strtotime($latest_time_out)) : 'N/A');
-
-                                    // Default status logic
-                                    if (!$first_time_in && !$latest_time_out) {
-                                        $status = '<span style="color:gray;">No Record Yet</span>';
-                                    } else {
-                                        $status = $latest_time_in_without_out ? '<span style="color:green;">Timed-in</span>' : '<span style="color:red;">Timed-out</span>';
-                                    }
-
-                                    // Check for remarks and override status
-                                    $remark = isset($remarks[$student_id]) ? $remarks[$student_id] : null;
-                                    if ($remark) {
-                                        $remark_id = $remark['remark_id'];
-                                        $remark_type = $remark['remark_type'];
-                                        $remark_status = $remark['status'];
-
-                                        if ($remark_type === 'Absent') {
-                                            $status = '<span style="color:#8B0000;">Absent</span>';
-                                        }
-                                    }
-                                    ?>
+                        <tbody style="max-height: 400px; overflow-y: auto;">
+                            <?php if (!empty($attendances)): ?>
+                                <?php foreach ($attendances as $attendance): ?>
                                     <tr>
-                                        <td class="image" style="position:relative;">
+                                        <td class="image">
                                             <img style="border-radius: 50%;"
-                                                src="../uploads/student/<?php echo !empty($attendance['student_image']) ? htmlspecialchars($attendance['student_image'], ENT_QUOTES) : 'user.png'; ?>"
+                                                src="../../uploads/student/<?php echo !empty($attendance['student_image']) ? htmlspecialchars($attendance['student_image'], ENT_QUOTES) : 'user.png'; ?>"
                                                 alt="Student Image">
-                                            <?php if ($remark && $remark['status'] === 'Pending'): ?>
-                                                <?php if ($remark_type === 'Absent'): ?>
-                                                    <span class="tooltip-icon absent" title="Absent"
-                                                        onclick="openRemarkModal(<?php echo $student_id; ?>, '<?php echo $remark_type; ?>', <?php echo $remark_id; ?>)">
-                                                        X
-                                                    </span>
-                                                <?php elseif ($remark_type === 'Late'): ?>
-                                                    <span class="tooltip-icon late" title="Late"
-                                                        onclick="openRemarkModal(<?php echo $student_id; ?>, 'Late', <?php echo $remark_id; ?>)">
-                                                        ?
-                                                    </span>
-                                                <?php endif; ?>
-                                            <?php endif; ?>
                                         </td>
-
                                         <td class="name">
-                                            <?php echo htmlspecialchars($attendances[0]['student_firstname'] . ' ' . $attendances[0]['student_middle'] . '.' . ' ' . $attendances[0]['student_lastname'], ENT_QUOTES); ?>
+                                            <?php echo htmlspecialchars($attendance['student_firstname'] . ' ' . $attendance['student_middle'] . ' ' . $attendance['student_lastname'], ENT_QUOTES); ?>
                                         </td>
                                         <td class="timein">
-                                            <?php echo $first_time_in ? date('h:i A', strtotime($first_time_in)) : 'N/A'; ?>
+                                            <?php echo $attendance['time_in'] ? date('h:i A', strtotime($attendance['time_in'])) : 'N/A'; ?>
                                         </td>
-                                        <td class="timeout"><?php echo $displayed_time_out; ?></td>
+                                        <td class="timeout">
+                                            <?php echo $attendance['time_out'] ? date('h:i A', strtotime($attendance['time_out'])) : 'N/A'; ?>
+                                        </td>
                                         <td class="duration">
-                                            <?php echo $total_hours_today > 0 ? formatDuration($total_hours_today) : 'N/A'; ?>
+                                            <?php echo $attendance['ojt_hours'] > 0 ? formatDuration($attendance['ojt_hours']) : 'N/A'; ?>
                                         </td>
-                                        <td class="status"><?php echo $status; ?></td>
+                                        <td class="duration">
+                                            <?php echo $attendance['time_out_reason'] ?: 'N/A'; ?>
+                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
-
-
-
-
-
-
-                                <!-- Handle Absent students who have no attendance records -->
-                                <!-- <?php foreach ($remarks as $student_id => $remark_type): ?>
-                                    <?php if ($remark_type === 'Absent' && !isset($students[$student_id])): ?>
-                                        <tr>
-                                            <td class="image" style="position:relative;">
-                                                <img style="border-radius: 50%;" src="../uploads/student/user.png"
-                                                    alt="Student Image">
-                                                <span class="tooltip-icon absent" title="Absent"
-                                                    onclick="openRemarkModal(<?php echo $student_id; ?>, 'Absent')">X</span>
-                                            </td>
-                                            <td class="name">
-                                                <?php
-                                                // Fetch the student's name from the database for absent students
-                                                $student_query = "SELECT student_firstname, student_middle, student_lastname FROM student WHERE student_id = ?";
-                                                $stmt = $database->prepare($student_query);
-                                                $stmt->bind_param("i", $student_id);
-                                                $stmt->execute();
-                                                $student_result = $stmt->get_result();
-                                                if ($student_row = $student_result->fetch_assoc()) {
-                                                    echo $student_row['student_firstname'] . ' ' . $student_row['student_middle'] . '.' . ' ' . $student_row['student_lastname'];
-                                                }
-                                                $stmt->close();
-                                                ?>
-                                            </td>
-                                            <td class="timein">N/A</td>
-                                            <td class="timeout">N/A</td>
-                                            <td class="duration">N/A</td>
-                                            <td class="status"><span style="color:red;">Absent</span></td>
-                                        </tr>
-                                    <?php endif; ?>
-                                <?php endforeach; ?> -->
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="6">No attendance for this day.</td>
+                                    <td colspan="5">No attendance records found for this day.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
-                    <!-- Display pagination links -->
-                    <?php if ($total_students > 5): ?>
-                        <div class="pagination">
-                            <?php
-                            if ($current_page > 1) {
-                                $prev_page = $current_page - 1;
-                                $prev_url = '?' . http_build_query(array_merge($_GET, ['page' => $prev_page]));
-                                echo '<a href="' . $prev_url . '" class="prev">Previous</a>';
-                            }
-
-                            renderPaginationLinks($total_pages, $current_page);
-
-                            if ($current_page < $total_pages) {
-                                $next_page = $current_page + 1;
-                                $next_url = '?' . http_build_query(array_merge($_GET, ['page' => $next_page]));
-                                echo '<a href="' . $next_url . '" class="next">Next</a>';
-                            }
-                            ?>
-                        </div>
-                    <?php endif; ?>
-
                 </div>
             </div>
         </div>

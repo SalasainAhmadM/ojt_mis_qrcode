@@ -57,13 +57,13 @@ $search_query = isset($_GET['search']) ? '%' . $_GET['search'] . '%' : '';
 $selected_course_section = isset($_GET['course_section']) ? $_GET['course_section'] : '';
 
 // Function to get students based on company_id with pagination
-function getStudentsByCompany($database, $company_id, $selected_course_section, $search_query, $limit = 5)
+function getStudentsByCompany($database, $company_id, $selected_course_section, $search_query, $adviser_id, $limit = 5)
 {
     $page = isset($_GET['page']) && is_numeric($_GET['page']) ? intval($_GET['page']) : 1;
     $offset = ($page - 1) * $limit;
 
     // Base query to count total students for pagination
-    $total_students_query = "SELECT COUNT(*) AS total FROM student WHERE company = ?";
+    $total_students_query = "SELECT COUNT(*) AS total FROM student WHERE company = ? AND adviser = ?";
 
     // Query to fetch students
     $students_query = "
@@ -75,7 +75,7 @@ function getStudentsByCompany($database, $company_id, $selected_course_section, 
         LEFT JOIN company ON student.company = company.company_id
         LEFT JOIN course_sections ON student.course_section = course_sections.id
         LEFT JOIN departments ON student.department = departments.department_id
-        WHERE student.company = ?";
+        WHERE student.company = ? AND student.adviser = ?";
 
     // Add filters
     if (!empty($selected_course_section)) {
@@ -94,13 +94,13 @@ function getStudentsByCompany($database, $company_id, $selected_course_section, 
     // Count total students for pagination
     if ($stmt = $database->prepare($total_students_query)) {
         if (!empty($selected_course_section) && !empty($search_query)) {
-            $stmt->bind_param("iss", $company_id, $selected_course_section, $search_query);
+            $stmt->bind_param("iiss", $company_id, $adviser_id, $selected_course_section, $search_query);
         } elseif (!empty($selected_course_section)) {
-            $stmt->bind_param("is", $company_id, $selected_course_section);
+            $stmt->bind_param("iis", $company_id, $adviser_id, $selected_course_section);
         } elseif (!empty($search_query)) {
-            $stmt->bind_param("iss", $company_id, $search_query, $search_query);
+            $stmt->bind_param("iis", $company_id, $adviser_id, $search_query, $search_query);
         } else {
-            $stmt->bind_param("i", $company_id);
+            $stmt->bind_param("ii", $company_id, $adviser_id);
         }
         $stmt->execute();
         $result = $stmt->get_result();
@@ -114,13 +114,13 @@ function getStudentsByCompany($database, $company_id, $selected_course_section, 
     $students = [];
     if ($stmt = $database->prepare($students_query)) {
         if (!empty($selected_course_section) && !empty($search_query)) {
-            $stmt->bind_param("issiii", $company_id, $selected_course_section, $search_query, $search_query, $limit, $offset);
+            $stmt->bind_param("iissiii", $company_id, $adviser_id, $selected_course_section, $search_query, $search_query, $limit, $offset);
         } elseif (!empty($selected_course_section)) {
-            $stmt->bind_param("isii", $company_id, $selected_course_section, $limit, $offset);
+            $stmt->bind_param("iiisii", $company_id, $adviser_id, $selected_course_section, $limit, $offset);
         } elseif (!empty($search_query)) {
-            $stmt->bind_param("issii", $company_id, $search_query, $search_query, $limit, $offset);
+            $stmt->bind_param("iissii", $company_id, $adviser_id, $search_query, $search_query, $limit, $offset);
         } else {
-            $stmt->bind_param("iii", $company_id, $limit, $offset);
+            $stmt->bind_param("iiii", $company_id, $adviser_id, $limit, $offset);
         }
         $stmt->execute();
         $result = $stmt->get_result();
@@ -136,6 +136,7 @@ function getStudentsByCompany($database, $company_id, $selected_course_section, 
         'current_page' => $page,
     ];
 }
+
 
 // Function to render pagination links
 function renderPaginationLinks($total_pages, $current_page, $selected_course_section, $search_query, $company_id)
@@ -157,10 +158,11 @@ function renderPaginationLinks($total_pages, $current_page, $selected_course_sec
     }
 }
 
-$pagination_data = getStudentsByCompany($database, $company_id, $selected_course_section, $search_query);
+$pagination_data = getStudentsByCompany($database, $company_id, $selected_course_section, $search_query, $adviser_id);
 $students = $pagination_data['students'];
 $total_pages = $pagination_data['total_pages'];
 $current_page = $pagination_data['current_page'];
+
 
 // Fetch all companies from the database
 $companies = [];
@@ -277,6 +279,7 @@ if ($company_id > 0) {
                 <ul class="sub-menu">
                     <li><a class="link_name" href="../attendance.php">Attendance</a></li>
                     <li><a href="../intern/attendance-intern.php">Intern Attendance</a></li>
+                    <li><a href="../intern/attendance-monitor.php">Monitoring</a></li>
                 </ul>
             </li>
             <li>
@@ -416,9 +419,7 @@ if ($company_id > 0) {
                                             <button class="action-icon edit-btn"
                                                 onclick="openEditStudentModal(<?php echo htmlspecialchars(json_encode($student), ENT_QUOTES); ?>)"><i
                                                     class="fa-solid fa-eye"></i></button>
-                                            <!-- <button class="action-icon delete-btn"
-                                                onclick="confirmDelete(<?php echo $student['student_id']; ?>)"><i
-                                                    class="fa-solid fa-trash"></i></button> -->
+
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -445,9 +446,9 @@ if ($company_id > 0) {
 
     <!-- Edit Student Modal -->
     <div id="editStudentModal" class="modal">
-        <div class="modal-content-big">
+        <div class="modal-content-bigger">
             <span class="close" id="closeEditStudentModal">&times;</span>
-            <h2 class="modal-title">Edit Student</h2>
+            <h2 class="modal-title">Student Details</h2>
 
             <form action="./edit_student.php" method="POST" enctype="multipart/form-data">
                 <input type="hidden" id="editStudentId" name="student_id">

@@ -141,6 +141,7 @@ $current_page = $pagination_data['current_page'];
                 <ul class="sub-menu">
                     <li><a class="link_name" href="attendance.php">Attendance</a></li>
                     <li><a href="./intern/attendance-intern.php">Intern Attendance</a></li>
+                    <li><a href="./intern/attendance-monitor.php">Monitoring</a></li>
                 </ul>
             </li>
             <li>
@@ -149,7 +150,7 @@ $current_page = $pagination_data['current_page'];
                     <span class="link_name">Announcement</span>
                 </a>
                 <ul class="sub-menu blank">
-                    <li><a class="link_name" href="announcemnet.php">Announcement</a></li>
+                    <li><a class="link_name" href="announcement.php">Announcement</a></li>
                 </ul>
             </li>
             <li>

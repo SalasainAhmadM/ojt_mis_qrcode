@@ -148,24 +148,31 @@
       // Optional: Hide the form while the loader is shown (if desired)
       document.querySelector('.signup-form').style.opacity = '0.5';
     });
-    // Email validation for signup form
-    // function validateEmail() {
-    //   const emailField = document.getElementById('signup-email');
-    //   const emailPattern = /^[a-z]{2}[0-9]{4}[0-9]{5}@wmsu\.edu\.ph$/;
-    //   const isValid = emailPattern.test(emailField.value);
 
-    //   if (!isValid) {
-    //     alert('Invalid email format. Please use your WMSU email!');
-    //     return false; // Prevent form submission
-    //   }
-    //   return true;
-    // }
-    // Password strength checker for signup form
+    const signupEmailField = document.getElementById('signup-email');
     const signupPasswordField = document.getElementById('signup-password');
+    const signupConfirmPasswordField = document.getElementById('signup-confirm-password');
     const signupStrengthIndicator = document.getElementById('signup_password_strength');
     const signupInstructionText = document.getElementById('signup_instruction_text');
     const signupButton = document.getElementById('signup-button');
 
+    // Email validation event listener
+    signupEmailField.addEventListener('input', function () {
+      const email = signupEmailField.value;
+      const emailRegex = /^[^\s@]+@wmsu\.edu\.ph$/;
+      if (emailRegex.test(email)) {
+        signupEmailField.setCustomValidity('');
+        signupInstructionText.textContent = '';
+        signupButton.disabled = false;
+      } else {
+        signupEmailField.setCustomValidity('Email must be a valid wmsu email address');
+        signupInstructionText.style.color = '#8B0000';
+        signupInstructionText.textContent = 'Please enter a valid wmsu email address.';
+        signupButton.disabled = true;
+      }
+    });
+
+    // Password validation event listener
     signupPasswordField.addEventListener('input', function () {
       const password = signupPasswordField.value;
       const strength = checkPasswordStrength(password);
@@ -181,12 +188,25 @@
         signupInstructionText.style.color = '#8B0000';
         signupInstructionText.textContent = 'Password must include at least 2 numbers, 5 lowercase letters, and 1 uppercase letter.';
         signupButton.disabled = true;
-      } else if (strength === 'Strong') {
+      } else if (strength === 'Strong' && signupConfirmPasswordField.value === password && signupEmailField.validity.valid) {
         signupInstructionText.textContent = '';
         signupButton.disabled = false;
       } else {
         signupInstructionText.textContent = '';
         signupButton.disabled = true;
+      }
+    });
+
+    // Confirm password match check
+    signupConfirmPasswordField.addEventListener('input', function () {
+      if (signupConfirmPasswordField.value !== signupPasswordField.value) {
+        signupConfirmPasswordField.setCustomValidity('Passwords do not match');
+        signupButton.disabled = true;
+      } else {
+        signupConfirmPasswordField.setCustomValidity('');
+        if (checkPasswordStrength(signupPasswordField.value) === 'Strong' && signupEmailField.validity.valid) {
+          signupButton.disabled = false;
+        }
       }
     });
 
@@ -201,6 +221,7 @@
         return 'Weak';
       }
     }
+
   </script>
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>

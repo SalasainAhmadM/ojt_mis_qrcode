@@ -121,7 +121,7 @@ if ($stmt = $database->prepare($query)) {
                     <span class="link_name">Announcement</span>
                 </a>
                 <ul class="sub-menu blank">
-                    <li><a class="link_name" href="announcemnet.php">Announcement</a></li>
+                    <li><a class="link_name" href="announcement.php">Announcement</a></li>
                 </ul>
             </li>
             <li>

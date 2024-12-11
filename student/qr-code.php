@@ -3,7 +3,7 @@ session_start();
 require '../conn/connection.php';
 
 // Set timezone to Asia/Manila
-// date_default_timezone_set('Asia/Manila');
+date_default_timezone_set('Asia/Manila');
 $database->query("SET time_zone = '+08:00'");
 // Check if the user is logged in
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student') {
@@ -231,6 +231,10 @@ if (isset($schedule_id)) { // Ensure there's a valid schedule ID
             /* Show the hamburger icon in mobile view */
         }
 
+        .lottie-wrapper {
+            margin-left: -20px;
+        }
+
         .sidebar.close {
             width: 78px;
             margin-left: -78px;
@@ -300,6 +304,52 @@ if (isset($schedule_id)) { // Ensure there's a valid schedule ID
         .sidebar.close .nav-links li .sub-menu {
             display: none;
         }
+    }
+
+    .whole-box {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .centered-header {
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+        color: #333;
+    }
+
+    .qr-scanner {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .lottie-wrapper {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .qr-camera {
+        width: 100%;
+        height: auto;
+    }
+
+    .start-scan-container {
+        margin-top: 20px;
+    }
+
+    .start-scan {
+        padding: 10px 20px;
+        font-size: 1rem;
+        color: #fff;
+        background-color: #095d40;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
     }
 </style>
 
@@ -401,8 +451,8 @@ if (isset($schedule_id)) { // Ensure there's a valid schedule ID
                 <label style="color: #a6a6a6; margin-left: 10px;">QR Scanner</label>
             </div>
             <div class="main-box">
-                <div class="left-box-qr">
-                    <!-- Intern Time-In Details -->
+                <!-- <div class="left-box-qr">
+                   
                     <div class="intern-timein-details">
                         <div class="intern-image">
                             <img src="../uploads/student/user.png" alt="Intern Image" id="intern-image">
@@ -416,7 +466,6 @@ if (isset($schedule_id)) { // Ensure there's a valid schedule ID
                         </div>
                     </div>
 
-                    <!-- Time In Details -->
                     <div class="time-in-details">
                         <div class="time-in-info">
                             <h3>Time In</h3>
@@ -427,11 +476,11 @@ if (isset($schedule_id)) { // Ensure there's a valid schedule ID
                             <img src="../img/clock.png" alt="Clock Image" style="">
                         </div>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Right Box for Scanning QR Code-->
-                <div class="right-box-qr">
-                    <h2>Scan Your QR Code</h2>
+                <div class="whole-box">
+                    <h2 style="text-align: center;">Scan Your QR Code</h2>
                     <div id="qr-scanner">
                         <!-- Lottie Animation -->
                         <div id="lottie-animation" class="lottie-wrapper">
@@ -553,14 +602,11 @@ if (isset($schedule_id)) { // Ensure there's a valid schedule ID
         <script>
             function submitAbsentReason(studentId) {
                 const reason = document.getElementById("absent-reason-text").value.trim();
-                const proofImage = document.getElementById("proof-image").files[0];
+                const proofImageInput = document.getElementById("proof-image");
+                const proofImage = proofImageInput.files[0];
 
                 if (reason === "") {
                     alert("Please provide a reason for your absence.");
-                    return;
-                }
-                if (!proofImage) {
-                    alert("Please upload a proof image.");
                     return;
                 }
 
@@ -570,7 +616,9 @@ if (isset($schedule_id)) { // Ensure there's a valid schedule ID
                 const formData = new FormData();
                 formData.append("student_id", studentId);
                 formData.append("reason", reason);
-                formData.append("proof_image", proofImage);
+                if (proofImage) {
+                    formData.append("proof_image", proofImage);
+                }
                 scheduleIds.forEach(scheduleId => formData.append("schedule_ids[]", scheduleId));
 
                 fetch('submit_absent_reason.php', {
@@ -591,6 +639,7 @@ if (isset($schedule_id)) { // Ensure there's a valid schedule ID
                         openModal('absentResponseFailureModal');
                     });
             }
+
         </script>
         <!-- Absent Response Success Modal -->
         <div id="absentResponseSuccessModal" class="modal" style="display: none;">

@@ -132,12 +132,16 @@ if ($stmt = $database->prepare($query)) {
             </li>
 
             <li>
-                <a href="attendance.php">
-                    <i class="fa-regular fa-clock"></i>
-                    <span class="link_name">Attendance</span>
-                </a>
-                <ul class="sub-menu blank">
+                <div class="iocn-link">
+                    <a href="attendance.php">
+                        <i class="fa-regular fa-clock"></i>
+                        <span class="link_name">Attendance</span>
+                    </a>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </div>
+                <ul class="sub-menu">
                     <li><a class="link_name" href="attendance.php">Attendance</a></li>
+                    <li><a href="./intern/attendance.php">Monitoring</a></li>
                 </ul>
             </li>
             <li>
@@ -230,7 +234,7 @@ if ($stmt = $database->prepare($query)) {
                 </div>
                 <div>
                     <label for="timeOut">Time Out:</label>
-                    <input type="time" id="timeOut" name="time_out" value="16:00">
+                    <input type="time" id="timeOut" name="time_out" value="17:00">
                 </div>
                 <div>
                     <label for="dayType">Day Type:</label>

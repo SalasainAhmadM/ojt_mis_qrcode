@@ -392,6 +392,7 @@ for ($i = 0; $i < 5; $i++) {
                 <ul class="sub-menu">
                     <li><a class="link_name" href="../attendance.php">Attendance</a></li>
                     <li><a href="attendance-intern.php">Intern Attendance</a></li>
+                    <li><a href="attendance-monitor.php">Monitoring</a></li>
                 </ul>
             </li>
             <li>
@@ -400,7 +401,7 @@ for ($i = 0; $i < 5; $i++) {
                     <span class="link_name">Announcement</span>
                 </a>
                 <ul class="sub-menu blank">
-                    <li><a class="link_name" href="../announcemnet.php">Announcement</a></li>
+                    <li><a class="link_name" href="../announcement.php">Announcement</a></li>
                 </ul>
             </li>
             <li>

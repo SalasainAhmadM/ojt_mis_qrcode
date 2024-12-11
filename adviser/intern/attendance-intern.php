@@ -231,6 +231,7 @@ if ($stmt = $database->prepare($query)) {
                 <ul class="sub-menu">
                     <li><a class="link_name" href="../attendance.php">Attendance</a></li>
                     <li><a href="attendance-intern.php">Intern Attendance</a></li>
+                    <li><a href="attendance-monitor.php">Monitoring</a></li>
                 </ul>
             </li>
 
@@ -240,7 +241,7 @@ if ($stmt = $database->prepare($query)) {
                     <span class="link_name">Announcement</span>
                 </a>
                 <ul class="sub-menu blank">
-                    <li><a class="link_name" href="../announcemnet.php">Announcement</a></li>
+                    <li><a class="link_name" href="../announcement.php">Announcement</a></li>
                 </ul>
             </li>
             <li>
@@ -302,16 +303,14 @@ if ($stmt = $database->prepare($query)) {
                         <!-- Student Dropdown -->
                         <form method="GET" action="attendance-intern.php" id="studentFilterForm">
                             <select name="student_id" id="studentSelect" class="search-bar">
-                                <option value="" disabled>Select Student</option>
+                                <option value="" selected disabled>Select Student</option>
                                 <?php
                                 $current_student_id = isset($_GET['student_id']) ? $_GET['student_id'] : '';
                                 foreach ($students as $student):
-                                    // Skip the current student in the URL
-                                    if ($current_student_id == $student['student_id']) {
-                                        continue;
-                                    }
+                                    $selected = ($current_student_id == $student['student_id']) ? 'selected' : '';
                                     ?>
-                                    <option value="<?php echo htmlspecialchars($student['student_id'], ENT_QUOTES); ?>">
+                                    <option value="<?php echo htmlspecialchars($student['student_id'], ENT_QUOTES); ?>"
+                                        <?php echo $selected; ?>>
                                         <?php
                                         echo htmlspecialchars(
                                             $student['student_firstname'] . ' ' .
@@ -324,6 +323,7 @@ if ($stmt = $database->prepare($query)) {
                                 <?php endforeach; ?>
                             </select>
                         </form>
+
 
                         <!-- Month Picker -->
                         <form method="GET" action="" class="month-picker-form">
@@ -356,7 +356,7 @@ if ($stmt = $database->prepare($query)) {
 
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody style="max-height: 400px; overflow-y: auto;">
                             <?php if (!empty($attendance_records)): ?>
                                 <?php foreach ($attendance_records as $record): ?>
                                     <tr style="<?php echo $record['remark_type'] === 'Absent' ? 'color: red;' : ''; ?>">
@@ -449,12 +449,13 @@ if ($stmt = $database->prepare($query)) {
                                                 echo '<span style="color: gray;">N/A</span>';
                                             } elseif ($record['day_type'] === 'Suspended') {
                                                 echo '<span style="color: orange;">N/A</span>';
-                                            } else {
+                                            } elseif (!empty($record['first_time_in']) && $record['last_time_out'] !== 'N/A' && ($record['day_type'] === 'Halfday' || $record['day_type'] === 'Regular')) {
                                                 echo '<span style="color: #095d40;">Present</span>';
+                                            } else {
+                                                echo '<span>N/A</span>';
                                             }
                                             ?>
                                         </td>
-
 
                                         <!-- Remark Status -->
                                         <td class="action">
@@ -478,6 +479,7 @@ if ($stmt = $database->prepare($query)) {
                                 </tr>
                             <?php endif; ?>
                         </tbody>
+
 
                         <script>
                             document.getElementById("studentSelect").addEventListener("change", function () {

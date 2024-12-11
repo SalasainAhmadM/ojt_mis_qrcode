@@ -21,13 +21,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!empty($_POST['adviser_password']) && $_POST['adviser_password'] === $_POST['adviser_cpassword']) {
         $hashed_password = password_hash($_POST['adviser_password'], PASSWORD_DEFAULT);
     }
-
     function generateFileName($adviser_lastname, $adviser_firstname, $adviser_middle)
     {
-        $middle_initial = $adviser_middle ? strtoupper(substr($adviser_middle, 0, 1)) : ''; // Use the middle initial
-        $file_extension = pathinfo($_FILES['adviser_image']['name'], PATHINFO_EXTENSION); // Get file extension
-        return 'adviser' . ucfirst($adviser_lastname) . ucfirst($adviser_firstname) . $middle_initial . '.' . $file_extension;
+        date_default_timezone_set('Asia/Manila');
+        $date_today = date('Ymd');
+        $random_number = rand(1000, 9999);
+        $middle_initial = $adviser_middle ? strtoupper(substr($adviser_middle, 0, 1)) : '';
+        $file_extension = pathinfo($_FILES['adviser_image']['name'], PATHINFO_EXTENSION);
+
+        return 'adviser_' . ucfirst($adviser_lastname) . ucfirst($adviser_firstname) . $middle_initial . '_' . $date_today . '_' . $random_number . '.' . $file_extension;
     }
+
 
     // Handle image upload if an image was submitted
     $adviser_image = null;

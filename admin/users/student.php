@@ -585,6 +585,22 @@ $current_page = $pagination_data['current_page'];
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <div class="input-group">
+                        <label for="editOJTtype">OJT Type</label>
+
+                        <select type="text" id="editOJTtype" name="ojt_type">
+                            <option disabled>Select OJT Typer</option>
+                            <option value="Field-Based" <?php if ($student['ojt_type'] == 'Field-Based')
+                                echo 'selected'; ?>>
+                                Field-Based
+                            </option>
+                            <option value="Project-Based" <?php if ($student['ojt_type'] == 'Project-Based')
+                                echo 'selected'; ?>>
+                                Project-Based
+                            </option>
+
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Batch Year and Address Row -->
@@ -754,6 +770,7 @@ $current_page = $pagination_data['current_page'];
         function openEditStudentModal(student) {
             document.getElementById('editStudentId').value = student.student_id;
             document.getElementById('editStudentWmsuId').value = student.wmsu_id;
+            document.getElementById('editOJTtype').value = student.ojt_type;
             document.getElementById('editImagePreview').src = student.student_image ? `../../uploads/student/${student.student_image}` : '../../img/user.png';
             document.getElementById('editStudentFirstname').value = student.student_firstname;
             document.getElementById('editStudentMiddle').value = student.student_middle;

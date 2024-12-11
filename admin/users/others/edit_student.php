@@ -5,6 +5,7 @@ require '../../../conn/connection.php';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $student_id = $_POST['student_id'];
     $wmsu_id = $_POST['wmsu_id'];
+    $ojt_type = $_POST['ojt_type'];
     $student_firstname = $_POST['student_firstname'];
     $student_middle = $_POST['student_middle'];
     $student_lastname = $_POST['student_lastname'];
@@ -59,15 +60,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Update the student's details, including the image (if changed)
     $sql = "UPDATE student 
-            SET wmsu_id = ?, student_firstname = ?, student_middle = ?, student_lastname = ?, student_image = ?, student_email = ?, 
+            SET wmsu_id = ?, ojt_type = ?, student_firstname = ?, student_middle = ?, student_lastname = ?, student_image = ?, student_email = ?, 
                 contact_number = ?, course_section = ?, company = ?, batch_year = ?, department = ?, adviser = ?, 
                 student_address = ? , street = ? 
             WHERE student_id = ?";
 
     $stmt = $database->prepare($sql);
     $stmt->bind_param(
-        'ssssssssssssssi',
+        'sssssssssssssssi',
         $wmsu_id,
+        $ojt_type,
         $student_firstname,
         $student_middle,
         $student_lastname,

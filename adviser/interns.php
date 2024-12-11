@@ -295,6 +295,7 @@ $current_page = $pagination_data['current_page'];
                 <ul class="sub-menu">
                     <li><a class="link_name" href="attendance.php">Attendance</a></li>
                     <li><a href="./intern/attendance-intern.php">Intern Attendance</a></li>
+                    <li><a href="./intern/attendance-monitor.php">Monitoring</a></li>
                 </ul>
             </li>
             <li>
@@ -303,7 +304,7 @@ $current_page = $pagination_data['current_page'];
                     <span class="link_name">Announcement</span>
                 </a>
                 <ul class="sub-menu blank">
-                    <li><a class="link_name" href="announcemnet.php">Announcement</a></li>
+                    <li><a class="link_name" href="announcement.php">Announcement</a></li>
                 </ul>
             </li>
             <li>
@@ -474,9 +475,9 @@ $current_page = $pagination_data['current_page'];
 
     <!-- Edit Student Modal -->
     <div id="editStudentModal" class="modal">
-        <div class="modal-content-big">
+        <div class="modal-content-bigger">
             <span class="close" id="closeEditStudentModal">&times;</span>
-            <h2 class="modal-title">Edit Student</h2>
+            <h2 class="modal-title">Student Details</h2>
 
             <form action="./others/edit_student.php" method="POST" enctype="multipart/form-data">
                 <input type="hidden" id="editStudentId" name="student_id">
@@ -485,9 +486,9 @@ $current_page = $pagination_data['current_page'];
                     <label for="editStudentImage">
                         <img id="editImagePreview" src="" alt="Profile Preview" class="profile-preview-img" />
                     </label>
-                    <input type="file" id="editStudentImage" name="student_image" accept="image/*"
+                    <!-- <input type="file" id="editStudentImage" name="student_image" accept="image/*"
                         onchange="previewEditImage()" style="display: none;">
-                    <p class="profile-img-label">Click to upload image</p>
+                    <p class="profile-img-label">Click to upload image</p> -->
                 </div>
 
                 <!-- Full Name Row -->

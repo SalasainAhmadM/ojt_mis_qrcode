@@ -8,27 +8,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $student_id = $_POST['student_id'];
     $schedule_ids = $_POST['schedule_ids'];
     $reason = $_POST['reason'];
-    $proof_image = $_FILES['proof_image'];
+    $proof_image = $_FILES['proof_image'] ?? null;
 
-    // Check required fields
-    if (empty($student_id) || empty($schedule_ids) || empty($reason) || empty($proof_image)) {
-        $response['message'] = 'All fields are required.';
+    // Check required fields (only student_id, schedule_ids, and reason are required)
+    if (empty($student_id) || empty($schedule_ids) || empty($reason)) {
+        $response['message'] = 'Student ID, schedule IDs, and reason are required.';
         echo json_encode($response);
         exit;
     }
 
-    // Handle file upload
-    $uploadDir = "../uploads/student/remark/";
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
-    }
+    // Handle file upload if proof image is provided
+    $proofImageName = null;
+    if ($proof_image && $proof_image['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = "../uploads/student/remark/";
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
 
-    $proofImageName = $uploadDir . uniqid("proof_", true) . '.' . pathinfo($proof_image['name'], PATHINFO_EXTENSION);
+        $proofImageName = $uploadDir . uniqid("proof_", true) . '.' . pathinfo($proof_image['name'], PATHINFO_EXTENSION);
 
-    if (!move_uploaded_file($proof_image['tmp_name'], $proofImageName)) {
-        $response['message'] = 'Failed to upload proof image.';
-        echo json_encode($response);
-        exit;
+        if (!move_uploaded_file($proof_image['tmp_name'], $proofImageName)) {
+            $response['message'] = 'Failed to upload proof image.';
+            echo json_encode($response);
+            exit;
+        }
     }
 
     // Insert into database

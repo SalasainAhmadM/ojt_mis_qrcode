@@ -32,8 +32,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Function to generate the file name based on last name and WMSU ID
     function generateFileName($student_lastname, $wmsu_id)
     {
-        return strtolower($student_lastname) . '_' . $wmsu_id . '.' . pathinfo($_FILES['student_image']['name'], PATHINFO_EXTENSION);
+        date_default_timezone_set('Asia/Manila');
+        $date_today = date('Ymd');
+        $random_number = rand(1000, 9999);
+        $file_extension = pathinfo($_FILES['student_image']['name'], PATHINFO_EXTENSION);
+        return strtolower($student_lastname) . '_' . $wmsu_id . '_' . $date_today . '_' . $random_number . '.' . $file_extension;
     }
+
+
 
     // Handle image upload if an image was submitted
     $student_image = null;
