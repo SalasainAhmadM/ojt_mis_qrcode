@@ -85,6 +85,15 @@ $showSuccessModal = isset($_SESSION['success']) ? $_SESSION['success'] : false;
 if ($showSuccessModal) {
     unset($_SESSION['success']); // Clear the flag
 }
+
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $currentSemester = $row['type'];
+    }
+}
 ?>
 
 
@@ -220,8 +229,10 @@ if ($showSuccessModal) {
 <body>
     <div class="header">
         <i class=""></i>
-        <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                style="color: #095d40;">|</span>
+        <div class="school-name">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+            <span id="sy-text"></span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
             <img src="../img/ccs.png">
         </div>
@@ -371,6 +382,8 @@ if ($showSuccessModal) {
                                                     onclick="viewImage('<?php echo htmlspecialchars($attendance['proof_image']); ?>')">
                                                     <i class="fa-solid fa-image"></i>
                                                 </button>
+
+
                                             <?php else: ?>
                                                 N/A
                                             <?php endif; ?>
@@ -389,6 +402,10 @@ if ($showSuccessModal) {
                                                 onclick="openRowModal(this)">
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </button>
+                                            <button class="action-icon view-btn" onclick="viewDTR(this)">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </button>
+
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -398,7 +415,7 @@ if ($showSuccessModal) {
                                 </tr>
                             <?php endif; ?>
                         </tbody>
-
+                    </table>
 
                 </div>
             </div>
@@ -441,9 +458,56 @@ if ($showSuccessModal) {
             </form>
         </div>
     </div>
+    <!-- View Modal -->
+    <div id="viewModal" class="modal" style="display: none;">
+        <div style="margin: 5% auto;" class="modal-content">
+            <span class="close" onclick="closeViewModal()">&times;</span>
+            <h2>View Attendance Remark</h2>
+
+            <div>
+                <strong>Schedule Date:</strong> <span id="viewScheduleDate"></span><br>
+                <strong>Remark Type:</strong> <span id="viewRemarkType"></span><br>
+                <strong>First Time-in:</strong> <span id="viewFirstTimeIn"></span><br>
+                <strong>Last Time-out:</strong> <span id="viewLastTimeOut"></span><br>
+                <strong>Total Hours:</strong> <span id="viewTotalHours"></span><br>
+                <strong>Remark:</strong> <span id="viewRemark"></span><br>
+                <!-- <strong>Proof Image:</strong> <span id="viewProofImage"></span><br> -->
+                <strong>Status:</strong> <span id="viewStatus"></span><br>
+            </div>
+        </div>
+    </div>
 
 
     <script>
+        function viewDTR(button) {
+            // Get the parent row of the clicked button
+            const row = button.closest('tr');
+
+            // Get all table cell values in the row
+            const cells = row.querySelectorAll('td');
+            const data = Array.from(cells).map(cell => cell.textContent.trim());
+
+            // Populate the modal with the values
+            document.getElementById('viewScheduleDate').textContent = data[0];
+            document.getElementById('viewRemarkType').textContent = data[1];
+            document.getElementById('viewFirstTimeIn').textContent = data[2];
+            document.getElementById('viewLastTimeOut').textContent = data[3];
+            document.getElementById('viewTotalHours').textContent = data[4];
+            document.getElementById('viewRemark').textContent = data[5];
+            // document.getElementById('viewProofImage').innerHTML = data[6] !== 'N/A'
+            //     ? `<img src="${data[6]}" alt="Proof Image" style="max-width: 100%;">`
+            //     : 'N/A';
+            document.getElementById('viewStatus').textContent = data[7];
+
+            // Show the modal
+            document.getElementById('viewModal').style.display = 'block';
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').style.display = 'none';
+        }
+
+
         function openRowModal(row) {
             const scheduleId = row.getAttribute('data-schedule-id');
             const remarkType = row.getAttribute('data-remark-type');
@@ -567,6 +631,7 @@ if ($showSuccessModal) {
     </script>
 
     <script src="./js/script.js"></script>
+    <script src="../js/sy.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

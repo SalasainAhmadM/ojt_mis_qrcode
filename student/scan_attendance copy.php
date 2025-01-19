@@ -4,7 +4,7 @@ session_start();
 require '../conn/connection.php'; // Assuming your database connection is in this file
 
 // Set timezone to Manila
-// date_default_timezone_set('Asia/Manila');
+date_default_timezone_set('Asia/Manila');
 $database->query("SET time_zone = '+08:00'");
 // Function to format hours and minutes
 function formatTime($hours, $minutes)

@@ -29,7 +29,14 @@ if ($stmt = $database->prepare($query)) {
   }
   $stmt->close(); // Close the statement
 }
-
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+  if ($result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+    $currentSemester = $row['type'];
+  }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -50,7 +57,10 @@ if ($stmt = $database->prepare($query)) {
 <body>
   <div class="header">
     <i class="fas fa-school"></i>
-    <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
+    <div class="school-name">
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+      <span id="sy-text"></span>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
       <img src="../img/ccs.png">
     </div>
@@ -155,13 +165,19 @@ if ($stmt = $database->prepare($query)) {
       </div>
       <div class="main-box">
         <div class="whole-box">
+          <div class="header-group">
+            <h2>Feedback Questions</h2>
+            <div class="button-container">
+              <button id="openAddModalBtn" class="add-btn">
+                <i class="fa-solid fa-plus"></i>Add Question
+              </button>
+            </div>
+          </div>
+
           <table>
             <thead>
               <th>Feedback Questions</th>
               <th class="action">Action</th>
-              <!-- <th></th>
-              <th></th>
-              <th></th> -->
             </thead>
             <tbody>
               <?php
@@ -171,31 +187,64 @@ if ($stmt = $database->prepare($query)) {
 
               if ($result->num_rows > 0) {
                 while ($row = $result->fetch_assoc()) {
-                  for ($i = 1; $i <= 5; $i++) {
+                  for ($i = 1; $i <= 10; $i++) { // Loop for questions 1 to 10
                     $question = $row["question$i"];
-                    echo "
-                              <tr>
-                                  <td>$question</td>
-                                  <td class=\"action\">
-                                      <button class=\"action-icon edit-btn\" onclick=\"openEditModal($row[id], 'question$i', '$question')\">
-                                          <i class=\"fa-solid fa-pen-to-square\"></i>
-                                      </button>
-                                  </td>
-                              </tr>
-                          ";
+                    if (!empty($question)) {
+                      // Define the action buttons based on the question number
+                      $actionButtons = "
+                            <button class=\"action-icon edit-btn\" onclick=\"openEditModal($row[id], 'question$i', '$question')\">
+                                <i class=\"fa-solid fa-pen-to-square\"></i>
+                            </button>
+                        ";
+
+                      // For question 6 to 10, add delete button
+                      if ($i >= 6) {
+                        $actionButtons .= "
+                                <button class=\"action-icon delete-btn\" onclick=\"deleteQuestion($row[id], 'question$i')\">
+                                    <i class=\"fa-solid fa-trash\"></i>
+                                </button>
+                            ";
+                      }
+
+                      echo "
+                            <tr>
+                                <td>$question</td>
+                                <td class=\"action\">
+                                    $actionButtons
+                                </td>
+                            </tr>
+                        ";
+                    }
                   }
                 }
               } else {
                 echo "<tr><td colspan='2'>No feedback questions found.</td></tr>";
               }
-
               ?>
             </tbody>
           </table>
+
         </div>
       </div>
     </div>
   </section>
+
+  <!-- Add Feedback Modal -->
+  <div id="addFeedbackModal" class="modal">
+    <div class="modal-content-others">
+      <span class="close" id="closeAddFeedbackModal">&times;</span>
+      <h2>Add Feedback Question</h2>
+      <form id="addFeedbackForm" action="./add_feedback.php" method="POST">
+        <div class="input-group">
+          <label for="addFeedbackText">Feedback Question</label>
+          <textarea id="addFeedbackText" name="feedback_text" rows="4" placeholder="Enter feedback question"
+            required></textarea>
+        </div>
+        <button type="submit" class="modal-btn">Add Feedback</button>
+      </form>
+    </div>
+  </div>
+
 
   <!-- Edit Feedback Modal -->
   <div id="editFeedbackModal" class="modal">
@@ -226,6 +275,32 @@ if ($stmt = $database->prepare($query)) {
       <button class="proceed-btn" onclick="closeModal('updateFeedbackSuccessModal')">Close</button>
     </div>
   </div>
+  <!-- Add Success Modal -->
+  <div id="addFeedbackSuccessModal" class="modal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+          style="width: 150px; height: 150px;" loop autoplay>
+        </lottie-player>
+      </div>
+      <h2>Added Successfully!</h2>
+      <p>The feedback question was added successfully!</p>
+      <button class="proceed-btn" onclick="closeModal('addFeedbackSuccessModal')">Close</button>
+    </div>
+  </div>
+  <!-- Delete Success Modal -->
+  <div id="deleteFeedbackSuccessModal" class="modal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+          style="width: 150px; height: 150px;" loop autoplay>
+        </lottie-player>
+      </div>
+      <h2>Deleted Successfully!</h2>
+      <p>The feedback question was deleted successfully!</p>
+      <button class="proceed-btn" onclick="closeModal('deleteFeedbackSuccessModal')">Close</button>
+    </div>
+  </div>
 
 
   <!-- Logout Confirmation Modal -->
@@ -245,6 +320,29 @@ if ($stmt = $database->prepare($query)) {
     </div>
   </div>
   <script>
+    // Get modal elements
+    const openAddFeedbackModalBtn = document.getElementById('openAddModalBtn');
+    const addFeedbackModal = document.getElementById('addFeedbackModal');
+    const closeAddFeedbackModal = document.getElementById('closeAddFeedbackModal');
+
+    // Open modal
+    openAddFeedbackModalBtn.addEventListener('click', () => {
+      addFeedbackModal.style.display = 'block';
+    });
+
+    // Close modal
+    closeAddFeedbackModal.addEventListener('click', () => {
+      addFeedbackModal.style.display = 'none';
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (event) => {
+      if (event.target === addFeedbackModal) {
+        addFeedbackModal.style.display = 'none';
+      }
+    });
+
+
     document.addEventListener("DOMContentLoaded", function () {
       const modal = document.getElementById("editFeedbackModal");
       const closeModal = document.getElementById("closeEditFeedbackModal");
@@ -291,10 +389,30 @@ if ($stmt = $database->prepare($query)) {
         showModal('updateFeedbackSuccessModal');
         <?php unset($_SESSION['update_success']); // Remove after displaying ?>
       <?php endif; ?>
+
+      <?php if (isset($_SESSION['add_success']) && $_SESSION['add_success'] === true): ?>
+        showModal('addFeedbackSuccessModal');
+        <?php unset($_SESSION['add_success']); // Remove after displaying ?>
+      <?php endif; ?>
+
+      <?php if (isset($_SESSION['delete_success']) && $_SESSION['delete_success'] === true): ?>
+        showModal('deleteFeedbackSuccessModal'); // Show a delete success modal
+        <?php unset($_SESSION['delete_success']); ?>
+      <?php endif; ?>
+
     };
+
+
+    function deleteQuestion(feedbackId, questionField) {
+      if (confirm("Are you sure you want to delete this question?")) {
+        window.location.href = `./delete_feedback.php?feedback_id=${feedbackId}&question_field=${questionField}`;
+      }
+    }
+
   </script>
 
   <script src="./js/script.js"></script>
+  <script src="../js/sy.js"></script>
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

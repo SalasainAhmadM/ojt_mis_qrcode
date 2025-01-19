@@ -219,6 +219,15 @@ if ($result->num_rows > 0) {
 } else {
     die("No questions found in the database.");
 }
+
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $currentSemester = $row['type'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -240,8 +249,10 @@ if ($result->num_rows > 0) {
 <body>
     <div class="header">
         <i class="fas fa-school"></i>
-        <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                style="color: #095d40;">|</span>
+        <div class="school-name">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+            <span id="sy-text"></span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
             <img src="../img/ccs.png">
         </div>
@@ -584,6 +595,30 @@ if ($result->num_rows > 0) {
                         <label><input type="checkbox" name="question_5" value="Strongly Disagree"> Strongly
                             Disagree</label>
                     </div>
+
+                    <!-- Question 6 to 10 (if they exist) -->
+                    <?php for ($i = 6; $i <= 10; $i++): ?>
+                        <?php if (!empty($question["question$i"])): ?>
+                            <label><?php echo $i . ". " . $question["question$i"]; ?></label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" name="question_<?php echo $i; ?>" value="Strongly Agree"> Strongly
+                                    Agree</label>
+                                <label><input type="checkbox" name="question_<?php echo $i; ?>" value="Agree"> Agree</label>
+                                <label><input type="checkbox" name="question_<?php echo $i; ?>" value="Neutral"> Neutral</label>
+                                <label><input type="checkbox" name="question_<?php echo $i; ?>" value="Disagree">
+                                    Disagree</label>
+                                <label><input type="checkbox" name="question_<?php echo $i; ?>" value="Strongly Disagree">
+                                    Strongly Disagree</label>
+                            </div>
+                        <?php endif; ?>
+                    <?php endfor; ?>
+
+
+                </div>
+                <!-- Additional Comments -->
+                <div class="additional-comments">
+                    <label for="additional_comments">Additional Comments(Optional):</label>
+                    <textarea id="additional_comments" name="feedback_comment" rows="4" style="width: 100%;"></textarea>
                 </div>
 
                 <div style="display: flex; justify-content: space-around; margin-top: 20px;">
@@ -596,20 +631,32 @@ if ($result->num_rows > 0) {
 
     <script>
         function validateEvaluationForm() {
-            const requiredQuestions = ["question_1", "question_5"];
+            // Define required questions (1-10, if they exist)
+            const requiredQuestions = [];
+
+            // Dynamically check which questions exist
+            for (let i = 1; i <= 10; i++) {
+                if (document.querySelector(`input[name="question_${i}"]`)) {
+                    requiredQuestions.push(`question_${i}`);
+                }
+            }
+
+            // Validate that each required question has at least one checked box
             for (const question of requiredQuestions) {
                 const checkboxes = document.querySelectorAll(`input[name="${question}"]:checked`);
                 if (checkboxes.length === 0) {
-                    openModal('feedbackSubmitErrorModal');
+                    openModal('feedbackSubmitErrorModal'); // Show error modal if any required question is not answered
                     return false;
                 }
             }
-            return true;
+
+            return true; // Form is valid if all required questions are answered
         }
 
         document.addEventListener("DOMContentLoaded", function () {
             const form = document.getElementById("evaluationForm");
 
+            // Ensure only one checkbox is checked per question
             form.addEventListener("change", function (event) {
                 if (event.target.type === "checkbox") {
                     const questionName = event.target.name;
@@ -621,6 +668,23 @@ if ($result->num_rows > 0) {
                         }
                     });
                 }
+            });
+
+            // Enable/disable submit button based on required question completion
+            form.addEventListener("input", function () {
+                const submitButton = document.getElementById("submitEvaluation");
+                let allAnswered = true;
+
+                // Check all required questions dynamically
+                for (let i = 1; i <= 10; i++) {
+                    const checkboxes = document.querySelectorAll(`input[name="question_${i}"]:checked`);
+                    if (document.querySelector(`input[name="question_${i}"]`) && checkboxes.length === 0) {
+                        allAnswered = false;
+                        break;
+                    }
+                }
+
+                submitButton.disabled = !allAnswered; // Disable if any required question is unanswered
             });
         });
     </script>
@@ -661,57 +725,25 @@ if ($result->num_rows > 0) {
                 <div class="evaluation-questions">
                     <p>Edit <strong><span id="edit_student_name"></span></strong>'s performance feedback:</p>
 
-                    <!-- Question 1 -->
-                    <label>1. <?php echo $question['question1']; ?></label>
-                    <div class="checkbox-group">
-                        <label><input type="radio" name="question_1" value="100"> Strongly Agree</label>
-                        <label><input type="radio" name="question_1" value="80"> Agree</label>
-                        <label><input type="radio" name="question_1" value="60"> Neutral</label>
-                        <label><input type="radio" name="question_1" value="40"> Disagree</label>
-                        <label><input type="radio" name="question_1" value="20"> Strongly Disagree</label>
-                    </div>
-
-                    <!-- Question 2 -->
-                    <label>2. <?php echo $question['question2']; ?></label>
-                    <div class="checkbox-group">
-                        <label><input type="radio" name="question_2" value="100"> Strongly Agree</label>
-                        <label><input type="radio" name="question_2" value="80"> Agree</label>
-                        <label><input type="radio" name="question_2" value="60"> Neutral</label>
-                        <label><input type="radio" name="question_2" value="40"> Disagree</label>
-                        <label><input type="radio" name="question_2" value="20"> Strongly Disagree</label>
-                    </div>
-
-                    <!-- Question 3 -->
-                    <label>3. <?php echo $question['question3']; ?></label>
-                    <div class="checkbox-group">
-                        <label><input type="radio" name="question_3" value="100"> Strongly Agree</label>
-                        <label><input type="radio" name="question_3" value="80"> Agree</label>
-                        <label><input type="radio" name="question_3" value="60"> Neutral</label>
-                        <label><input type="radio" name="question_3" value="40"> Disagree</label>
-                        <label><input type="radio" name="question_3" value="20"> Strongly Disagree</label>
-                    </div>
-
-                    <!-- Question 4 -->
-                    <label>4. <?php echo $question['question4']; ?></label>
-                    <div class="checkbox-group">
-                        <label><input type="radio" name="question_4" value="100"> Strongly Agree</label>
-                        <label><input type="radio" name="question_4" value="80"> Agree</label>
-                        <label><input type="radio" name="question_4" value="60"> Neutral</label>
-                        <label><input type="radio" name="question_4" value="40"> Disagree</label>
-                        <label><input type="radio" name="question_4" value="20"> Strongly Disagree</label>
-                    </div>
-
-                    <!-- Question 5 -->
-                    <label>5. <?php echo $question['question5']; ?></label>
-                    <div class="checkbox-group">
-                        <label><input type="radio" name="question_5" value="100"> Strongly Agree</label>
-                        <label><input type="radio" name="question_5" value="80"> Agree</label>
-                        <label><input type="radio" name="question_5" value="60"> Neutral</label>
-                        <label><input type="radio" name="question_5" value="40"> Disagree</label>
-                        <label><input type="radio" name="question_5" value="20"> Strongly Disagree</label>
-                    </div>
+                    <?php for ($i = 1; $i <= 10; $i++): ?>
+                        <?php if (!empty($question["question$i"])): ?>
+                            <label><?php echo $i . ". " . $question["question$i"]; ?></label>
+                            <div class="checkbox-group">
+                                <label><input type="radio" name="question_<?php echo $i; ?>" value="100"> Strongly Agree</label>
+                                <label><input type="radio" name="question_<?php echo $i; ?>" value="80"> Agree</label>
+                                <label><input type="radio" name="question_<?php echo $i; ?>" value="60"> Neutral</label>
+                                <label><input type="radio" name="question_<?php echo $i; ?>" value="40"> Disagree</label>
+                                <label><input type="radio" name="question_<?php echo $i; ?>" value="20"> Strongly
+                                    Disagree</label>
+                            </div>
+                        <?php endif; ?>
+                    <?php endfor; ?>
                 </div>
-
+                <!-- Additional Comments -->
+                <div class="additional-comments">
+                    <label for="additional_comments">Additional Comments (Optional):</label>
+                    <textarea id="edit_comments" name="feedback_comment" rows="4" style="width: 100%;"></textarea>
+                </div>
                 <div style="display: flex; justify-content: space-around; margin-top: 20px;">
                     <button type="submit" class="confirm-btn">Update Feedback</button>
                     <button type="button" class="cancel-btn" onclick="closeModal('editFeedbackModal')">Cancel</button>
@@ -751,12 +783,10 @@ if ($result->num_rows > 0) {
         </div>
     </div>
     <script>
-        // Function to open the Edit Feedback Modal and populate it with data
         function openEditFeedbackModal(studentName, studentId) {
             document.getElementById('edit_student_name').textContent = studentName;
             document.getElementById('edit_student_id').value = studentId;
 
-            // Fetch feedback data from the server
             fetch(`fetch_feedback.php?student_id=${studentId}`)
                 .then(response => {
                     if (!response.ok) {
@@ -765,27 +795,39 @@ if ($result->num_rows > 0) {
                     return response.json();
                 })
                 .then(data => {
-                    if (Object.keys(data).length) {
-                        // Set radio buttons based on feedback values
-                        setRadioButton('question_1', data.question_1);
-                        setRadioButton('question_2', data.question_2);
-                        setRadioButton('question_3', data.question_3);
-                        setRadioButton('question_4', data.question_4);
-                        setRadioButton('question_5', data.question_5);
-                    } else {
-                        console.warn('No feedback found for this student.');
+                    for (let i = 1; i <= 10; i++) {
+                        if (data[`question_${i}`] !== undefined) {
+                            setRadioButton(`question_${i}`, data[`question_${i}`]);
+                        }
                     }
-                    openModal('editFeedbackModal'); // Open modal only after setting data
+                    if (data.feedback_comment !== undefined) {
+                        document.getElementById('edit_comments').value = data.feedback_comment;
+                    } else {
+                        document.getElementById('edit_comments').value = ''; // Clear if no comment
+                    }
+                    openModal('editFeedbackModal');
                 })
                 .catch(error => console.error('Error fetching feedback:', error));
         }
 
+
         // Helper function to set radio buttons based on the value
         function setRadioButton(question, value) {
-            const radios = document.querySelectorAll(`input[name=${question}]`);
+            const radios = document.querySelectorAll(`input[name="${question}"]`);
+            let valueFound = false;
+
             radios.forEach(radio => {
-                radio.checked = parseInt(radio.value) === value;
+                if (parseInt(radio.value) === value) {
+                    radio.checked = true;
+                    valueFound = true;
+                } else {
+                    radio.checked = false; // Ensure other radios are unchecked
+                }
             });
+
+            if (!valueFound) {
+                console.warn(`No matching radio button found for question: ${question} with value: ${value}`);
+            }
         }
 
         // Function to open the modal
@@ -936,6 +978,7 @@ if ($result->num_rows > 0) {
         </div>
     </div>
     <script src="./js/script.js"></script>
+    <script src="../js/sy.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

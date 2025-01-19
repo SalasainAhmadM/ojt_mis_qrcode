@@ -191,7 +191,14 @@ if ($stmt = $database->prepare($remarks_query)) {
     $stmt->close();
 }
 
-
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $currentSemester = $row['type'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -256,8 +263,10 @@ if ($stmt = $database->prepare($remarks_query)) {
 <body>
     <div class="header">
         <i class="fas fa-school"></i>
-        <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                style="color: #095d40;">|</span>
+        <div class="school-name">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+            <span id="sy-text"></span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
             <img src="../img/ccs.png">
         </div>
@@ -494,7 +503,7 @@ if ($stmt = $database->prepare($remarks_query)) {
                                         $remark_status = $remark['status'];
 
                                         if ($remark_type === 'Absent') {
-                                            $status = '<span style="color:#8B0000;">Absent</span>';
+                                            $status = '<span style="">Absent</span>';
                                         }
                                     }
                                     ?>
@@ -508,6 +517,16 @@ if ($stmt = $database->prepare($remarks_query)) {
                                                     <span class="tooltip-icon absent" title="Absent"
                                                         onclick="openRemarkModal(<?php echo $student_id; ?>, '<?php echo $remark_type; ?>', <?php echo $remark_id; ?>)">
                                                         X
+                                                    </span>
+                                                <?php elseif ($remark_type === 'Forgot Time-out'): ?>
+                                                    <span class="tooltip-icon forgot" title="Forgot Time-out"
+                                                        onclick="openRemarkModal(<?php echo $student_id; ?>, '<?php echo $remark_type; ?>', <?php echo $remark_id; ?>)">
+                                                        !
+                                                    </span>
+                                                <?php elseif ($remark_type === 'Emergency'): ?>
+                                                    <span class="tooltip-icon emergency" title="Emergency"
+                                                        onclick="openRemarkModal(<?php echo $student_id; ?>, '<?php echo $remark_type; ?>', <?php echo $remark_id; ?>)">
+                                                        !
                                                     </span>
                                                 <?php elseif ($remark_type === 'Late'): ?>
                                                     <span class="tooltip-icon late" title="Late"
@@ -685,6 +704,12 @@ if ($stmt = $database->prepare($remarks_query)) {
             if (remarkType === 'Absent') {
                 proofButton.style.display = 'inline-block'; // Show proof button
                 approveButton.style.display = 'none'; // Hide approve button initially
+            } else if (remarkType === 'Forgot Time-out') {
+                proofButton.style.display = 'inline-block'; // Show proof button
+                approveButton.style.display = 'none'; // Hide approve button initially
+            } else if (remarkType === 'Emergency') {
+                proofButton.style.display = 'inline-block'; // Show proof button
+                approveButton.style.display = 'none'; // Hide approve button initially
             } else if (remarkType === 'Late') {
                 proofButton.style.display = 'none'; // Hide proof button for "Late"
                 approveButton.style.display = 'inline-block'; // Show approve button immediately
@@ -729,6 +754,7 @@ if ($stmt = $database->prepare($remarks_query)) {
                             proofModal.style.display = 'block';
                         } else {
                             alert('No proof image available.');
+                            openApprovalModal();
                         }
                     })
                     .catch(() => {
@@ -827,6 +853,7 @@ if ($stmt = $database->prepare($remarks_query)) {
         </div>
     </div>
     <script src="./js/script.js"></script>
+    <script src="../js/sy.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

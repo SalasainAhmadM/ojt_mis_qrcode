@@ -9,6 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $company_firstname = $_POST['company_rep_firstname'];
     $company_middle = $_POST['company_rep_middle'];
     $company_lastname = $_POST['company_rep_lastname'];
+    $company_position = $_POST['company_rep_position'];
     $company_email = $_POST['company_email'];
     $company_number = $_POST['company_number'];
     $company_address = $_POST['company_address'];
@@ -71,11 +72,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Update the company information
     $sql = "UPDATE company
-            SET company_image = ?, company_name = ?, company_rep_firstname = ?, company_rep_middle = ?, company_rep_lastname = ?, company_number = ?, company_email = ?, company_address = ?, company_password = ?
+            SET company_image = ?, company_name = ?, company_rep_firstname = ?, company_rep_middle = ?, company_rep_lastname = ?, company_rep_position = ?, company_number = ?, company_email = ?, company_address = ?, company_password = ?
             WHERE company_id = ?";
 
     $stmt = $database->prepare($sql);
-    $stmt->bind_param('sssssssssi', $company_image, $company_name, $company_firstname, $company_middle, $company_lastname, $company_number, $company_email, $company_address, $company_password, $company_id);
+    $stmt->bind_param('ssssssssssi', $company_image, $company_name, $company_firstname, $company_middle, $company_lastname, $company_position, $company_number, $company_email, $company_address, $company_password, $company_id);
 
     if ($stmt->execute()) {
         // Set a session variable for success

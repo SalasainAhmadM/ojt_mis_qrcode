@@ -9,6 +9,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $question_3 = intval($_POST['question_3']);
     $question_4 = intval($_POST['question_4']);
     $question_5 = intval($_POST['question_5']);
+    $question_6 = isset($_POST['question_6']) ? intval($_POST['question_6']) : null;
+    $question_7 = isset($_POST['question_7']) ? intval($_POST['question_7']) : null;
+    $question_8 = isset($_POST['question_8']) ? intval($_POST['question_8']) : null;
+    $question_9 = isset($_POST['question_9']) ? intval($_POST['question_9']) : null;
+    $question_10 = isset($_POST['question_10']) ? intval($_POST['question_10']) : null;
+    $feedback_comment = isset($_POST['feedback_comment']) ? $_POST['feedback_comment'] : null;
 
     // Check if feedback already exists
     $check_query = "SELECT feedback_id FROM feedback WHERE student_id = ?";
@@ -22,16 +28,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $update_query = "
             UPDATE feedback 
             SET question_1 = ?, question_2 = ?, question_3 = ?, 
-                question_4 = ?, question_5 = ?, feedback_date = NOW() 
+                question_4 = ?, question_5 = ?, question_6 = ?, question_7 = ?, 
+                question_8 = ?, question_9 = ?, question_10 = ?, 
+                feedback_comment = ?, feedback_date = NOW() 
             WHERE student_id = ?";
         $stmt = $database->prepare($update_query);
         $stmt->bind_param(
-            "iiiiii",
+            "iiiiiiiiissi",
             $question_1,
             $question_2,
             $question_3,
             $question_4,
             $question_5,
+            $question_6,
+            $question_7,
+            $question_8,
+            $question_9,
+            $question_10,
+            $feedback_comment,
             $student_id
         );
 
@@ -44,17 +58,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Insert new feedback if not found
         $insert_query = "
             INSERT INTO feedback (student_id, question_1, question_2, 
-                                  question_3, question_4, question_5) 
-            VALUES (?, ?, ?, ?, ?, ?)";
+                                  question_3, question_4, question_5, 
+                                  question_6, question_7, question_8, 
+                                  question_9, question_10, feedback_comment) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $database->prepare($insert_query);
         $stmt->bind_param(
-            "iiiiii",
+            "iiiiiiiiiss",
             $student_id,
             $question_1,
             $question_2,
             $question_3,
             $question_4,
-            $question_5
+            $question_5,
+            $question_6,
+            $question_7,
+            $question_8,
+            $question_9,
+            $question_10,
+            $feedback_comment
         );
 
         if ($stmt->execute()) {

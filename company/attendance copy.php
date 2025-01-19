@@ -71,24 +71,32 @@ if ($schedule_day_type === 'Suspended') {
 // Handle search query
 $search = isset($_GET['search']) ? '%' . $_GET['search'] . '%' : null;
 
-// Query to fetch students and attendance based on search or day
+// Pagination logic
+$students_per_page = 5; // Number of students per page
+$current_page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+$offset = ($current_page - 1) * $students_per_page;
+
+// Fetch all students, regardless of attendance
 $students_query = "
-    SELECT s.student_id, s.student_firstname, s.student_middle, s.student_lastname, 
-           s.student_image, a.time_in, a.time_out, a.ojt_hours
+    SELECT s.student_id, s.student_firstname, s.student_middle, s.student_lastname, s.student_image, 
+           a.time_in, a.time_out, a.ojt_hours
     FROM student s
-    LEFT JOIN attendance a ON s.student_id = a.student_id 
-    WHERE s.company = ? AND DATE(a.time_in) = ?
+    LEFT JOIN attendance a ON s.student_id = a.student_id AND DATE(a.time_in) = ?
+    WHERE s.company = ?
 ";
 
-// If a search is provided, add the search condition
+// Add search condition if applicable
 if ($search) {
     $students_query .= " AND (s.student_firstname LIKE ? OR s.student_lastname LIKE ?)";
-    $query_params = [$company_id, $selected_day, $search, $search];
+    $query_params = [$selected_day, $company_id, $search, $search];
 } else {
-    $query_params = [$company_id, $selected_day];
+    $query_params = [$selected_day, $company_id];
 }
 
-$students_query .= " ORDER BY s.student_lastname, a.time_in ASC";
+// Add LIMIT for pagination
+$students_query .= " ORDER BY s.student_lastname, a.time_in ASC LIMIT ? OFFSET ?";
+$query_params[] = $students_per_page;
+$query_params[] = $offset;
 
 if ($stmt = $database->prepare($students_query)) {
     $stmt->bind_param(str_repeat("s", count($query_params)), ...$query_params);
@@ -102,23 +110,67 @@ if ($stmt = $database->prepare($students_query)) {
     $stmt->close();
 }
 
+// Get the total number of students for pagination
+$total_students_query = "
+    SELECT COUNT(*) AS total
+    FROM student s
+    WHERE s.company = ?
+";
+
+// Add search condition if applicable
+if ($search) {
+    $total_students_query .= " AND (s.student_firstname LIKE ? OR s.student_lastname LIKE ?)";
+    $total_query_params = [$company_id, $search, $search];
+} else {
+    $total_query_params = [$company_id];
+}
+
+if ($stmt = $database->prepare($total_students_query)) {
+    $stmt->bind_param(str_repeat("s", count($total_query_params)), ...$total_query_params);
+    $stmt->execute();
+    $stmt->bind_result($total_students);
+    $stmt->fetch();
+    $stmt->close();
+}
+
+$total_pages = ceil($total_students / $students_per_page);
+
+// Function to render pagination links
+function renderPaginationLinks($total_pages, $current_page)
+{
+    // Get current query parameters
+    $query_params = $_GET;
+    for ($i = 1; $i <= $total_pages; $i++) {
+        $query_params['page'] = $i;
+        $url = '?' . http_build_query($query_params); // Generate query string
+        $active_class = $i == $current_page ? 'class="active"' : '';
+        echo '<a ' . $active_class . ' href="' . $url . '">' . $i . '</a>';
+    }
+}
+
+
 // Function to format hours into "X hrs Y mins"
 function formatDuration($hours)
 {
-    $totalMinutes = $hours * 60;
-    $hrs = floor($totalMinutes / 60);
-    $mins = $totalMinutes % 60;
+    // Convert hours to total minutes
+    $totalMinutes = round($hours * 60); // Use round to ensure accurate minute representation
+    $hrs = floor($totalMinutes / 60);  // Extract hours
+    $mins = $totalMinutes % 60;        // Extract remaining minutes
 
+    // Format output
     $formatted = '';
-    if ($hrs > 0)
+    if ($hrs > 0) {
         $formatted .= $hrs . ' hr' . ($hrs > 1 ? 's' : '') . ' ';
-    if ($mins > 0)
+    }
+    if ($mins > 0) {
         $formatted .= $mins . ' min' . ($mins > 1 ? 's' : '');
+    }
 
     return trim($formatted) ?: '0 mins';
 }
+
 $remarks_query = "
-    SELECT student_id, remark_type 
+    SELECT remark_id, student_id, remark_type , status
     FROM attendance_remarks 
     WHERE schedule_id = (SELECT schedule_id FROM schedule WHERE company_id = ? AND date = ?)
 ";
@@ -129,13 +181,24 @@ if ($stmt = $database->prepare($remarks_query)) {
     $result = $stmt->get_result();
 
     while ($row = $result->fetch_assoc()) {
-        $remarks[$row['student_id']] = $row['remark_type'];
+        // Store the remark details indexed by student_id
+        $remarks[$row['student_id']] = [
+            'remark_id' => $row['remark_id'],
+            'remark_type' => $row['remark_type'],
+            'status' => $row['status']
+        ];
     }
     $stmt->close();
 }
-// Calculate previous and next day for pagination
-$previous_day = date('Y-m-d', strtotime($selected_day . ' -1 day'));
-$next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
+
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $currentSemester = $row['type'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -169,14 +232,41 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
             max-height: 80%;
             overflow-y: auto;
         }
+
+        .proof-modal-content {
+            width: 400px;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .proof-image {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="header">
         <i class="fas fa-school"></i>
-        <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                style="color: #095d40;">|</span>
+        <div class="school-name">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+            <span id="sy-text"></span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
             <img src="../img/ccs.png">
         </div>
@@ -255,6 +345,20 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
             </li>
 
             <li>
+                <div class="iocn-link" class="active">
+                    <a href="attendance.php">
+                        <i class="fa-regular fa-clock"></i>
+                        <span class="link_name">Attendance</span>
+                    </a>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </div>
+                <ul class="sub-menu">
+                    <li><a class="link_name" href="attendance.php">Attendance</a></li>
+                    <li><a href="./intern/attendance.php">Monitoring</a></li>
+                </ul>
+            </li>
+
+            <!-- <li>
                 <a href="attendance.php" class="active">
                     <i class="fa-regular fa-clock"></i>
                     <span class="link_name">Attendance</span>
@@ -262,7 +366,7 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
                 <ul class="sub-menu blank">
                     <li><a class="link_name" href="attendance.php">Attendance</a></li>
                 </ul>
-            </li>
+            </li> -->
             <li>
                 <a href="calendar.php">
                     <i class="fa-regular fa-calendar-days"></i>
@@ -362,9 +466,8 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
                         </thead>
                         <tbody>
                             <?php if (!empty($students) || !empty($remarks)): ?>
-                                <?php
-                                // Loop through all students who attended
-                                foreach ($students as $student_id => $attendances):
+                                <?php foreach ($students as $student_id => $attendances): ?>
+                                    <?php
                                     $first_time_in = null;
                                     $latest_time_in_without_out = null;
                                     $latest_time_out = null;
@@ -384,30 +487,48 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
                                     }
 
                                     $displayed_time_out = $latest_time_in_without_out ? '' : ($latest_time_out ? date('h:i A', strtotime($latest_time_out)) : 'N/A');
-                                    $status = $latest_time_in_without_out ? '<span style="color:green;">Timed-in</span>' : '<span style="color:red;">Timed-out</span>';
 
-                                    // Determine if the student is marked as Absent or Late
-                                    $remark_type = isset($remarks[$student_id]) ? $remarks[$student_id] : null;
+                                    // Default status logic
+                                    if (!$first_time_in && !$latest_time_out) {
+                                        $status = '<span style="color:gray;">No Record Yet</span>';
+                                    } else {
+                                        $status = $latest_time_in_without_out ? '<span style="color:green;">Timed-in</span>' : '<span style="color:red;">Timed-out</span>';
+                                    }
+
+                                    // Check for remarks and override status
+                                    $remark = isset($remarks[$student_id]) ? $remarks[$student_id] : null;
+                                    if ($remark) {
+                                        $remark_id = $remark['remark_id'];
+                                        $remark_type = $remark['remark_type'];
+                                        $remark_status = $remark['status'];
+
+                                        if ($remark_type === 'Absent') {
+                                            $status = '<span style="color:#8B0000;">Absent</span>';
+                                        }
+                                    }
                                     ?>
                                     <tr>
                                         <td class="image" style="position:relative;">
                                             <img style="border-radius: 50%;"
-                                                src="../uploads/student/<?php echo !empty($attendance['student_image']) ? $attendance['student_image'] : 'user.png'; ?>"
+                                                src="../uploads/student/<?php echo !empty($attendance['student_image']) ? htmlspecialchars($attendance['student_image'], ENT_QUOTES) : 'user.png'; ?>"
                                                 alt="Student Image">
-
-                                            <!-- Absent Icon -->
-                                            <?php if ($remark_type === 'Absent'): ?>
-                                                <span class="tooltip-icon absent" title="Absent"
-                                                    onclick="openRemarkModal(<?php echo $student_id; ?>, 'Absent')">X</span>
-                                            <?php elseif ($remark_type === 'Late'): ?>
-                                                <span class="tooltip-icon late" title="Late"
-                                                    onclick="openRemarkModal(<?php echo $student_id; ?>, 'Late')">?</span>
+                                            <?php if ($remark && $remark['status'] === 'Pending'): ?>
+                                                <?php if (in_array($remark_type, ['Absent', 'Forgot Time-out', 'Emergency'])): ?>
+                                                    <span class="tooltip-icon absent" title="<?php echo $remark_type; ?>"
+                                                        onclick="openRemarkModal(<?php echo $student_id; ?>, '<?php echo $remark_type; ?>', <?php echo $remark_id; ?>)">
+                                                        X
+                                                    </span>
+                                                <?php elseif ($remark_type === 'Late'): ?>
+                                                    <span class="tooltip-icon late" title="Late"
+                                                        onclick="openRemarkModal(<?php echo $student_id; ?>, 'Late', <?php echo $remark_id; ?>)">
+                                                        ?
+                                                    </span>
+                                                <?php endif; ?>
                                             <?php endif; ?>
-
-
                                         </td>
+
                                         <td class="name">
-                                            <?php echo $attendances[0]['student_firstname'] . ' ' . $attendances[0]['student_middle'] . '.' . ' ' . $attendances[0]['student_lastname']; ?>
+                                            <?php echo htmlspecialchars($attendances[0]['student_firstname'] . ' ' . $attendances[0]['student_middle'] . '.' . ' ' . $attendances[0]['student_lastname'], ENT_QUOTES); ?>
                                         </td>
                                         <td class="timein">
                                             <?php echo $first_time_in ? date('h:i A', strtotime($first_time_in)) : 'N/A'; ?>
@@ -420,8 +541,13 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
                                     </tr>
                                 <?php endforeach; ?>
 
+
+
+
+
+
                                 <!-- Handle Absent students who have no attendance records -->
-                                <?php foreach ($remarks as $student_id => $remark_type): ?>
+                                <!-- <?php foreach ($remarks as $student_id => $remark_type): ?>
                                     <?php if ($remark_type === 'Absent' && !isset($students[$student_id])): ?>
                                         <tr>
                                             <td class="image" style="position:relative;">
@@ -450,31 +576,49 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
                                             <td class="status"><span style="color:red;">Absent</span></td>
                                         </tr>
                                     <?php endif; ?>
-                                <?php endforeach; ?>
+                                <?php endforeach; ?> -->
                             <?php else: ?>
                                 <tr>
                                     <td colspan="6">No attendance for this day.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
-
                     </table>
+                    <!-- Display pagination links -->
+                    <?php if ($total_students > 5): ?>
+                        <div class="pagination">
+                            <?php
+                            if ($current_page > 1) {
+                                $prev_page = $current_page - 1;
+                                $prev_url = '?' . http_build_query(array_merge($_GET, ['page' => $prev_page]));
+                                echo '<a href="' . $prev_url . '" class="prev">Previous</a>';
+                            }
 
-                    <div class="paginationDay">
-                        <a href="?day=<?php echo $previous_day; ?>" class="prev">Previous Day</a>
-                        <a href="?day=<?php echo date('Y-m-d'); ?>"
-                            class="<?php echo ($selected_day == date('Y-m-d')) ? 'active' : ''; ?>">Today</a>
-                        <?php if ($selected_day != date('Y-m-d')): ?>
-                            <a href="?day=<?php echo $next_day; ?>" class="next">Next Day</a>
-                        <?php endif; ?>
-                    </div>
+                            renderPaginationLinks($total_pages, $current_page);
 
+                            if ($current_page < $total_pages) {
+                                $next_page = $current_page + 1;
+                                $next_url = '?' . http_build_query(array_merge($_GET, ['page' => $next_page]));
+                                echo '<a href="' . $next_url . '" class="next">Next</a>';
+                            }
+                            ?>
+                        </div>
+                    <?php endif; ?>
 
-                    </table>
                 </div>
             </div>
         </div>
     </section>
+    <style>
+        #remarkText {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 500;
+            color: #555;
+            margin-top: 10px;
+        }
+    </style>
+
 
     <!-- Remark Modal -->
     <div id="remarkModal" class="modal">
@@ -484,36 +628,292 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
                     style="width: 150px; height: 150px;" loop autoplay>
                 </lottie-player>
             </div>
+
             <h2 id="remarkTypeTitle" data-remark-type="">Remark</h2>
+
+            <p>Reason:</p>
             <p id="remarkText">Loading remark...</p>
-            <button class="proceed-btn" onclick="closeModal('remarkModal')">Close</button>
+
+            <button class="proof-btn" style="display: none;" onclick="handleProofClick()">
+                <i class="fa-solid fa-image"></i>
+            </button>
+            <button class="approve-btn" id="approveBtn" style="display: none;" onclick="openApprovalModal()">
+                <i class="fa-solid fa-check"></i>
+            </button>
+            <button class="closer-btn" onclick="closeModal('remarkModal')">Close</button>
         </div>
     </div>
 
+    <!-- Proof Modal -->
+    <div id="proofModal" class="modal" style="display: none;">
+        <div class="modal-content proof-modal-content">
+            <span class="close-btn" onclick="closeModal('proofModal')">&times;</span>
+            <img src="" alt="Proof Image" class="proof-image">
+            <button class="approve-btn" onclick="openApprovalModal()">Approve?</button>
+        </div>
+    </div>
+
+    <!-- Approval Confirmation Modal -->
+    <div id="approvalModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/notice-095d40.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2>Confirm Approval</h2>
+            <p>Are you sure you want to approve this?</p>
+            <button class="approve-btn" onclick="confirmApproval()">Confirm</button>
+            <button class="closer-btn" onclick="closeModal('approvalModal')">Cancel</button>
+        </div>
+    </div>
 
     <script>
-        function openRemarkModal(studentId, remarkType) {
+        function openRemarkModal(studentId, remarkType, remarkId) {
             const titleElement = document.getElementById('remarkTypeTitle');
-            titleElement.innerText = remarkType;
-            titleElement.setAttribute('data-remark-type', remarkType); // Set data attribute for CSS styling
+            const remarkTextElement = document.getElementById('remarkText');
+            const proofButton = document.querySelector('.proof-btn');
+            const approveButton = document.getElementById('approveBtn');
 
-            document.getElementById('remarkText').innerText = 'Loading remark...';
+            titleElement.innerText = `${remarkType}`;
+            titleElement.setAttribute('data-remark-type', remarkType);
+            titleElement.setAttribute('data-remark-id', remarkId);
 
-            // AJAX to fetch remark from the server
-            fetch(`fetch_remark.php?student_id=${studentId}&remark_type=${remarkType}`)
+            remarkTextElement.innerText = 'Loading remark...';
+
+            if (['Absent', 'Forgot Time-out', 'Emergency'].includes(remarkType)) {
+                proofButton.style.display = 'inline-block';
+                approveButton.style.display = 'none';
+            } else if (remarkType === 'Late') {
+                proofButton.style.display = 'none';
+                approveButton.style.display = 'inline-block';
+            } else {
+                proofButton.style.display = 'none';
+                approveButton.style.display = 'none';
+            }
+
+            fetch(`fetch_remark.php?student_id=${studentId}&remark_type=${remarkType}&remark_id=${remarkId}`)
                 .then(response => response.text())
                 .then(remark => {
-                    document.getElementById('remarkText').innerText = remark || 'No remark available';
+                    remarkTextElement.innerText = remark || 'No remark available.';
                 })
                 .catch(() => {
-                    document.getElementById('remarkText').innerText = 'Error loading remark';
+                    remarkTextElement.innerText = 'Error loading remark.';
                 });
 
-            // Display the modal
             document.getElementById('remarkModal').style.display = 'block';
         }
 
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function handleProofClick() {
+            const remarkId = document.getElementById('remarkTypeTitle').getAttribute('data-remark-id');
+            const proofModal = document.getElementById('proofModal');
+            const proofImageElement = proofModal.querySelector('.proof-image');
+
+            if (remarkId) {
+                fetch(`fetch_proofimg.php?remark_id=${remarkId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.proof_image) {
+                            proofImageElement.src = `${data.proof_image}`;
+                            proofModal.style.display = 'block';
+                        } else {
+                            alert('No proof image available.');
+                            openApprovalModal();
+                        }
+                    })
+                    .catch(() => {
+                        alert('Error loading proof image.');
+                    });
+            } else {
+                alert('Remark ID not found.');
+            }
+        }
+
+        function showApproveButton() {
+            closeModal('proofModal');
+            document.getElementById('approveBtn').style.display = 'inline-block';
+        }
+
+        function openApprovalModal() {
+            document.getElementById('approvalModal').style.display = 'block';
+        }
+
+        function confirmApproval() {
+            const remarkId = document.getElementById('remarkTypeTitle').getAttribute('data-remark-id');
+
+            if (!remarkId) {
+                alert("Invalid remark ID.");
+                return;
+            }
+
+            fetch('approve_remark.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `remark_id=${encodeURIComponent(remarkId)}`
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('remarkApprovalSuccessModal').style.display = 'block';
+                    } else {
+                        alert(`Error: ${data.message}`);
+                    }
+                    closeModal('approvalModal');
+                    closeModal('remarkModal');
+                })
+                .catch(() => {
+                    alert('Error while approving remark.');
+                });
+        }
     </script>
+    <script>
+        // function openRemarkModal(studentId, remarkType, remarkId) {
+        //     const titleElement = document.getElementById('remarkTypeTitle');
+        //     const remarkTextElement = document.getElementById('remarkText');
+        //     const proofButton = document.querySelector('.proof-btn');
+        //     const approveButton = document.getElementById('approveBtn');
+
+        //     // Set the modal title and data attributes
+        //     titleElement.innerText = `${remarkType}`;
+        //     titleElement.setAttribute('data-remark-type', remarkType);
+        //     titleElement.setAttribute('data-remark-id', remarkId); // Save remark ID for later use
+
+        //     // Reset the remark text
+        //     remarkTextElement.innerText = 'Loading remark...';
+
+        //     // Adjust button visibility based on the remark type
+        //     if (remarkType === 'Absent') {
+        //         proofButton.style.display = 'inline-block'; // Show proof button
+        //         approveButton.style.display = 'none'; // Hide approve button initially
+        //     } else if (remarkType === 'Late') {
+        //         proofButton.style.display = 'none'; // Hide proof button for "Late"
+        //         approveButton.style.display = 'inline-block'; // Show approve button immediately
+        //     } else {
+        //         proofButton.style.display = 'none';
+        //         approveButton.style.display = 'none';
+        //     }
+
+        //     // Fetch the remark text dynamically from the server
+        //     fetch(`fetch_remark.php?student_id=${studentId}&remark_type=${remarkType}&remark_id=${remarkId}`)
+        //         .then(response => response.text())
+        //         .then(remark => {
+        //             remarkTextElement.innerText = remark || 'No remark available.';
+        //         })
+        //         .catch(() => {
+        //             remarkTextElement.innerText = 'Error loading remark.';
+        //         });
+
+        //     // Display the remark modal
+        //     document.getElementById('remarkModal').style.display = 'block';
+        // }
+
+
+
+        // function closeModal(modalId) {
+        //     document.getElementById(modalId).style.display = 'none';
+        // }
+
+        // function handleProofClick() {
+        //     const proofButton = document.querySelector('.proof-btn');
+        //     const remarkId = document.getElementById('remarkTypeTitle').getAttribute('data-remark-id');
+        //     const proofModal = document.getElementById('proofModal');
+        //     const proofImageElement = proofModal.querySelector('.proof-image');
+
+        //     if (remarkId) {
+        //         // Fetch proof image dynamically
+        //         fetch(`fetch_proofimg.php?remark_id=${remarkId}`)
+        //             .then(response => response.json())
+        //             .then(data => {
+        //                 if (data.proof_image) {
+        //                     proofImageElement.src = `${data.proof_image}`;
+        //                     proofModal.style.display = 'block';
+        //                 } else {
+        //                     alert('No proof image available.');
+        //                 }
+        //             })
+        //             .catch(() => {
+        //                 alert('Error loading proof image.');
+        //             });
+        //     } else {
+        //         alert('Remark ID not found.');
+        //     }
+        // }
+
+
+        // function showApproveButton() {
+        //     closeModal('proofModal');
+        //     const approveButton = document.getElementById('approveBtn');
+        //     approveButton.style.display = 'inline-block'; // Show approve button after proof is confirmed.
+        // }
+
+        // function openApprovalModal() {
+        //     document.getElementById('approvalModal').style.display = 'block';
+        // }
+
+        // function confirmApproval() {
+        //     const remarkId = document.getElementById('remarkTypeTitle').getAttribute('data-remark-id');
+
+        //     if (!remarkId) {
+        //         alert("Invalid remark ID.");
+        //         return;
+        //     }
+
+        //     // Send the request to approve the remark
+        //     fetch('approve_remark.php', {
+        //         method: 'POST',
+        //         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        //         body: `remark_id=${encodeURIComponent(remarkId)}`
+        //     })
+        //         .then(response => response.json())
+        //         .then(data => {
+        //             console.log('Server Response:', data); // Log the server response
+        //             if (data.success) {
+        //                 // Show the success modal
+        //                 document.getElementById('remarkApprovalSuccessModal').style.display = 'block';
+        //             } else {
+        //                 alert(`Error: ${data.message}`);
+        //             }
+        //             closeModal('approvalModal');
+        //             closeModal('remarkModal');
+        //         })
+        //         .catch(error => {
+        //             console.error('Fetch Error:', error);
+        //             alert('Error while approving remark.');
+        //         });
+        // }
+
+    </script>
+
+    <!-- Remark Approval Success Modal -->
+    <div id="remarkApprovalSuccessModal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+                    style="width: 150px; height: 150px;" loop autoplay>
+                </lottie-player>
+            </div>
+            <h2>Remark Approved!</h2>
+            <p>The remark has been successfully approved.</p>
+            <button class="proceed-btn" onclick="closeModalAndReload('remarkApprovalSuccessModal')">Proceed</button>
+        </div>
+    </div>
+
+    <script>
+        // Function to close the modal and reload the page
+        function closeModalAndReload(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none'; // Close the modal
+            }
+            location.reload(); // Reload the page
+        }
+    </script>
+
+
     <!-- Logout Confirmation Modal -->
     <div id="logoutModal" class="modal">
         <div class="modal-content">
@@ -531,6 +931,7 @@ $next_day = date('Y-m-d', strtotime($selected_day . ' +1 day'));
         </div>
     </div>
     <script src="./js/script.js"></script>
+    <script src="../js/sy.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

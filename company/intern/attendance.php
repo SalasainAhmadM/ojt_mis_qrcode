@@ -35,7 +35,7 @@ $search = isset($_GET['search']) ? '%' . $_GET['search'] . '%' : null;
 
 $attendance_query = "
     SELECT s.student_id, s.student_firstname, s.student_middle, s.student_lastname, s.student_image,
-           a.time_in, a.time_out, a.ojt_hours, a.time_out_reason
+           a.time_in, a.time_out, a.ojt_hours, a.time_out_reason, a.reason
     FROM attendance a
     JOIN student s ON a.student_id = s.student_id
     WHERE DATE(a.time_in) = ? AND s.company = ?
@@ -77,6 +77,15 @@ function formatDuration($hours)
     }
 
     return trim($formatted) ?: '0 mins';
+}
+
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $currentSemester = $row['type'];
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -142,8 +151,10 @@ function formatDuration($hours)
 <body>
     <div class="header">
         <i class="fas fa-school"></i>
-        <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                style="color: #095d40;">|</span>
+        <div class="school-name">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+            <span id="sy-text"></span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
             <img src="../../img/ccs.png">
         </div>
@@ -322,6 +333,7 @@ function formatDuration($hours)
                                 <th class="timeout">Time-out</th>
                                 <th class="duration">Duration</th>
                                 <th class="duration">Action</th>
+                                <th class="duration">Reason</th>
                             </tr>
                         </thead>
                         <tbody style="max-height: 400px; overflow-y: auto;">
@@ -347,6 +359,9 @@ function formatDuration($hours)
                                         </td>
                                         <td class="duration">
                                             <?php echo $attendance['time_out_reason'] ?: 'N/A'; ?>
+                                        </td>
+                                        <td class="duration">
+                                            <?php echo $attendance['reason'] ?: 'N/A'; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -576,18 +591,19 @@ function formatDuration($hours)
         <div class="modal-content">
             <!-- Lottie Animation -->
             <div style="display: flex; justify-content: center; align-items: center;">
-                <lottie-player src="../animation/logout-095d40.json" background="transparent" speed="1"
+                <lottie-player src="../../animation/logout-095d40.json" background="transparent" speed="1"
                     style="width: 150px; height: 150px;" loop autoplay>
                 </lottie-player>
             </div>
             <h2 style="color: #000">Are you sure you want to logout?</h2>
             <div style="display: flex; justify-content: space-around; margin-top: 20px;">
-                <button class="confirm-btn" onclick="logout()">Confirm</button>
+                <button class="confirm-btn" onclick="logout_intern()">Confirm</button>
                 <button class="cancel-btn" onclick="closeModal('logoutModal')">Cancel</button>
             </div>
         </div>
     </div>
-    <script src="./js/script.js"></script>
+    <script src="../js/script.js"></script>
+    <script src="../../js/sy.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

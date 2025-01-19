@@ -106,6 +106,15 @@ if ($course_sections_result->num_rows > 0) {
     }
 }
 $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.php" : "qr-code.php";
+
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $currentSemester = $row['type'];
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -212,8 +221,10 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
 <body>
     <div class="header">
         <i class=""></i>
-        <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                style="color: #095d40;">|</span>
+        <div class="school-name">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+            <span id="sy-text"></span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
             <img src="../img/ccs.png">
         </div>
@@ -369,9 +380,10 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
 
             </div>
 
+
             <div class="form-section">
                 <div class="form-group">
-                    <label for="batch-year">Batch Year</label>
+                    <label for="batch-year">School Year</label>
                     <select id="batch-year" name="batch_year" required>
                         <option disabled>Select Batch Year</option>
                         <?php
@@ -451,7 +463,7 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
             <!-- Right Side Form -->
             <div class="form-section">
                 <div class="image-preview" id="image-preview">
-                    <img id="preview-image"
+                    <img style="" id="preview-image"
                         src="../uploads/student/<?php echo !empty($student['student_image']) ? $student['student_image'] : 'user.png'; ?>"
                         alt="Preview Image">
                 </div>
@@ -563,6 +575,7 @@ $qr_url = ($student['ojt_type'] === 'Project-Based') ? "qr-code_project_based.ph
     </script>
 
     <script src="./js/script.js"></script>
+    <script src="../js/sy.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

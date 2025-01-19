@@ -220,6 +220,15 @@ if ($result->num_rows > 0) {
 } else {
     die("No questions found in the database.");
 }
+
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $currentSemester = $row['type'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -242,8 +251,10 @@ if ($result->num_rows > 0) {
 <body>
     <div class="header">
         <i class="fas fa-school"></i>
-        <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                style="color: #095d40;">|</span>
+        <div class="school-name">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+            <span id="sy-text"></span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
             <img src="../../img/ccs.png">
         </div>
@@ -311,6 +322,8 @@ if ($result->num_rows > 0) {
                     <li><a class="link_name" href="../attendance.php">Attendance</a></li>
                     <li><a href="../intern/attendance-intern.php">Intern Attendance</a></li>
                     <li><a href="../intern/attendance-monitor.php">Monitoring</a></li>
+                    <li><a href="../intern/intern_hours.php">Intern Total Hours</a></li>
+
                 </ul>
             </li>
             <li>
@@ -524,104 +537,27 @@ if ($result->num_rows > 0) {
                 <input type="hidden" id="edit_student_id" name="student_id">
 
                 <div class="evaluation-questions">
-                    <p><strong><span id="edit_student_name"></span></strong>performance feedback:</p>
+                    <p>View<strong><span id="edit_student_name"></span></strong>'s performance feedback:</p>
 
-                    <!-- Question 1 -->
-                    <label>1. <?php echo $question['question1']; ?></label>
-                    <div class="checkbox-group">
-                        <input type="radio" id="q1-strongly-agree" name="question_1" value="100" disabled>
-                        <label for="q1-strongly-agree">Strongly Agree</label>
-
-                        <input type="radio" id="q1-agree" name="question_1" value="80" disabled>
-                        <label for="q1-agree">Agree</label>
-
-                        <input type="radio" id="q1-neutral" name="question_1" value="60" disabled>
-                        <label for="q1-neutral">Neutral</label>
-
-                        <input type="radio" id="q1-disagree" name="question_1" value="40" disabled>
-                        <label for="q1-disagree">Disagree</label>
-
-                        <input type="radio" id="q1-strongly-disagree" name="question_1" value="20" disabled>
-                        <label for="q1-strongly-disagree">Strongly Disagree</label>
-                    </div>
-
-                    <!-- Question 2 -->
-                    <label>2. <?php echo $question['question2']; ?></label>
-                    <div class="checkbox-group">
-                        <input type="radio" id="q2-strongly-agree" name="question_2" value="100" disabled>
-                        <label for="q2-strongly-agree">Strongly Agree</label>
-
-                        <input type="radio" id="q2-agree" name="question_2" value="80" disabled>
-                        <label for="q2-agree">Agree</label>
-
-                        <input type="radio" id="q2-neutral" name="question_2" value="60" disabled>
-                        <label for="q2-neutral">Neutral</label>
-
-                        <input type="radio" id="q2-disagree" name="question_2" value="40" disabled>
-                        <label for="q2-disagree">Disagree</label>
-
-                        <input type="radio" id="q2-strongly-disagree" name="question_2" value="20" disabled>
-                        <label for="q2-strongly-disagree">Strongly Disagree</label>
-                    </div>
-
-                    <!-- Question 3 -->
-                    <label>3. <?php echo $question['question3']; ?></label>
-                    <div class="checkbox-group">
-                        <input type="radio" id="q3-strongly-agree" name="question_3" value="100" disabled>
-                        <label for="q3-strongly-agree">Strongly Agree</label>
-
-                        <input type="radio" id="q3-agree" name="question_3" value="80" disabled>
-                        <label for="q3-agree">Agree</label>
-
-                        <input type="radio" id="q3-neutral" name="question_3" value="60" disabled>
-                        <label for="q3-neutral">Neutral</label>
-
-                        <input type="radio" id="q3-disagree" name="question_3" value="40" disabled>
-                        <label for="q3-disagree">Disagree</label>
-
-                        <input type="radio" id="q3-strongly-disagree" name="question_3" value="20" disabled>
-                        <label for="q3-strongly-disagree">Strongly Disagree</label>
-                    </div>
-
-                    <!-- Question 4 -->
-                    <label>4. <?php echo $question['question4']; ?></label>
-                    <div class="checkbox-group">
-                        <input type="radio" id="q4-strongly-agree" name="question_4" value="100" disabled>
-                        <label for="q4-strongly-agree">Strongly Agree</label>
-
-                        <input type="radio" id="q4-agree" name="question_4" value="80" disabled>
-                        <label for="q4-agree">Agree</label>
-
-                        <input type="radio" id="q4-neutral" name="question_4" value="60" disabled>
-                        <label for="q4-neutral">Neutral</label>
-
-                        <input type="radio" id="q4-disagree" name="question_4" value="40" disabled>
-                        <label for="q4-disagree">Disagree</label>
-
-                        <input type="radio" id="q4-strongly-disagree" name="question_4" value="20" disabled>
-                        <label for="q4-strongly-disagree">Strongly Disagree</label>
-                    </div>
-
-                    <!-- Question 5 -->
-                    <label>5. <?php echo $question['question5']; ?></label>
-                    <div class="checkbox-group">
-                        <input type="radio" id="q5-strongly-agree" name="question_5" value="100" disabled>
-                        <label for="q5-strongly-agree">Strongly Agree</label>
-
-                        <input type="radio" id="q5-agree" name="question_5" value="80" disabled>
-                        <label for="q5-agree">Agree</label>
-
-                        <input type="radio" id="q5-neutral" name="question_5" value="60" disabled>
-                        <label for="q5-neutral">Neutral</label>
-
-                        <input type="radio" id="q5-disagree" name="question_5" value="40" disabled>
-                        <label for="q5-disagree">Disagree</label>
-
-                        <input type="radio" id="q5-strongly-disagree" name="question_5" value="20" disabled>
-                        <label for="q5-strongly-disagree">Strongly Disagree</label>
-                    </div>
+                    <?php for ($i = 1; $i <= 10; $i++): ?>
+                        <?php if (!empty($question["question$i"])): ?>
+                            <label><?php echo $i . ". " . $question["question$i"]; ?></label>
+                            <div class="checkbox-group">
+                                <label><input type="radio" name="question_<?php echo $i; ?>" value="100"> Strongly Agree</label>
+                                <label><input type="radio" name="question_<?php echo $i; ?>" value="80"> Agree</label>
+                                <label><input type="radio" name="question_<?php echo $i; ?>" value="60"> Neutral</label>
+                                <label><input type="radio" name="question_<?php echo $i; ?>" value="40"> Disagree</label>
+                                <label><input type="radio" name="question_<?php echo $i; ?>" value="20"> Strongly
+                                    Disagree</label>
+                            </div>
+                        <?php endif; ?>
+                    <?php endfor; ?>
                 </div>
-
+                <!-- Additional Comments -->
+                <div class="additional-comments">
+                    <label for="additional_comments">Additional Comments (Optional):</label>
+                    <textarea id="edit_comments" name="feedback_comment" rows="4" style="width: 100%;"></textarea>
+                </div>
                 <div style="display: flex; justify-content: space-around; margin-top: 20px;">
                     <!-- <button type="submit" class="confirm-btn">Update Feedback</button> -->
                     <button type="button" class="confirm-btn" onclick="closeModal('editFeedbackModal')">Close</button>
@@ -635,7 +571,6 @@ if ($result->num_rows > 0) {
             document.getElementById('edit_student_name').textContent = studentName;
             document.getElementById('edit_student_id').value = studentId;
 
-            // Fetch feedback data from the server
             fetch(`fetch_feedback.php?student_id=${studentId}`)
                 .then(response => {
                     if (!response.ok) {
@@ -644,17 +579,17 @@ if ($result->num_rows > 0) {
                     return response.json();
                 })
                 .then(data => {
-                    if (Object.keys(data).length) {
-                        // Set radio buttons based on feedback values
-                        setRadioButton('question_1', data.question_1);
-                        setRadioButton('question_2', data.question_2);
-                        setRadioButton('question_3', data.question_3);
-                        setRadioButton('question_4', data.question_4);
-                        setRadioButton('question_5', data.question_5);
-                        openModal('editFeedbackModal'); // Open modal only after setting data
-                    } else {
-                        openModal('noFeedbackModal'); // Open error modal if no feedback found
+                    for (let i = 1; i <= 10; i++) {
+                        if (data[`question_${i}`] !== undefined) {
+                            setRadioButton(`question_${i}`, data[`question_${i}`]);
+                        }
                     }
+                    if (data.feedback_comment !== undefined) {
+                        document.getElementById('edit_comments').value = data.feedback_comment;
+                    } else {
+                        document.getElementById('edit_comments').value = ''; // Clear if no comment
+                    }
+                    openModal('editFeedbackModal');
                 })
                 .catch(error => console.error('Error fetching feedback:', error));
         }
@@ -662,11 +597,30 @@ if ($result->num_rows > 0) {
 
         // Helper function to set radio buttons based on the value
         function setRadioButton(question, value) {
-            const radios = document.querySelectorAll(`input[name=${question}]`);
+            const radios = document.querySelectorAll(`input[name="${question}"]`);
+            let valueFound = false;
+
             radios.forEach(radio => {
-                radio.checked = parseInt(radio.value) === value;
+                if (parseInt(radio.value) === value) {
+                    radio.checked = true;
+                    valueFound = true;
+                } else {
+                    radio.checked = false; // Ensure other radios are unchecked
+                }
             });
+
+            if (!valueFound) {
+                console.warn(`No matching radio button found for question: ${question} with value: ${value}`);
+            }
         }
+
+        // Helper function for optional radio buttons
+        function setOptionalRadioButton(question, value) {
+            if (value !== null) {
+                setRadioButton(question, value);
+            }
+        }
+
 
         // Function to open the modal
         function openModal(modalId) {
@@ -711,6 +665,7 @@ if ($result->num_rows > 0) {
         </div>
     </div>
     <script src="../js/scripts.js"></script>
+    <script src="../../js/sy.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

@@ -39,6 +39,14 @@ $advisers = $pagination_data['advisers'];
 $total_pages = $pagination_data['total_pages'];
 $current_page = $pagination_data['current_page'];
 
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $currentSemester = $row['type'];
+    }
+}
 ?>
 
 
@@ -64,8 +72,10 @@ $current_page = $pagination_data['current_page'];
 <body>
     <div class="header">
         <i class="fas fa-school"></i>
-        <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                style="color: #095d40;">|</span>
+        <div class="school-name">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+            <span id="sy-text"></span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
             <img src="../../img/ccs.png">
         </div>
@@ -368,35 +378,37 @@ $current_page = $pagination_data['current_page'];
                         </select>
                     </div>
                 </div>
-                <!-- Password Input -->
-                <div class="input-group-row">
-                    <div style="position: relative;" class="input-group">
-                        <label for="adviserPassword">Password</label>
-                        <div class="password-wrapper">
-                            <input style="padding-right: 40px; " type="password" id="adviserPassword"
-                                name="adviser_password" placeholder="Password" required>
-                            <span class="toggle-password">
-                                <i class="fas fa-eye"></i>
-                            </span>
-                        </div>
-                    </div>
-                    <div style="position: relative;" class="input-group">
-                        <label for="adviserConfirmPassword">Confirm Password</label>
-                        <div class="password-wrapper">
-                            <input type="password" id="adviserConfirmPassword" name="confirm_password"
-                                placeholder="Confirm Password" required>
-                            <span class="toggle-password">
-                                <i class="fas fa-eye"></i>
-                            </span>
-                        </div>
-                    </div>
-                </div>
+
 
                 <button type="submit" class="modal-btn">Add Adviser</button>
             </form>
         </div>
     </div>
 
+
+    <!-- Password Input -->
+    <!-- <div class="input-group-row">
+        <div style="position: relative;" class="input-group">
+            <label for="adviserPassword">Password</label>
+            <div class="password-wrapper">
+                <input style="padding-right: 40px; " type="password" id="adviserPassword" name="adviser_password"
+                    placeholder="Password" required>
+                <span class="toggle-password">
+                    <i class="fas fa-eye"></i>
+                </span>
+            </div>
+        </div>
+        <div style="position: relative;" class="input-group">
+            <label for="adviserConfirmPassword">Confirm Password</label>
+            <div class="password-wrapper">
+                <input type="password" id="adviserConfirmPassword" name="confirm_password"
+                    placeholder="Confirm Password" required>
+                <span class="toggle-password">
+                    <i class="fas fa-eye"></i>
+                </span>
+            </div>
+        </div>
+    </div> -->
     <!-- Edit Adviser Modal -->
     <div id="editAdviserModal" class="modal">
         <div class="modal-content-bigger">
@@ -497,7 +509,7 @@ $current_page = $pagination_data['current_page'];
                 </lottie-player>
             </div>
             <h2>Adviser Added Successfully!</h2>
-            <p>The adviser has been added successfully!</p>
+            <p>The adviser password has been sent via email successfully!</p>
             <button class="proceed-btn" onclick="closeModal('addAdviserSuccessModal')">Close</button>
         </div>
     </div>
@@ -772,6 +784,8 @@ $current_page = $pagination_data['current_page'];
             <button class="proceed-btn" onclick="closeDeleteSuccessModal('deleteSuccessModal')">Close</button>
         </div>
     </div>
+
+    <script src="../../js/sy.js"></script>
     <script src="../js/script.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>

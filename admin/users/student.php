@@ -204,6 +204,14 @@ $students = $pagination_data['students'];
 $total_pages = $pagination_data['total_pages'];
 $current_page = $pagination_data['current_page'];
 
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $currentSemester = $row['type'];
+    }
+}
 ?>
 
 
@@ -229,15 +237,18 @@ $current_page = $pagination_data['current_page'];
 <body>
     <div class="header">
         <i class="fas fa-school"></i>
-        <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                style="color: #095d40;">|</span>
+        <div class="school-name">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+            <span id="sy-text"></span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
             <img src="../../img/ccs.png">
         </div>
     </div>
     <div class="sidebar close">
         <div class="profile-details">
-            <img src="../../uploads/admin/<?php echo !empty($admin['admin_image']) ? $admin['admin_image'] : 'user.png'; ?>"
+            <img style=""
+                src="../../uploads/admin/<?php echo !empty($admin['admin_image']) ? $admin['admin_image'] : 'user.png'; ?>"
                 alt="logout Image" class="logout-img">
             <div style="margin-top: 10px;" class="profile-info">
                 <span
@@ -395,7 +406,7 @@ $current_page = $pagination_data['current_page'];
                                 <th>Company</th>
                                 <th>Section</th>
                                 <th>Department</th>
-                                <th>Batch Year</th>
+                                <th>School Year</th>
                                 <th>Address</th>
                                 <th class="action">Action</th>
                             </tr>
@@ -620,9 +631,9 @@ $current_page = $pagination_data['current_page'];
                     </div>
 
                     <div class="input-group" style="width: 50%;">
-                        <label for="editStudentBatchYear">Batch Year</label>
+                        <label for="editStudentBatchYear">School Year</label>
                         <select type="text" id="editStudentBatchYear" name="batch_year">
-                            <option disabled>Select Batch Year</option>
+                            <option disabled>Select School Year</option>
                             <option value="2020-2021" <?php if ($student['batch_year'] == '2020-2021')
                                 echo 'selected'; ?>>
                                 2020-2021
@@ -944,6 +955,7 @@ $current_page = $pagination_data['current_page'];
         </div>
     </div>
     <script src="../js/script.js"></script>
+    <script src="../../js/sy.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

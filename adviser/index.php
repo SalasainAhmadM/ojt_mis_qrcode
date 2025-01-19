@@ -239,6 +239,14 @@ $students = $pagination_data['students'];
 $total_pages = $pagination_data['total_pages'];
 $current_page = $pagination_data['current_page'];
 
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+  if ($result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+    $currentSemester = $row['type'];
+  }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -261,7 +269,10 @@ $current_page = $pagination_data['current_page'];
 <body>
   <div class="header">
     <i class="fas fa-school"></i>
-    <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
+    <div class="school-name">
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+      <span id="sy-text"></span>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
       <img src="../img/ccs.png">
     </div>
@@ -330,6 +341,7 @@ $current_page = $pagination_data['current_page'];
           <li><a class="link_name" href="attendance.php">Attendance</a></li>
           <li><a href="./intern/attendance-intern.php">Intern Attendance</a></li>
           <li><a href="./intern/attendance-monitor.php">Monitoring</a></li>
+          <li><a href="./intern/intern_hours.php">Intern Total Hours</a></li>
         </ul>
       </li>
       <li>
@@ -689,6 +701,7 @@ $current_page = $pagination_data['current_page'];
     };
   </script>
   <script src="./js/scripts.js"></script>
+  <script src="../js/sy.js"></script>
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

@@ -693,7 +693,7 @@ if (isset($schedule_id)) { // Ensure there's a valid schedule ID
             <h2>Time-in Successful!</h2>
             <p>Name: <span id="timein-name" style="color: #095d40; font-size: 20px"></span></p>
             <p>Time-in</p>
-            <h3 id="timein-time"></h3>
+            <h3 style="font-size: 20px" id="timein-time"></h3>
             <button class="proceed-btn" onclick="closeModal('qrsuccessTimeinModal')">Close</button>
         </div>
     </div>
@@ -708,7 +708,7 @@ if (isset($schedule_id)) { // Ensure there's a valid schedule ID
             <h2>Time-out Successful!</h2>
             <p>Name: <span id="timeout-name" style="color: #095d40; font-size: 20px"></span></p>
             <p>Time-out</p>
-            <h3 id="timeout-time"></h3>
+            <h3 style="font-size: 20px" id="timeout-time"></h3>
             <p>OJT Hours: <strong id="ojt-hours"></strong></p>
             <button class="proceed-btn" onclick="closeModal('qrsuccessTimeoutModal')">Close</button>
         </div>

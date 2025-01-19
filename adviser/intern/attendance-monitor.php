@@ -51,7 +51,8 @@ $query = "
         attendance.time_in,
         attendance.time_out,
         attendance.ojt_hours,
-        attendance.time_out_reason
+        attendance.time_out_reason,
+        attendance.reason
     FROM attendance
     JOIN student ON attendance.student_id = student.student_id
     JOIN course_sections ON student.course_section = course_sections.id
@@ -92,6 +93,15 @@ while ($row = $result->fetch_assoc()) {
     $attendance_records[] = $row;
 }
 $stmt->close();
+
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $currentSemester = $row['type'];
+    }
+}
 ?>
 
 
@@ -133,8 +143,10 @@ $stmt->close();
 <body>
     <div class="header">
         <i class="fas fa-school"></i>
-        <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                style="color: #095d40;">|</span>
+        <div class="school-name">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+            <span id="sy-text"></span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
             <img src="../../img/ccs.png">
         </div>
@@ -203,6 +215,7 @@ $stmt->close();
                     <li><a class="link_name" href="../attendance.php">Attendance</a></li>
                     <li><a href="attendance-intern.php">Intern Attendance</a></li>
                     <li><a href="attendance-monitor.php">Monitoring</a></li>
+                    <li><a href="intern_hours.php">Intern Total Hours</a></li>
                 </ul>
             </li>
 
@@ -307,6 +320,7 @@ $stmt->close();
                                 <th class="timeout">Time-out</th>
                                 <th class="duration">Duration</th>
                                 <th class="duration">Action</th>
+                                <th class="duration">Reason</th>
                             </tr>
                         </thead>
                         <tbody style="max-height: 400px; overflow-y: auto;">
@@ -325,6 +339,9 @@ $stmt->close();
                                         <td class="duration"><?php echo htmlspecialchars($record['ojt_hours']); ?></td>
                                         <td class="duration">
                                             <?php echo htmlspecialchars($record['time_out_reason'] ?? 'N/A'); ?>
+                                        </td>
+                                        <td class="duration">
+                                            <?php echo htmlspecialchars($record['reason'] ?? 'N/A'); ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -433,6 +450,7 @@ $stmt->close();
         </div>
     </div>
     <script src="../js/scripts.js"></script>
+    <script src="../../js/sy.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

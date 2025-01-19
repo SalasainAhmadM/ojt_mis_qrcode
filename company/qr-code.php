@@ -67,6 +67,14 @@ if (!$holiday) {
 }
 $isSuspended = isset($schedule['day_type']) && $schedule['day_type'] === 'Suspended';
 
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $currentSemester = $row['type'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -89,8 +97,10 @@ $isSuspended = isset($schedule['day_type']) && $schedule['day_type'] === 'Suspen
 <body>
     <div class="header">
         <i class=""></i>
-        <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                style="color: #095d40;">|</span>
+        <div class="school-name">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+            <span id="sy-text"></span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
             <img src="../img/ccs.png">
         </div>
@@ -217,9 +227,24 @@ $isSuspended = isset($schedule['day_type']) && $schedule['day_type'] === 'Suspen
     </div>
     <style>
         #qr-code-img {
-            width: 400px;
-            height: 400px;
+            width: 360px;
+            height: 360px;
             margin-bottom: 0px;
+        }
+
+        .qr-time {
+            color: #095d40;
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 0;
+        }
+
+        .time-in-label,
+        .time-out-label {
+            font-size: 20px;
+            color: #333;
+            font-weight: bold;
         }
     </style>
     <section class="home-section">
@@ -261,10 +286,34 @@ $isSuspended = isset($schedule['day_type']) && $schedule['day_type'] === 'Suspen
                     <!-- </div> -->
                     <!-- Right Box for Scanning QR Code -->
                     <!-- <div class="right-box-qr"> -->
-                    <h2 style="text-align: center; margin-bottom: 0">Today's QR Code</h2>
+                    <h2 style="text-align: center; margin-bottom: 0; color: #095d40">Good Day Interns!</h2>
+                    <h3 style="text-align: center; margin-bottom: 0">Today's QR Code</h3>
                     <div class="qr-container">
                         <img src="<?php echo !empty($schedule['generated_qr_code']) ? $schedule['generated_qr_code'] : '../img/qr-code-error.png'; ?>"
                             alt="QR Code" id="qr-code-img" style="">
+                        <p class="qr-time"></p>
+
+                        <script>
+                            function updateTime() {
+                                const options = {
+                                    timeZone: 'Asia/Manila',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit',
+                                    hour12: true
+                                };
+
+                                const now = new Date();
+                                const formattedTime = now.toLocaleTimeString('en-US', options);
+
+                                document.querySelector('.qr-time').textContent = formattedTime;
+                            }
+
+                            setInterval(updateTime, 1000);
+
+                            updateTime();
+                        </script>
+
                         <p class="qr-date"><?php echo date('F j, Y'); ?></p>
 
                         <div style="flex-direction: column; align-items: center;" class="time-container">
@@ -553,6 +602,7 @@ $isSuspended = isset($schedule['day_type']) && $schedule['day_type'] === 'Suspen
     </div>
 
     <script src="./js/script.js"></script>
+    <script src="../js/sy.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>

@@ -135,7 +135,7 @@ CREATE TABLE `attendance` (
 --
 
 INSERT INTO `attendance` (`attendance_id`, `student_id`, `schedule_id`, `time_in`, `time_out`, `time_out_reason`) VALUES
-(1, 2, 2, '2024-12-06 00:17:00', '2024-12-06 01:48:15', 'Lunch Break'),
+(1, 2, 2, '2024-12-06 00:17:00', NULL, NULL),
 (3, 2, 7, '2024-12-03 00:05:00', '2024-12-03 11:40:15', 'Lunch Break'),
 (4, 2, 8, '2024-12-02 00:05:00', '2024-12-02 04:08:15', 'Time-Out'),
 (7, 1, 1, '2024-12-05 23:55:43', '2024-12-06 02:15:48', 'Lunch Break'),

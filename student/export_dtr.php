@@ -41,15 +41,15 @@ $sqlDTR = "
         s.date AS schedule_date, 
         MIN(a.time_in) AS first_time_in, 
         MAX(a.time_out) AS last_time_out,
-        ar.remark_type, 
-        ar.remark, 
-        ar.status,
+        COALESCE(ar.remark_type, 'Regular') AS remark_type, 
+        COALESCE(ar.remark, '') AS remark, 
+        COALESCE(ar.status, 'Present') AS status,
         SUM(a.ojt_hours) AS total_hours
-    FROM attendance_remarks ar
-    LEFT JOIN schedule s ON ar.schedule_id = s.schedule_id
-    LEFT JOIN attendance a ON ar.schedule_id = a.schedule_id AND ar.student_id = a.student_id
-    WHERE ar.student_id = ?
-    GROUP BY s.date, ar.schedule_id, ar.remark_type, ar.remark, ar.status
+    FROM schedule s
+    LEFT JOIN attendance a ON s.schedule_id = a.schedule_id
+    LEFT JOIN attendance_remarks ar ON a.schedule_id = ar.schedule_id AND a.student_id = ar.student_id
+    WHERE a.student_id = ?
+    GROUP BY s.date, a.schedule_id, ar.remark_type, ar.remark, ar.status
     ORDER BY s.date ASC
 ";
 

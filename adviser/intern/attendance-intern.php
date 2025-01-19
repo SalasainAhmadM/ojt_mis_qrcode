@@ -122,6 +122,15 @@ if ($stmt = $database->prepare($query)) {
     }
     $stmt->close();
 }
+
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $currentSemester = $row['type'];
+    }
+}
 ?>
 
 
@@ -162,8 +171,10 @@ if ($stmt = $database->prepare($query)) {
 <body>
     <div class="header">
         <i class="fas fa-school"></i>
-        <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                style="color: #095d40;">|</span>
+        <div class="school-name">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+            <span id="sy-text"></span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
             <img src="../../img/ccs.png">
         </div>
@@ -232,6 +243,7 @@ if ($stmt = $database->prepare($query)) {
                     <li><a class="link_name" href="../attendance.php">Attendance</a></li>
                     <li><a href="attendance-intern.php">Intern Attendance</a></li>
                     <li><a href="attendance-monitor.php">Monitoring</a></li>
+                    <li><a href="intern_hours.php">Intern Total Hours</a></li>
                 </ul>
             </li>
 
@@ -656,6 +668,7 @@ if ($stmt = $database->prepare($query)) {
         </div>
     </div>
     <script src="../js/scripts.js"></script>
+    <script src="../../js/sy.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

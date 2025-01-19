@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $company_firstname = $_POST['company_rep_firstname'];
     $company_middle = $_POST['company_rep_middle'];
     $company_lastname = $_POST['company_rep_lastname'];
+    $company_position = $_POST['company_rep_position'];
     $company_email = $_POST['company_email'];
     $contact = $_POST['company_number'];
     $address = $_POST['address'];
@@ -71,17 +72,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
               company_name = ?,
               company_rep_firstname = ?, 
               company_rep_middle = ?, 
-              company_rep_lastname = ?, 
+              company_rep_lastname = ?,
+              company_rep_position = ?, 
               company_email = ?, 
               company_number = ?,
               company_address = ?";
 
-    $types = "sssssss";
+    $types = "ssssssss";
     $params = [
         $company_name,
         $company_firstname,
         $company_middle,
         $company_lastname,
+        $company_position,
         $company_email,
         $contact,
         $address

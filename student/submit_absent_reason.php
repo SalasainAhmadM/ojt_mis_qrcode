@@ -41,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($stmt = $database->prepare($query)) {
         foreach ($schedule_ids as $schedule_id) {
+            // Bind `null` for proof_image if no image was uploaded
             $stmt->bind_param("iiss", $student_id, $schedule_id, $reason, $proofImageName);
             if ($stmt->execute()) {
                 $inserted = true;

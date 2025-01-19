@@ -42,7 +42,14 @@ if ($result = $database->query($query)) {
         $barangays[] = $row;
     }
 }
-
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $currentSemester = $row['type'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -66,8 +73,10 @@ if ($result = $database->query($query)) {
 <body>
     <div class="header">
         <i class="fas fa-school"></i>
-        <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                style="color: #095d40;">|</span>
+        <div class="school-name">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+            <span id="sy-text"></span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
             <img src="../img/ccs.png">
         </div>
@@ -221,6 +230,11 @@ if ($result = $database->query($query)) {
                             value="<?php echo $company['company_rep_lastname']; ?>" required>
                     </div>
                 </div>
+                <div class="form-group-name">
+                    <label for="wmsu-id">Representative Position</label>
+                    <input type="text" id="company-position" name="company_rep_position"
+                        value="<?php echo $company['company_rep_position']; ?>" required>
+                </div>
                 <div class="form-group">
                     <input type="hidden" id="company-id" name="company_id"
                         value="<?php echo $company['company_id']; ?>">
@@ -270,17 +284,17 @@ if ($result = $database->query($query)) {
 
             <!-- Right Side Form -->
             <div class="form-section">
-                <div class="form-group">
-                    <label for="company-image">Company Image</label>
-                    <input type="file" id="company-image" name="company_image" accept="image/*">
-                </div>
+
 
                 <div class="image-preview" id="image-preview">
                     <img id="preview-image"
                         src="../uploads/company/<?php echo !empty($company['company_image']) ? $company['company_image'] : 'user.png'; ?>"
                         alt="Preview Image">
                 </div>
-
+                <div class="form-group">
+                    <label for="company-image">Company Image</label>
+                    <input type="file" id="company-image" name="company_image" accept="image/*">
+                </div>
                 <button type="submit" class="btn-confirm"><i style="margin-right: 4px;"
                         class="fa-solid fa-circle-check"></i>Confirm</button>
             </div>
@@ -355,6 +369,7 @@ if ($result = $database->query($query)) {
         <?php endif; ?>
     </script>
     <script src="./js/script.js"></script>
+    <script src="../js/sy.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

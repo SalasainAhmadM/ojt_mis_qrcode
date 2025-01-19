@@ -102,6 +102,14 @@ $extracted_email_part = substr($student_email, 2, $at_position - 2);
 // Insert a hyphen after the 4th character
 $formatted_email = substr_replace($extracted_email_part, '-', 4, 0);
 
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+  if ($result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+    $currentSemester = $row['type'];
+  }
+}
 ?>
 
 <!DOCTYPE html>
@@ -149,7 +157,9 @@ $formatted_email = substr_replace($extracted_email_part, '-', 4, 0);
       <i style=" padding-left: 5px;" class="fas fa-sign-out-alt"></i>
     </a>
     <div class="school-name">
-      S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+      <span id="sy-text"></span>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
       <img src="../img/ccs.png">
     </div>
@@ -212,31 +222,58 @@ $formatted_email = substr_replace($extracted_email_part, '-', 4, 0);
       </div>
 
       <div class="form-group">
-        <label for="batch-year">Batch Year</label>
-        <select id="batch-year" name="batch_year" required>
-          <option value="" disabled selected>Select Batch Year</option>
-        </select>
+        <label for="batch-year">School Year</label>
+        <input id="batch-year" name="batch_year" readonly />
       </div>
+
       <script>
-        document.addEventListener("DOMContentLoaded", function () {
-          const selectBatchYear = document.getElementById("batch-year");
-          const currentYear = new Date().getFullYear(); // Get the current year
-          const pastYearsToExclude = 5;
-          const futureYearsToInclude = 1;
+        const now = new Date(
+          new Intl.DateTimeFormat("en-US", {
+            timeZone: "Asia/Manila",
+            year: "numeric",
+            month: "numeric",
+            day: "numeric",
+          }).format(new Date())
+        );
 
-          // Generate batch year options
-          for (let i = -pastYearsToExclude + 1; i <= futureYearsToInclude; i++) {
-            const startYear = currentYear + i;
-            if (startYear < currentYear - pastYearsToExclude) continue;
-            if (startYear > currentYear + futureYearsToInclude) break;
-            const endYear = startYear + 1;
+        const input = document.getElementById("batch-year");
+        const syText = document.getElementById("sy-text");
 
-            const option = document.createElement("option");
-            option.value = `${startYear}-${endYear}`;
-            option.textContent = `${startYear}-${endYear}`;
-            selectBatchYear.appendChild(option);
-          }
-        });
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+
+        let batchYear;
+        if (month <= 5) {
+          batchYear = `${year - 1}-${year}`;
+        } else {
+          batchYear = `${year}-${year + 1}`;
+        }
+
+        input.value = batchYear;
+        syText.textContent = batchYear;
+      </script>
+
+
+      <script>
+        // document.addEventListener("DOMContentLoaded", function () {
+        //   const selectBatchYear = document.getElementById("batch-year");
+        //   const currentYear = new Date().getFullYear(); // Get the current year
+        //   const pastYearsToExclude = 5;
+        //   const futureYearsToInclude = 1;
+
+        //   // Generate batch year options
+        //   for (let i = -pastYearsToExclude + 1; i <= futureYearsToInclude; i++) {
+        //     const startYear = currentYear + i;
+        //     if (startYear < currentYear - pastYearsToExclude) continue;
+        //     if (startYear > currentYear + futureYearsToInclude) break;
+        //     const endYear = startYear + 1;
+
+        //     const option = document.createElement("option");
+        //     option.value = `${startYear}-${endYear}`;
+        //     option.textContent = `${startYear}-${endYear}`;
+        //     selectBatchYear.appendChild(option);
+        //   }
+        // });
       </script>
 
       <div class="form-group">
@@ -412,6 +449,7 @@ $formatted_email = substr_replace($extracted_email_part, '-', 4, 0);
 
   </script>
   <script src="./js/script.js"></script>
+  <!-- <script src="../js/sy.js"></script> -->
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

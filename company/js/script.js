@@ -71,3 +71,4 @@ function closeModal_intern(modalId) {
 function logout_intern() {
   window.location.href = '../../endpoint/logout.php';
 }
+

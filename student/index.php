@@ -61,7 +61,8 @@ SELECT DATE_FORMAT(time_in, '%b %d, %Y') AS attendance_date,
 TIME_FORMAT(time_in, '%h:%i %p') AS time_in,
 TIME_FORMAT(time_out, '%h:%i %p') AS time_out,
 IFNULL(ojt_hours, 0) AS total_hours,
-time_out_reason
+time_out_reason,
+reason
 FROM attendance
 WHERE student_id = ?
 ";
@@ -177,6 +178,15 @@ if ($stmt = $database->prepare($schedule_query)) {
 
 // Determine final message (either holiday or suspension notice)
 $login_message = $holiday_message ?: $suspended_message;
+
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+  if ($result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+    $currentSemester = $row['type'];
+  }
+}
 ?>
 
 
@@ -299,7 +309,10 @@ $login_message = $holiday_message ?: $suspended_message;
 <body>
   <div class="header">
     <i class=""></i>
-    <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
+    <div class="school-name">
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+      <span id="sy-text"></span>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
       <img src="../img/ccs.png">
     </div>
@@ -429,6 +442,7 @@ $login_message = $holiday_message ?: $suspended_message;
                 <th>Time-in</th>
                 <th>Time-out</th>
                 <th>Total Hours</th>
+                <th>Reason</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -440,6 +454,7 @@ $login_message = $holiday_message ?: $suspended_message;
                     <td><?php echo htmlspecialchars($attendance['time_in']); ?></td>
                     <td><?php echo htmlspecialchars($attendance['time_out'] ?? 'N/A'); ?></td>
                     <td><?php echo formatOjtHours($attendance['total_hours']); ?></td>
+                    <td><?php echo htmlspecialchars($attendance['reason'] ?? 'N/A'); ?></td>
                     <td><?php echo htmlspecialchars($attendance['time_out_reason'] ?? 'N/A'); ?></td>
                   </tr>
                 <?php endforeach; ?>
@@ -651,7 +666,7 @@ $login_message = $holiday_message ?: $suspended_message;
     <?php endif; ?>
   </script>
 
-
+  <script src="../js/sy.js"></script>
   <script src="./js/script.js"></script>
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>

@@ -40,6 +40,14 @@ $companies = $pagination_data['companies'];
 $total_pages = $pagination_data['total_pages'];
 $current_page = $pagination_data['current_page'];
 
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $currentSemester = $row['type'];
+    }
+}
 ?>
 
 
@@ -65,8 +73,10 @@ $current_page = $pagination_data['current_page'];
 <body>
     <div class="header">
         <i class="fas fa-school"></i>
-        <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                style="color: #095d40;">|</span>
+        <div class="school-name">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+            <span id="sy-text"></span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
             <img src="../../img/ccs.png">
         </div>
@@ -254,8 +264,8 @@ $current_page = $pagination_data['current_page'];
                                             <?php echo $company['company_name']; ?>
                                         </td>
                                         <td
-                                            title="<?php echo $company['company_rep_firstname'] . ' ' . $company['company_rep_middle'] . '.' . ' ' . $company['company_rep_lastname']; ?>">
-                                            <?php echo $company['company_rep_firstname'] . ' ' . $company['company_rep_middle'] . '.' . ' ' . $company['company_rep_lastname']; ?>
+                                            title="<?php echo $company['company_rep_firstname'] . ' ' . $company['company_rep_middle'] . '.' . ' ' . $company['company_rep_lastname'] . ' - ' . $company['company_rep_position']; ?>">
+                                            <?php echo $company['company_rep_firstname'] . ' ' . $company['company_rep_middle'] . '.' . ' ' . $company['company_rep_lastname'] . ' - ' . $company['company_rep_position']; ?>
                                         </td>
                                         <td title="<?php echo $company['company_email']; ?>">
                                             <?php echo $company['company_email']; ?>
@@ -356,7 +366,11 @@ $current_page = $pagination_data['current_page'];
                 </div>
 
                 <div class="input-group-row">
-
+                    <div class="input-group">
+                        <label for="companyPosition">Position</label>
+                        <input type="text" id="companyPosition" name="company_rep_position"
+                            placeholder="Representative Position" required>
+                    </div>
                     <div class="input-group">
                         <label for="companyContact">Contact Number</label>
                         <input type="text" id="companyContact" value="+63" name="company_number"
@@ -375,7 +389,7 @@ $current_page = $pagination_data['current_page'];
                     </div>
                 </div>
                 <!-- Password Input -->
-                <div class="input-group-row">
+                <!-- <div class="input-group-row">
                     <div style="position: relative;" class="input-group">
                         <label for="companyPassword">Password</label>
                         <div class="password-wrapper">
@@ -395,8 +409,8 @@ $current_page = $pagination_data['current_page'];
                                 <i class="fas fa-eye"></i>
                             </span>
                         </div>
-                    </div>
-                </div>
+                    </div> 
+                </div> -->
                 <button type="submit" class="modal-btn">Add Company</button>
             </form>
         </div>
@@ -447,7 +461,11 @@ $current_page = $pagination_data['current_page'];
 
                 <!-- Email, Contact, Department Row -->
                 <div class="input-group-row">
-
+                    <div class="input-group">
+                        <label for="editCompanyPosition">Position</label>
+                        <input type="text" id="editCompanyPosition" name="company_rep_position"
+                            placeholder="Representative Position" required>
+                    </div>
                     <div class="input-group" style="width: 33%;">
                         <label for="editCompanyContact">Contact Number</label>
                         <input type="text" id="editCompanyContact" name="company_number" required maxlength="13"
@@ -509,7 +527,7 @@ $current_page = $pagination_data['current_page'];
                 </lottie-player>
             </div>
             <h2>Company Added Successfully!</h2>
-            <p>The Company has been added successfully!</p>
+            <p>The company password has been sent via email successfully!</p>
             <button class="proceed-btn" onclick="closeModal('addCompanySuccessModal')">Close</button>
         </div>
     </div>
@@ -576,6 +594,7 @@ $current_page = $pagination_data['current_page'];
             document.getElementById('editCompanyMiddle').value = company.company_rep_middle;
             document.getElementById('editCompanyLastname').value = company.company_rep_lastname;
             document.getElementById('editCompanyEmail').value = company.company_email;
+            document.getElementById('editCompanyPosition').value = company.company_rep_position;
             document.getElementById('editCompanyContact').value = company.company_number;
             document.getElementById('editCompanyAddress').value = company.company_address;
 
@@ -751,6 +770,7 @@ $current_page = $pagination_data['current_page'];
         </div>
     </div>
     <script src="../js/script.js"></script>
+    <script src="../../js/sy.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

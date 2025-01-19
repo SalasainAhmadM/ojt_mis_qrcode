@@ -29,7 +29,14 @@ if ($stmt = $database->prepare($query)) {
   }
   $stmt->close(); // Close the statement
 }
-
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+  if ($result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+    $currentSemester = $row['type'];
+  }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -48,13 +55,69 @@ if ($stmt = $database->prepare($query)) {
 </head>
 
 <body>
+  <?php
+  if (isset($_SESSION['success'])) {
+    if ($_SESSION['success'] === true) {
+      echo '<script>
+      document.addEventListener("DOMContentLoaded", function() {
+        openModal("updateSemesterSuccessModal");
+      });
+    </script>';
+    }
+    unset($_SESSION['success']);
+  }
+  ?>
+
   <div class="header">
     <i class="fas fa-school"></i>
-    <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
+    <div class="school-name">
+      <i style="color: #095d40; cursor: pointer;" class="fas fa-edit" onclick="openModal('updateSemesterModal')"></i>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+      <span id="sy-text"></span>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
       <img src="../img/ccs.png">
     </div>
   </div>
+
+  <!-- Update Semester Modal -->
+  <div id="updateSemesterModal" class="modal">
+    <div class="modal-content-others">
+      <span class="close" onclick="closeModal('updateSemesterModal')">&times;</span>
+      <h2>Update Semester</h2>
+      <form action="./update_semester.php" method="POST">
+        <div class="input-group">
+          <label for="semesterType">Select Semester</label>
+          <select style="width: 100%;
+    padding: 10px;
+    margin: 5px 0 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;" id="semesterType" name="semesterType" required>
+            <option value="1st Sem" <?php echo ($currentSemester === '1st Sem') ? 'selected' : ''; ?>>1st Sem</option>
+            <option value="2nd Sem" <?php echo ($currentSemester === '2nd Sem') ? 'selected' : ''; ?>>2nd Sem</option>
+            <option value="Summer" <?php echo ($currentSemester === 'Summer') ? 'selected' : ''; ?>>Summer</option>
+          </select>
+        </div>
+        <button type="submit" class="modal-btn">Update Semester</button>
+      </form>
+    </div>
+  </div>
+  <!-- Success Modal for Updating Semester -->
+  <div id="updateSemesterSuccessModal" class="modal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <lottie-player src="../animation/success-095d40.json" background="transparent" speed="1"
+          style="width: 150px; height: 150px;" loop autoplay>
+        </lottie-player>
+      </div>
+      <h2>Updated Successfully!</h2>
+      <p>The semester has been updated successfully!</p>
+      <button class="proceed-btn" onclick="closeModal('updateSemesterSuccessModal')">Close</button>
+    </div>
+  </div>
+
+
   <div class="sidebar close">
     <div class="profile-details">
       <img src="../uploads/admin/<?php echo !empty($admin['admin_image']) ? $admin['admin_image'] : 'user.png'; ?>"
@@ -363,6 +426,7 @@ if ($stmt = $database->prepare($query)) {
     };
   </script>
 
+  <script src="../js/sy.js"></script>
   <script src="./js/script.js"></script>
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>

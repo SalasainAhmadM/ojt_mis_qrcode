@@ -29,7 +29,14 @@ if ($stmt = $database->prepare($query)) {
     }
     $stmt->close(); // Close the statement
 }
-
+$currentSemester = "1st Sem";
+$semesterQuery = "SELECT `type` FROM `semester` WHERE `id` = 1";
+if ($result = $database->query($semesterQuery)) {
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $currentSemester = $row['type'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -50,8 +57,10 @@ if ($stmt = $database->prepare($query)) {
 <body>
     <div class="header">
         <i class="fas fa-school"></i>
-        <div class="school-name">S.Y. 2024-2025 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-                style="color: #095d40;">|</span>
+        <div class="school-name">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $currentSemester; ?> &nbsp;&nbsp;&nbsp;
+            <span id="sy-text"></span>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #095d40;">|</span>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;College of Computing Studies
             <img src="../img/ccs.png">
         </div>
@@ -183,12 +192,24 @@ if ($stmt = $database->prepare($query)) {
                     <input type="password" id="cpassword" name="admin_cpassword" placeholder="Confirm New Password">
                 </div>
 
-                <div class="form-group">
-                    <label for="admin-image">Admin Image</label>
-                    <input type="file" id="admin-image" name="admin_image" accept="image/*">
-                </div>
-            </div>
 
+            </div>
+            <style>
+                .image-preview {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    margin-top: 20px;
+                    margin-bottom: 20px;
+                }
+
+                .image-preview img {
+                    width: 200px;
+                    height: 200px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                }
+            </style>
             <!-- Right Side Form -->
             <div class="form-section">
                 <div class="image-preview" id="image-preview">
@@ -196,7 +217,10 @@ if ($stmt = $database->prepare($query)) {
                         src="../uploads/admin/<?php echo !empty($admin['admin_image']) ? $admin['admin_image'] : 'user.png'; ?>"
                         alt="Preview Image">
                 </div>
-
+                <div class="form-group">
+                    <label for="admin-image">Admin Image</label>
+                    <input type="file" id="admin-image" name="admin_image" accept="image/*">
+                </div>
                 <button type="submit" class="btn-confirm"><i style="margin-right: 4px;"
                         class="fa-solid fa-circle-check"></i>Confirm</button>
             </div>
@@ -294,6 +318,7 @@ if ($stmt = $database->prepare($query)) {
 
     </script>
     <script src="./js/script.js"></script>
+    <script src="../js/sy.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </body>
 

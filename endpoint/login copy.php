@@ -5,9 +5,42 @@ require '../conn/connection.php';
 
 // Set the default timezone to Asia/Manila
 date_default_timezone_set('Asia/Manila');
+$database->set_charset("utf8mb4");
 
 $currentDate = date('Y-m-d');
+$currentTime = date('H:i:s');
 $currentDayOfWeek = date('N');
+
+// Auto time-out functionality
+$autoTimeoutQuery = "
+    UPDATE attendance a
+    JOIN schedule s ON a.schedule_id = s.schedule_id
+    SET a.time_out = DATE_ADD(CONCAT(s.date, ' ', s.time_out), INTERVAL 2 HOUR),
+        a.time_out_reason = 'Time-Out'
+    WHERE a.time_out IS NULL AND CONCAT(s.date, ' ', s.time_out) <= NOW();
+";
+
+if ($stmt = $database->prepare($autoTimeoutQuery)) {
+    $stmt->execute();
+    $stmt->close();
+}
+
+// Insert attendance remarks for auto time-out
+$insertRemarksQuery = "
+    INSERT INTO attendance_remarks (student_id, schedule_id, remark_type, remark, proof_image, status)
+    SELECT a.student_id, a.schedule_id, 'Forgot Time-out', 'Auto time-out applied', NULL, 'Pending'
+    FROM attendance a
+    WHERE a.time_out IS NOT NULL AND a.time_out_reason = 'Time-Out'
+      AND NOT EXISTS (
+          SELECT 1 FROM attendance_remarks ar
+          WHERE ar.student_id = a.student_id AND ar.schedule_id = a.schedule_id AND ar.remark_type = 'Forgot Time-out'
+      );
+";
+
+if ($stmt = $database->prepare($insertRemarksQuery)) {
+    $stmt->execute();
+    $stmt->close();
+}
 
 $isHoliday = false;
 $holidayQuery = "SELECT * FROM holiday WHERE holiday_date = ?";
